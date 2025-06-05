@@ -6,7 +6,7 @@ const { Title, Text, Link } = Typography;
 function Login() {
   return (
     <>
-      {/* CSS Reset nhúng trực tiếp */}
+      
       <style>{`
         
         *, *::before, *::after {
@@ -91,7 +91,7 @@ function Login() {
             </Form.Item>
 
             <Text style={{ display: "block", textAlign: "center" }}>
-              Chưa có tài khoản? <Link href="#" style={{ color: "#009066" }}>Đăng ký ngay</Link>
+              Chưa có tài khoản? <Link href="/register" style={{ color: "#009066" }}>Đăng ký ngay</Link>
             </Text>
           </Form>
         </Card>
