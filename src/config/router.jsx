@@ -4,6 +4,8 @@ import Zustand from "../Zustand";
 import UseReactQuerry from "../component/UseReactQuerry";
 import Test from "../Test";
 
+import Login from "../component/login/Login";
+
 // const ProtectedRouteAuth = ({ children }) => {
 //   const user = useSelector(selectUser);
 //   if (!user) {
@@ -48,4 +50,8 @@ export const router = createBrowserRouter([
     path: "/a",
     element: <UseReactQuerry />,
   },
+  {
+    path: "/login",
+    element: <Login/>,
+  }
 ]);
