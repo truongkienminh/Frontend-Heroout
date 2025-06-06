@@ -7,6 +7,8 @@ import {
   EyeTwoTone,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import HeroOutLogo from "../../assets/heroout.jpg"; 
+
 const { Title, Text } = Typography;
 
 function Login() {
@@ -30,12 +32,19 @@ function Login() {
         }}
       >
         <Card style={{ maxWidth: 400, width: "100%", borderRadius: 8 }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <img
-              src="heroout.jpg"
-              alt="Herodout Logo"
-              style={{ height: 120, marginBottom: 6 }}
+              src={HeroOutLogo}
+              alt="Heroout Logo"
+              style={{ height: 120}}
             />
+          </div>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
             <Title level={3}>Đăng nhập</Title>
             <Text type="secondary">Chào mừng bạn quay trở lại</Text>
           </div>
