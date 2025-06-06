@@ -1,6 +1,7 @@
 import React from "react";
 import { Form, Input, Button, Typography, Card } from "antd";
 import { MailOutlined } from "@ant-design/icons";
+import HeroOutLogo from "../../assets/heroout.jpg"; 
 
 const { Title, Text, Link } = Typography;
 
@@ -25,12 +26,19 @@ function ForgotPassword() {
         }}
       >
         <Card style={{ maxWidth: 400, width: "100%", borderRadius: 8 }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <img
-              src="heroout.jpg"
-              alt="Herodout Logo"
-              style={{ height: 120, marginBottom: 6 }}
+              src={HeroOutLogo}
+              alt="Heroout Logo"
+              style={{ height: 120}}
             />
+          </div>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
             <Title level={3}>Quên mật khẩu</Title>
             <Text type="secondary">Nhập email để khôi phục mật khẩu</Text>
           </div>

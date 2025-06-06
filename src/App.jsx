@@ -1,11 +1,11 @@
 import { RouterProvider } from "react-router-dom";
 import { router } from "./config/router";
 import { Provider } from "react-redux";
-import { persistor, store } from "./redux/store";
+import { persistor, store } from "./store/redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { StateProvider } from "./Context/StateProvider";
+import { StateProvider } from "./contexts/StateProvider";
 import { QueryClient, QueryClientProvider } from "react-query";
 AOS.init({
   duration: 1000,

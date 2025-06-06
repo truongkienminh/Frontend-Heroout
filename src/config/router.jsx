@@ -1,8 +1,9 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
-import Login from "../component/Authentication/Login";
-import Register from "../component/Authentication/Register";
-import ForgotPassword from "../component/Authentication/ForgotPassword";
+import HomePage from "../pages/HomePage";
+import Login from "../components/authentication/Login";
+import Register from "../components/authentication/Register";
+import ForgotPassword from "../components/authentication/ForgotPassword";
 
 // const ProtectedRouteAuth = ({ children }) => {
 //   const user = useSelector(selectUser);
@@ -36,6 +37,10 @@ import ForgotPassword from "../component/Authentication/ForgotPassword";
 // };
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+  },
   {
     path: "/login",
     element: <Login />,
