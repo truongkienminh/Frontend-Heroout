@@ -5,7 +5,7 @@ import BannerImage1 from "../assets/banner1.jpg";
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+    
 
       {/* Banner */}
       <section className="bg-emerald-600 text-white py-16 lg:py-24">
@@ -151,7 +151,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <Footer />
+   
     </div>
   );
 };

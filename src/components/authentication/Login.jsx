@@ -116,7 +116,7 @@ function Login() {
 
             <Text style={{ display: "block", textAlign: "center" }}>
               Chưa có tài khoản?{" "}
-              <Link href="/register" style={{ color: "#009066" }}>
+              <Link to="/register" style={{ color: "#009066" }}>
                 Đăng ký ngay
               </Link>
             </Text>
