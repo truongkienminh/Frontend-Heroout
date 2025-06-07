@@ -7,11 +7,13 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
+            <Link to="/">
             <img
               src={HeroOutLogo}
               alt="Herodout Logo"
               style={{ width: 100, height: 80, objectFit: "contain" }}
             />
+            </Link>
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">

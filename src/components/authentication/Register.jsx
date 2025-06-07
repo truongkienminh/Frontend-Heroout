@@ -44,12 +44,14 @@ const Register = () => {
               margin: "20px 0",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "center"}}>
-              <img
-                src={HeroOutLogo}
-                alt="Heroout Logo"
-                style={{ width: 140, height: 120, objectFit: "contain" }}
-              />
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Link to="/">
+                <img
+                  src={HeroOutLogo}
+                  alt="Heroout Logo"
+                  style={{ width: 140, height: 120, objectFit: "contain" }}
+                />
+              </Link>
             </div>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <Title level={3}>Đăng ký tài khoản</Title>

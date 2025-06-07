@@ -38,11 +38,13 @@ function Login() {
               justifyContent: "center",
             }}
           >
-            <img
-              src={HeroOutLogo}
-              alt="Heroout Logo"
-              style={{ height: 120}}
-            />
+            <Link to="/">
+              <img
+                src={HeroOutLogo}
+                alt="Heroout Logo"
+                style={{ height: 120 }}
+              />
+            </Link>
           </div>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <Title level={3}>Đăng nhập</Title>
@@ -116,7 +118,7 @@ function Login() {
 
             <Text style={{ display: "block", textAlign: "center" }}>
               Chưa có tài khoản?{" "}
-              <Link href="/register" style={{ color: "#009066" }}>
+              <Link to="/register" style={{ color: "#009066" }}>
                 Đăng ký ngay
               </Link>
             </Text>

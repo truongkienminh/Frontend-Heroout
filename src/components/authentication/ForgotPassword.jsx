@@ -1,9 +1,10 @@
 import React from "react";
 import { Form, Input, Button, Typography, Card } from "antd";
 import { MailOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 import HeroOutLogo from "../../assets/heroout.jpg"; 
 
-const { Title, Text, Link } = Typography;
+const { Title, Text } = Typography;
 
 function ForgotPassword() {
   return (
@@ -32,11 +33,13 @@ function ForgotPassword() {
               justifyContent: "center",
             }}
           >
-            <img
-              src={HeroOutLogo}
-              alt="Heroout Logo"
-              style={{ height: 120}}
-            />
+            <Link to="/">
+              <img
+                src={HeroOutLogo}
+                alt="Heroout Logo"
+                style={{ height: 120 }}
+              />
+            </Link>
           </div>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <Title level={3}>Quên mật khẩu</Title>
@@ -78,7 +81,7 @@ function ForgotPassword() {
 
             <Text style={{ display: "block", textAlign: "center" }}>
               Quay lại{" "}
-              <Link href="/login" style={{ color: "#009066" }}>
+              <Link to="/login" style={{ color: "#009066" }}>
                 Đăng nhập
               </Link>
             </Text>
