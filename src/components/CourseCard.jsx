@@ -13,9 +13,8 @@ const Card = ({ children, className = "", delay = 0 }) => {
   }, [delay]);
 
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transform transition-all duration-700 hover:shadow-xl hover:scale-105 ${
-      isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-    } ${className}`}>
+    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transform transition-all duration-700 hover:shadow-xl hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+      } ${className}`}>
       {children}
     </div>
   );
@@ -24,16 +23,15 @@ const Card = ({ children, className = "", delay = 0 }) => {
 // Badge component with hover effects
 const Badge = ({ children, variant = "default" }) => {
   const variants = {
-    basic: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-    advanced: "bg-orange-100 text-orange-800 hover:bg-orange-200",
-    expert: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+    basic: "bg-[#16a34a] text-white hover:bg-[#15803d]",
+    advanced: "bg-[#fef3c7] text-yellow-800 hover:bg-[#fde68a]",
+    expert: "bg-[#FECACA] text-red-800 hover:bg-[#FCA5A5]",
     default: "bg-green-100 text-green-800 hover:bg-green-200"
   };
 
   return (
-    <span className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 transform hover:scale-110 ${
-      variants[variant] || variants.default
-    }`}>
+    <span className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 transform hover:scale-110 ${variants[variant] || variants.default
+      }`}>
       {children}
     </span>
   );
@@ -98,9 +96,7 @@ const CourseCardItem = ({ course, delay }) => {
           <Badge variant={course.levelColor}>{course.level}</Badge>
         </div>
         <div className="absolute top-3 right-3 transform transition-all duration-300 opacity-0 group-hover:opacity-100">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full p-2">
-            <Play className="w-4 h-4 text-green-600" />
-          </div>
+
         </div>
       </div>
 
@@ -115,17 +111,16 @@ const CourseCardItem = ({ course, delay }) => {
             <Users className="w-4 h-4 mr-1 transition-transform duration-300 group-hover:scale-110" />
             <span>{course.students.toLocaleString()}</span>
           </div>
-          
+
           <div className="flex items-center">
             <div className="flex mr-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-4 h-4 transition-all duration-300 ${
-                    star <= Math.floor(course.rating)
-                      ? 'text-yellow-400 fill-current scale-100'
-                      : 'text-gray-300 scale-75'
-                  } group-hover:scale-110`}
+                  className={`w-4 h-4 transition-all duration-300 ${star <= Math.floor(course.rating)
+                    ? 'text-yellow-400 fill-current scale-100'
+                    : 'text-gray-300 scale-75'
+                    } group-hover:scale-110`}
                   style={{ transitionDelay: `${star * 50}ms` }}
                 />
               ))}
@@ -211,9 +206,8 @@ const ProgressCardItem = ({ course, delay, isVisible }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transform transition-all duration-700 hover:shadow-md hover:border-green-200 ${
-      cardVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-    }`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transform transition-all duration-700 hover:shadow-md hover:border-green-200 ${cardVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+      }`}>
       <div className="p-4">
         <div className="flex items-center justify-between">
           {/* Left section with avatar and course info */}
@@ -245,7 +239,7 @@ const ProgressCardItem = ({ course, delay, isVisible }) => {
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
               className="bg-green-500 h-2 rounded-full transition-all duration-1000 ease-out"
-              style={{ 
+              style={{
                 width: `${course.progress}%`,
                 transitionDelay: `${delay + 200}ms`
               }}
