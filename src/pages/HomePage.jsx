@@ -1,12 +1,8 @@
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import BannerImage1 from "../assets/banner1.jpg";
 
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-white">
-    
-
       {/* Banner */}
       <section className="bg-emerald-600 text-white py-16 lg:py-24">
         <div className="container mx-auto px-4">
@@ -150,8 +146,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-   
     </div>
   );
 };

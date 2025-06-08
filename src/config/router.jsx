@@ -5,6 +5,8 @@ import Login from "../components/authentication/Login";
 import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
 import CoursesPage from "../pages/CoursesPage";
+import BlogsPage from "../pages/BlogsPage";
+import BlogDetailPage from "../pages/BlogDetailPage";
 import Layout from "../components/layout";
 import CourseDetail from "../pages/CourseDetail";
 import LearningCoursePage from "../pages/LearningCoursePage";
@@ -45,6 +47,14 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: <HomePage />,
+      },
+      {
+        path: "/blogs",
+        element: <BlogsPage />,
+      },
+      {
+        path: "/blogs/:id",
+        element: <BlogDetailPage />,
       },
       {
         path: "/courses",
