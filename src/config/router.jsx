@@ -8,6 +8,8 @@ import CoursesPage from "../pages/CoursesPage";
 import BlogsPage from "../pages/BlogsPage";
 import BlogDetailPage from "../pages/BlogDetailPage";
 import Layout from "../components/layout";
+import CourseDetail from "../pages/CourseDetail";
+import LearningCoursePage from "../pages/LearningCoursePage";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -47,10 +49,6 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: "/courses",
-        element: <CoursesPage />,
-      },
-      {
         path: "/blogs",
         element: <BlogsPage />,
       },
@@ -58,8 +56,28 @@ export const router = createBrowserRouter([
         path: "/blogs/:id",
         element: <BlogDetailPage />,
       },
+      {
+        path: "/courses",
+        element: <CoursesPage />,
+      },
+      {
+        path: "/coursedetail/:courseId",
+        element: <CourseDetail />,
+      },
     ],
   },
+  {
+    path: "",
+    element: <Layout />,
+    children: [
+      {
+        path: "/learningcourse/:courseId",
+        element: <LearningCoursePage />,
+      },
+      
+    ],
+  },
+
   {
     path: "/login",
     element: <Login />,
