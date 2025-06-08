@@ -6,6 +6,8 @@ import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
 import CoursesPage from "../pages/CoursesPage";
 import Layout from "../components/layout";
+import CourseDetail from "../pages/CourseDetail";
+import LearningCoursePage from "../pages/LearningCoursePage";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -48,8 +50,24 @@ export const router = createBrowserRouter([
         path: "/courses",
         element: <CoursesPage />,
       },
+      {
+        path: "/coursedetail/:courseId",
+        element: <CourseDetail />,
+      },
     ],
   },
+  {
+    path: "",
+    element: <Layout />,
+    children: [
+      {
+        path: "/learningcourse/:courseId",
+        element: <LearningCoursePage />,
+      },
+      
+    ],
+  },
+
   {
     path: "/login",
     element: <Login />,
