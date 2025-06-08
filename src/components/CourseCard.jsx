@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, User, Star, Play, BookOpen, Clock, Award, Users } from 'lucide-react';
 
 // Reusable Card component with entrance animation
-const Card = ({ children, className = "", delay = 0 }) => {
+const Card = ({ children, className = "", delay = 0, onClick }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -13,8 +14,11 @@ const Card = ({ children, className = "", delay = 0 }) => {
   }, [delay]);
 
   return (
-    <div className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transform transition-all duration-700 hover:shadow-xl hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      } ${className}`}>
+    <div 
+      className={`bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transform transition-all duration-700 hover:shadow-xl hover:scale-105 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        } ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      onClick={onClick}
+    >
       {children}
     </div>
   );
@@ -81,10 +85,21 @@ const CourseCard = () => {
 };
 
 const CourseCardItem = ({ course, delay }) => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
+  const handleCardClick = () => {
+    navigate(`/coursedetail/${course.id}`);
+  };
+
+  const handleButtonClick = (e) => {
+    e.stopPropagation(); // Ngăn event bubbling
+    // Xử lý đăng ký khóa học ở đây
+    console.log(`Đăng ký khóa học: ${course.title}`);
+  };
+
   return (
-    <Card delay={delay} className="group">
+    <Card delay={delay} className="group" onClick={handleCardClick}>
       <div className="relative overflow-hidden">
         <img
           src={course.image}
@@ -135,6 +150,7 @@ const CourseCardItem = ({ course, delay }) => {
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          onClick={handleButtonClick}
         >
           <span className="transition-transform duration-300 hover:translate-x-1">
             Đăng ký
@@ -191,6 +207,7 @@ const ProgressCard = () => {
 };
 
 const ProgressCardItem = ({ course, delay, isVisible }) => {
+  const navigate = useNavigate();
   const [cardVisible, setCardVisible] = useState(false);
 
   useEffect(() => {
@@ -205,9 +222,21 @@ const ProgressCardItem = ({ course, delay, isVisible }) => {
     return title.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const handleCardClick = () => {
+    navigate(`/coursedetail/${course.id}`);
+  };
+
+  const handleContinueClick = (e) => {
+    e.stopPropagation(); // Ngăn event bubbling
+    navigate(`/coursedetail/${course.id}`);
+  };
+
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transform transition-all duration-700 hover:shadow-md hover:border-green-200 ${cardVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-      }`}>
+    <div 
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden transform transition-all duration-700 hover:shadow-md hover:border-green-200 cursor-pointer ${cardVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+        }`}
+      onClick={handleCardClick}
+    >
       <div className="p-4">
         <div className="flex items-center justify-between">
           {/* Left section with avatar and course info */}
@@ -229,7 +258,10 @@ const ProgressCardItem = ({ course, delay, isVisible }) => {
           </div>
 
           {/* Right section with button */}
-          <button className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm flex-shrink-0">
+          <button 
+            className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm flex-shrink-0"
+            onClick={handleContinueClick}
+          >
             Tiếp tục
           </button>
         </div>
