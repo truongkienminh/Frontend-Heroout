@@ -65,6 +65,11 @@ export const router = createBrowserRouter([
         path: "/coursedetail/:courseId",
         element: <CourseDetail />,
       },
+
+      {
+        path: "/event",
+        element: <Event />,
+      },
     ],
   },
   {
@@ -89,9 +94,5 @@ export const router = createBrowserRouter([
   {
     path: "/forgotpassword",
     element: <ForgotPassword />,
-  },
-  {
-    path: "/event",
-    element: <Event />,
   },
 ]);
