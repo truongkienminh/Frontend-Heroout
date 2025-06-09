@@ -10,6 +10,7 @@ import BlogDetailPage from "../pages/BlogDetailPage";
 import Layout from "../components/layout";
 import CourseDetail from "../pages/CourseDetail";
 import LearningCoursePage from "../pages/LearningCoursePage";
+import Event from "../components/Event/Event";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -74,7 +75,6 @@ export const router = createBrowserRouter([
         path: "/learningcourse/:courseId",
         element: <LearningCoursePage />,
       },
-      
     ],
   },
 
@@ -89,5 +89,9 @@ export const router = createBrowserRouter([
   {
     path: "/forgotpassword",
     element: <ForgotPassword />,
+  },
+  {
+    path: "/event",
+    element: <Event />,
   },
 ]);
