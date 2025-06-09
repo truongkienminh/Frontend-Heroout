@@ -105,8 +105,7 @@ const getLucideIcon = (type) => {
   }
 };
 
-// --- EventPage Component ---
-const Event = () => {
+const EventPage = () => {
   // You would manage state for search, filter, layout here
 
   return (
@@ -318,4 +317,4 @@ const Event = () => {
   );
 };
 
-export default Event;
+export default EventPage;
