@@ -1,8 +1,11 @@
 import React from "react";
+// Import Link from react-router-dom
+import { Link } from "react-router-dom";
+
 // Import necessary icons from lucide-react
 import {
   Search,
-  Settings, // Or Filter, depending on preference
+  Settings,
   Grid,
   List,
   Clock,
@@ -10,9 +13,9 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Monitor, // For online events
-  Award, // For competition prize
-  CalendarCheck, // For 'My Events' icon
+  Monitor,
+  Award,
+  CalendarCheck,
 } from "lucide-react";
 
 // --- Mock Data ---
@@ -164,9 +167,7 @@ const Event = () => {
             <div className="text-xs font-bold text-amber-600 uppercase mb-1">
               {featuredEvent.type}
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-3">
-              {featuredEvent.title}
-            </h3>
+            <h3>{featuredEvent.title}</h3>
             <div className="text-sm text-gray-600 mb-4">
               <div className="flex items-center mb-2 gap-2">
                 <Clock className="w-5 h-5 text-gray-400" /> {featuredEvent.time}
@@ -180,9 +181,13 @@ const Event = () => {
                 {featuredEvent.attendees}
               </div>
             </div>
-            <button className="inline-block px-6 py-2 bg-green-500 text-white rounded-md text-base hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+            {/* Use Link component for navigation */}
+            <Link
+              to="/eventregistration" // The target route
+              className="inline-block px-6 py-2 bg-green-500 text-white rounded-md text-base hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
               Đăng ký ngay
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -249,6 +254,7 @@ const Event = () => {
                 <div className="mt-auto">
                   {" "}
                   {/* Pushes actions to the bottom */}
+                  {/* Link for other buttons if needed, e.g., view details */}
                   <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
                     {event.type === "CUỘC THI" ? "Tham gia" : "Đăng ký"}
                   </button>
@@ -293,6 +299,7 @@ const Event = () => {
                 </div>
                 {/* Actions */}
                 <div className="flex flex-col md:flex-row gap-2 flex-shrink-0">
+                  {/* Use Link for 'Xem chi tiết' if it navigates to a detail page */}
                   <button className="px-3 py-1.5 rounded-md text-sm border border-green-600 text-green-600 bg-transparent hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500">
                     Xem chi tiết
                   </button>
