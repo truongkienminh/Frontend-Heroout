@@ -8,11 +8,11 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Link to="/">
-            <img
-              src={HeroOutLogo}
-              alt="Herodout Logo"
-              style={{ width: 100, height: 80, objectFit: "contain" }}
-            />
+              <img
+                src={HeroOutLogo}
+                alt="Herodout Logo"
+                style={{ width: 100, height: 80, objectFit: "contain" }}
+              />
             </Link>
           </div>
 
@@ -30,7 +30,7 @@ const Header = () => {
               Khóa học
             </Link>
             <Link
-              to="/events"
+              to="/event"
               className="text-gray-600 hover:text-gray-800 transition-colors"
             >
               Sự kiện
