@@ -45,7 +45,7 @@ const eventDetails = {
 };
 
 // --- EventRegistrationPage Component ---
-const EventRegistrationPage = () => {
+const EventRegistration = () => {
   // State for form fields would go here in a real app
 
   return (
@@ -372,4 +372,4 @@ const EventRegistrationPage = () => {
   );
 };
 
-export default EventRegistrationPage;
+export default EventRegistration;
