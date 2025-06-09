@@ -11,6 +11,7 @@ import Layout from "../components/layout";
 import CourseDetail from "../pages/CourseDetail";
 import LearningCoursePage from "../pages/LearningCoursePage";
 
+
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
 //   const user = useSelector(selectUser);
@@ -64,18 +65,12 @@ export const router = createBrowserRouter([
         path: "/coursedetail/:courseId",
         element: <CourseDetail />,
       },
+
     ],
   },
   {
-    path: "",
-    element: <Layout />,
-    children: [
-      {
-        path: "/learningcourse/:courseId",
-        element: <LearningCoursePage />,
-      },
-      
-    ],
+    path: "learningcourse/:courseId",
+    element: <LearningCoursePage />,
   },
 
   {
