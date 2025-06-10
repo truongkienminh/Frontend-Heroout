@@ -1,5 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { getBlogImage } from "../utils/blogImages";
+import Breadcrumb from "../components/Breadcrumb";
 
 const BlogDetailPage = () => {
   const { id } = useParams();
@@ -103,57 +105,21 @@ const BlogDetailPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
-      <div className="bg-gray-50 py-4">
-        <div className="container mx-auto px-4">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <Link to="/" className="text-gray-700 hover:text-emerald-600">
-                  Trang chủ
-                </Link>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg
-                    className="w-6 h-6 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <Link
-                    to="/blogs"
-                    className="ml-1 text-gray-700 hover:text-emerald-600 md:ml-2"
-                  >
-                    Blogs
-                  </Link>
-                </div>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg
-                    className="w-6 h-6 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="ml-1 text-gray-500 md:ml-2 truncate">
-                    {post.title}
-                  </span>
-                </div>
-              </li>
-            </ol>
-          </nav>
-        </div>
+      <Breadcrumb
+        items={[
+          { label: "Trang chủ", href: "/" },
+          { label: "Blogs", href: "/blogs" },
+          { label: post.title, truncate: true },
+        ]}
+      />
+
+      {/* Blog Post Image */}
+      <div className="container mx-auto px-4 mb-8">
+        <img
+          src={getBlogImage(post.id) || "/placeholder.svg"}
+          alt={post.title}
+          className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+        />
       </div>
 
       {/* Article Content */}
@@ -307,6 +273,13 @@ const BlogDetailPage = () => {
                     key={relatedPost.id}
                     className="bg-white rounded-lg shadow-md overflow-hidden"
                   >
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={getBlogImage(relatedPost.id) || "/placeholder.svg"}
+                        alt={relatedPost.title}
+                        className="w-full h-32 object-cover"
+                      />
+                    </div>
                     <div className="p-6">
                       <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
                         {relatedPost.category}

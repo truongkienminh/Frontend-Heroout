@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getBlogImage } from "../utils/blogImages"
 
 const BlogsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,94 +59,6 @@ const BlogsPage = () => {
   const totalPages = Math.ceil(
     filteredPosts.filter((post) => !post.featured).length / postsPerPage
   );
-
-  // Render icon
-  const renderIcon = (iconType) => {
-    switch (iconType) {
-      case "brain":
-        return (
-          <svg
-            className="w-12 h-12 text-orange-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M21.33 12.91c.09-.09.15-.2.15-.33s-.06-.24-.15-.33L12 3.08c-.09-.09-.2-.15-.33-.15s-.24.06-.33.15L2.67 12.25c-.09.09-.15.2-.15.33s.06.24.15.33l8.67 8.67c.09.09.2.15.33.15s.24-.06.33-.15l8.67-8.67zM12 4.83l6.84 6.84-6.84 6.84L5.16 11.67 12 4.83z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-        );
-      case "psychology":
-        return (
-          <svg
-            className="w-12 h-12 text-purple-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.19 0 2.34-.21 3.41-.6.3-.11.49-.4.49-.72 0-.43-.35-.78-.78-.78-.17 0-.33.06-.46.14-.82.28-1.69.43-2.66.43-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8c0 1.57-.45 3.03-1.23 4.26-.15.24-.23.52-.23.8 0 .83.67 1.5 1.5 1.5.41 0 .78-.17 1.05-.44C21.38 16.5 22 14.32 22 12c0-5.52-4.48-10-10-10z" />
-            <circle cx="12" cy="12" r="4" />
-          </svg>
-        );
-      case "shield":
-        return (
-          <svg
-            className="w-12 h-12 text-green-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z" />
-          </svg>
-        );
-      case "people":
-        return (
-          <svg
-            className="w-12 h-12 text-blue-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63c-.24-.72-.84-1.29-1.58-1.29-.6 0-1.13.38-1.34.94L15.5 11.5c-.21.56-.21 1.18 0 1.74L17 16v6h3zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm1.5 16v-6h2.5L7.96 8.37c-.24-.72-.84-1.29-1.58-1.29-.6 0-1.13.38-1.34.94L3.5 11.5c-.21.56-.21 1.18 0 1.74L5 16v6h2z" />
-          </svg>
-        );
-      case "education":
-        return (
-          <svg
-            className="w-12 h-12 text-indigo-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18M12,3L1,9L12,15L21,11V17H23V9L12,3Z" />
-          </svg>
-        );
-      case "health":
-        return (
-          <svg
-            className="w-12 h-12 text-red-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12.8,5.4C12.8,5.4 12.8,5.4 12.8,5.4C13.1,4.9 13.4,4.4 13.7,4C14.8,2.4 15.4,1.8 16.3,2.1C17.1,2.3 17.8,3.1 17.9,4C18.1,5.2 17.4,6.6 16.3,7.5C15.9,7.9 15.4,8.1 14.9,8.3L17.6,11.0L19,9.6L20.4,11L19,12.4L20.4,13.8L19,15.2L17.6,13.8L16.2,15.2L14.8,13.8L16.2,12.4L14.8,11L13.4,12.4L12,11L10.6,12.4L9.2,11L7.8,12.4L6.4,11L5,12.4L3.6,11L2.2,12.4L0.8,11L2.2,9.6L3.6,11L5,9.6L6.4,11L7.8,9.6L9.2,11L10.6,9.6L12,11L12.8,5.4Z" />
-          </svg>
-        );
-      case "warning":
-        return (
-          <svg
-            className="w-12 h-12 text-yellow-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-          </svg>
-        );
-      default:
-        return (
-          <svg
-            className="w-12 h-12 text-gray-500"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-          </svg>
-        );
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -368,21 +281,14 @@ const BlogsPage = () => {
                   </span>
                   <div className="flex items-start mb-4">
                     <div className="mr-6 mt-2">
-                      {renderIcon(
-                        filteredPosts[0].category === "TÂM LÝ HỌC"
-                          ? "psychology"
-                          : filteredPosts[0].category === "PHÒNG NGỪA"
-                          ? "shield"
-                          : filteredPosts[0].category === "CỘNG ĐỒNG"
-                          ? "people"
-                          : filteredPosts[0].category === "GIÁO DỤC"
-                          ? "education"
-                          : filteredPosts[0].category === "SỨC KHỎE"
-                          ? "health"
-                          : filteredPosts[0].category === "PHÒNG CHỐNG MA TÚY"
-                          ? "warning"
-                          : "brain"
-                      )}
+                      <img
+                        src={
+                          getBlogImage(filteredPosts[0].id) ||
+                          "/placeholder.svg"
+                        }
+                        alt={filteredPosts[0].title}
+                        className="w-24 h-24 object-cover rounded-lg shadow-lg"
+                      />
                     </div>
                     <div className="flex-1">
                       <h2 className="text-2xl md:text-3xl font-bold mb-2">
@@ -486,22 +392,12 @@ const BlogsPage = () => {
                   data-aos="fade-up"
                   data-aos-delay={index * 100}
                 >
-                  <div
-                    className={`p-6 flex justify-center ${
-                      post.category === "TÂM LÝ HỌC"
-                        ? "bg-purple-50"
-                        : post.category === "PHÒNG NGỪA"
-                        ? "bg-green-50"
-                        : post.category === "CỘNG ĐỒNG"
-                        ? "bg-blue-50"
-                        : post.category === "GIÁO DỤC"
-                        ? "bg-indigo-50"
-                        : post.category === "SỨC KHỎE"
-                        ? "bg-red-50"
-                        : "bg-orange-50"
-                    }`}
-                  >
-                    {renderIcon(post.icon)}
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={getBlogImage(post.id) || "/placeholder.svg"}
+                      alt={post.title}
+                      className="w-full h-48 object-cover"
+                    />
                   </div>
                   <div className="p-6">
                     <div className="mb-4">
@@ -560,22 +456,14 @@ const BlogsPage = () => {
                   data-aos-delay={index * 100}
                 >
                   <div
-                    className={`p-6 flex items-center justify-center ${
-                      post.category === "TÂM LÝ HỌC"
-                        ? "bg-purple-50"
-                        : post.category === "PHÒNG NGỪA"
-                        ? "bg-green-50"
-                        : post.category === "CỘNG ĐỒNG"
-                        ? "bg-blue-50"
-                        : post.category === "GIÁO DỤC"
-                        ? "bg-indigo-50"
-                        : post.category === "SỨC KHỎE"
-                        ? "bg-red-50"
-                        : "bg-orange-50"
-                    }`}
-                    style={{ minWidth: "120px" }}
+                    className="relative overflow-hidden"
+                    style={{ minWidth: "200px" }}
                   >
-                    {renderIcon(post.icon)}
+                    <img
+                      src={getBlogImage(post.id) || "/placeholder.svg"}
+                      alt={post.title}
+                      className="w-full h-32 object-cover"
+                    />
                   </div>
                   <div className="p-6 flex-1">
                     <div className="mb-2">
