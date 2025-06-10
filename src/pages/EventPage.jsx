@@ -1,8 +1,7 @@
 import React from "react";
-// Import Link from react-router-dom
+
 import { Link } from "react-router-dom";
 
-// Import necessary icons from lucide-react
 import {
   Search,
   Settings,
@@ -18,13 +17,12 @@ import {
   CalendarCheck,
 } from "lucide-react";
 
-// --- Mock Data ---
 const featuredEvent = {
   id: 1,
   type: "HỘI THẢO",
   title: "Phòng chống tệ nạn xã hội trong môi trường học đường",
   dateDay: "20",
-  dateMonth: "12", // For the large date display
+  dateMonth: "12",
   fullDate: "20/12/2024",
   time: "08:00 - 17:00",
   location: "Trung tâm Hội nghị Quốc gia",
@@ -40,8 +38,8 @@ const upcomingEvents = [
     time: "14:00",
     location: "Online",
     price: "Miễn phí",
-    iconType: "monitor", // Map this to Lucide icon
-    cardColorClass: "bg-blue-100 text-blue-800", // Tailwind classes for background and text
+    iconType: "monitor",
+    cardColorClass: "bg-blue-100 text-blue-800",
   },
   {
     id: 3,
@@ -51,8 +49,8 @@ const upcomingEvents = [
     time: "09:00 - 16:00",
     location: "Công viên Thống Nhất",
     price: "Miễn phí",
-    iconType: "users", // Map this to Lucide icon
-    cardColorClass: "bg-yellow-100 text-yellow-800", // Tailwind classes for background and text
+    iconType: "users",
+    cardColorClass: "bg-yellow-100 text-yellow-800",
   },
   {
     id: 4,
@@ -60,27 +58,24 @@ const upcomingEvents = [
     title: "Cuộc thi sáng tác poster tuyên truyền phòng chống ma túy",
     date: "30/12/2024",
     time: "Hạn nộp bài",
-    prize: "Giải thưởng 50 triệu", // Use prize instead of location
-    price: "", // No price listed
-    iconType: "award", // Map this to Lucide icon
-    cardColorClass: "bg-red-100 text-red-800", // Tailwind classes for background and text
+    prize: "Giải thưởng 50 triệu",
+    price: "",
+    iconType: "award",
+    cardColorClass: "bg-red-100 text-red-800",
   },
-  // Add more upcoming events as needed
 ];
 
 const myEvents = [
   {
-    id: 2, // Assuming this is the same event as the first upcoming one
+    id: 2,
     title: "Workshop kỹ năng tư vấn cho thanh niên",
     status: "Bạn đã đăng ký tham gia sự kiện này",
     date: "22/12/2024",
     time: "14:00",
-    iconType: "calendar-check", // Icon for my events
+    iconType: "calendar-check",
   },
-  // Add more my events as needed
 ];
 
-// --- Helper to get Lucide Icon Component ---
 const getLucideIcon = (type) => {
   switch (type) {
     case "monitor":
@@ -101,18 +96,13 @@ const getLucideIcon = (type) => {
     case "dollar-sign":
       return <DollarSign className="w-4 h-4 text-gray-400" />;
     default:
-      return null; // Or a default icon like <Circle />
+      return null;
   }
 };
 
 const EventPage = () => {
-  // You would manage state for search, filter, layout here
-
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 min-h-screen">
-      {/* Assume Navigation Bar is outside or a separate component above this */}
-
-      {/* Page Header */}
       <div className="mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
           Sự kiện & Hoạt động
@@ -123,7 +113,6 @@ const EventPage = () => {
         </p>
       </div>
 
-      {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-8">
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -136,9 +125,8 @@ const EventPage = () => {
         <div className="relative inline-block w-full md:w-auto">
           <button className="flex items-center justify-center md:justify-between gap-2 w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500">
             Tất cả
-            <Settings className="w-5 h-5" /> {/* Or use ChevronDown */}
+            <Settings className="w-5 h-5" />
           </button>
-          {/* Dropdown content would go here */}
         </div>
         <div className="flex border border-gray-300 rounded-md overflow-hidden w-full md:w-auto">
           <button className="p-2 bg-green-500 text-white focus:outline-none">
@@ -150,18 +138,16 @@ const EventPage = () => {
         </div>
       </div>
 
-      {/* Featured Event Section */}
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-800 mb-4">
           Sự kiện nổi bật
         </h3>
         <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Date Block */}
           <div className="flex-shrink-0 w-full md:w-40 bg-green-500 flex flex-row md:flex-col items-center justify-center text-white p-4">
             <div className="text-4xl font-bold">{featuredEvent.dateDay}</div>
             <div className="text-lg font-normal md:mt-1 md:ml-0 ml-2">{`TH${featuredEvent.dateMonth}`}</div>
           </div>
-          {/* Info Block */}
+
           <div className="p-4 flex-grow">
             <div className="text-xs font-bold text-amber-600 uppercase mb-1">
               {featuredEvent.type}
@@ -180,9 +166,9 @@ const EventPage = () => {
                 {featuredEvent.attendees}
               </div>
             </div>
-            {/* Use Link component for navigation */}
+
             <Link
-              to="/eventregistration" // The target route
+              to="/eventregistration"
               className="inline-block px-6 py-2 bg-green-500 text-white rounded-md text-base hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Đăng ký ngay
@@ -191,25 +177,22 @@ const EventPage = () => {
         </div>
       </div>
 
-      {/* Upcoming Events Section */}
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-800 mb-4">
           Sự kiện sắp diễn ra
         </h3>
-        {/* Event list for horizontal scroll */}
+
         <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
           {upcomingEvents.map((event) => (
             <div
               key={event.id}
               className="flex-shrink-0 w-72 min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
             >
-              {/* Icon and Label Section */}
               <div
                 className={`relative h-32 flex justify-center items-center ${
                   event.cardColorClass.split(" ")[0]
                 }`}
               >
-                {/* Icon Placeholder */}
                 {getLucideIcon(event.iconType)}
                 <div
                   className={`absolute top-2 left-2 bg-white/80 px-2 py-1 rounded text-xs font-bold uppercase ${
@@ -219,7 +202,7 @@ const EventPage = () => {
                   {event.type}
                 </div>
               </div>
-              {/* Card Content */}
+
               <div className="p-4 flex-grow flex flex-col">
                 <div className="text-base font-bold text-gray-800 mb-2">
                   {event.title}
@@ -237,7 +220,7 @@ const EventPage = () => {
                       {event.location}
                     </div>
                   )}
-                  {event.prize && ( // Display prize if available
+                  {event.prize && (
                     <div className="flex items-center mb-1 gap-2">
                       <Award className="w-4 h-4 text-gray-400" /> {event.prize}
                     </div>
@@ -249,11 +232,9 @@ const EventPage = () => {
                     </div>
                   )}
                 </div>
-                {/* Actions */}
+
                 <div className="mt-auto">
                   {" "}
-                  {/* Pushes actions to the bottom */}
-                  {/* Link for other buttons if needed, e.g., view details */}
                   <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
                     {event.type === "CUỘC THI" ? "Tham gia" : "Đăng ký"}
                   </button>
@@ -264,25 +245,22 @@ const EventPage = () => {
         </div>
       </div>
 
-      {/* My Events Section */}
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-800 mb-4">
           Sự kiện của tôi
         </h3>
-        {/* Event list for vertical layout */}
+
         <div className="flex flex-col gap-4">
           {myEvents.map((event) => (
             <div
               key={event.id}
               className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-md overflow-hidden p-4 gap-4"
             >
-              {/* Icon */}
               <div className="flex-shrink-0">
                 {getLucideIcon(event.iconType)}
               </div>
-              {/* Content */}
+
               <div className="flex-grow flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-4 w-full">
-                {/* Info */}
                 <div className="flex-grow">
                   <div className="text-base font-bold text-gray-800 mb-1">
                     {event.title}
@@ -296,9 +274,8 @@ const EventPage = () => {
                     {event.time}
                   </div>
                 </div>
-                {/* Actions */}
+
                 <div className="flex flex-col md:flex-row gap-2 flex-shrink-0">
-                  {/* Use Link for 'Xem chi tiết' if it navigates to a detail page */}
                   <button className="px-3 py-1.5 rounded-md text-sm border border-green-600 text-green-600 bg-transparent hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500">
                     Xem chi tiết
                   </button>
@@ -311,8 +288,6 @@ const EventPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Potential Footer section here */}
     </div>
   );
 };
