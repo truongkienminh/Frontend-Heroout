@@ -101,12 +101,10 @@ function Register() {
         "Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập..."
       );
 
-      const token = response.data?.token; // Lấy token một cách an toàn
+      const token = response.data?.token;
       if (token) {
         localStorage.setItem("token", token);
       } else {
-        // Trường hợp này vẫn ổn; đăng ký thành công nhưng có thể API không trả token ngay.
-        // Người dùng sẽ được chuyển hướng đến trang đăng nhập.
         console.warn(
           "Đăng ký thành công, nhưng không có token trong phản hồi."
         );
@@ -130,14 +128,11 @@ function Register() {
         err.response.data &&
         typeof err.response.data.message === "string"
       ) {
-        errorMessage = err.response.data.message; // Sử dụng thông báo lỗi từ backend nếu có
+        errorMessage = err.response.data.message;
       } else if (err.response && err.response.status) {
-        // Xử lý các mã lỗi HTTP cụ thể nếu cần
         if (err.response.status === 409) {
-          // Ví dụ: Xung đột (email/số điện thoại đã tồn tại)
           errorMessage = "Email hoặc số điện thoại đã được sử dụng.";
         } else if (err.response.status === 400) {
-          // Ví dụ: Bad Request (lỗi validation)
           errorMessage = "Thông tin không hợp lệ. Vui lòng kiểm tra lại.";
         }
       }

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
 import HomePage from "../pages/HomePage";
-import Login from "../components/authentication/Login";
+import Login from "../components/authentication/Login/Login";
 import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
 import CoursesPage from "../pages/CoursesPage";
@@ -12,7 +12,6 @@ import CourseDetail from "../pages/CourseDetail";
 import LearningCoursePage from "../pages/LearningCoursePage";
 import EventPage from "../pages/EventPage";
 import EventRegistration from "../components/Event/EventRegistration";
-
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
