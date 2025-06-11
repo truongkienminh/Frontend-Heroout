@@ -1,0 +1,147 @@
+/* Background and centering */
+.login-page {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;     /* Center vertically */
+  min-height: 100vh;       /* Full viewport height */
+  background-color: #0D9488; /* Example green background color */
+  padding: 20px;           /* Add some padding in case content is larger than viewport */
+  box-sizing: border-box;  /* Include padding in element's total width and height */
+}
+
+/* White container */
+.login-container {
+  background-color: white;
+  border-radius: 8px; /* Rounded corners */
+  padding: 40px;      /* Inner padding */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  /* text-align: center; /* Có thể bỏ hoặc giữ, flexbox trên header sẽ đảm bảo centering */
+  width: 100%;          /* Allow container to take full width up to max */
+  max-width: 400px;     /* Limit max width as in the image */
+}
+
+/* Header styles - UPDATED */
+.login-header {
+  margin-bottom: 30px; /* Space below header */
+  display: flex;         /* Kích hoạt Flexbox */
+  flex-direction: column; /* Sắp xếp các item theo cột (logo, title, subtitle) */
+  align-items: center;   /* Canh giữa các item theo chiều ngang */
+}
+
+/* Logo style */
+.login-logo {
+  width: 60px; /* Size of the logo */
+  height: auto; /* Maintain aspect ratio */
+  margin-bottom: 15px; /* Space below logo */
+}
+
+/* Title style */
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px; /* Space below title */
+}
+
+/* Subtitle style */
+.login-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 0; /* No bottom margin */
+}
+
+/* Form container - optional, mostly for structure */
+.login-form-wrap {
+  width: 100%;
+}
+
+/* Ant Design Form Item adjustments */
+/* Style the label */
+.ant-form-item-label > label {
+    font-size: 14px !important; /* Adjust label font size */
+    color: #333 !important;     /* Adjust label color */
+    height: auto !important;   /* Allow label height to adjust */
+    line-height: normal !important; /* Reset line height */
+    margin-bottom: 8px; /* Space between label and input */
+    /* Thêm text-align left cho label nếu cần đảm bảo nó không bị center theo parent */
+    /* text-align: left !important; */
+    width: 100%; /* Đảm bảo label chiếm đủ rộng để text-align có hiệu quả */
+}
+
+/* Style the input fields */
+.ant-input-affix-wrapper,
+.ant-input {
+    border-radius: 4px !important; /* Slightly rounded input corners */
+    padding: 10px 12px !important; /* Adjust input padding */
+}
+
+/* Ensure inputs and other block elements within the form are full width if needed */
+.ant-form-item {
+    text-align: left !important; /* Align form items content (like inputs) to the left */
+}
+
+
+/* Form Actions (Forgot password) */
+.form-actions {
+  display: flex; /* Use flexbox */
+  justify-content: flex-end; /* Push content to the right */
+  margin-bottom: 20px; /* Space below actions */
+  width: 100%; /* Ensure form-actions takes full width to position link correctly */
+}
+
+.forgot-password-link {
+  color: #0D9488; /* Green color for link */
+  font-size: 13px;
+  text-decoration: none; /* No underline by default */
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Submit button */
+.login-button.ant-btn { /* Target the specific button class */
+  width: 100%;          /* Full width */
+  height: 40px;         /* Button height */
+  background-color: #0D9488; /* Green background */
+  border-color: #0D9488;     /* Green border */
+  color: white;         /* White text color */
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;   /* Rounded corners */
+  margin-top: 10px;     /* Space above the button */
+}
+
+.login-button.ant-btn:hover,
+.login-button.ant-btn:focus {
+  background-color: #0b7f74; /* Darker green on hover/focus */
+  border-color: #0b7f74;
+  color: white;
+}
+
+/* Register link container */
+.register-link-container {
+    text-align: center; /* Center the text */
+    margin-top: 20px;   /* Space above the link */
+    font-size: 14px;
+    color: #666;        /* Default text color */
+}
+
+.register-link {
+    color: #666; /* Default link color (Chưa có tài khoản?) */
+    text-decoration: none;
+}
+
+.register-link-highlight {
+    color: #0D9488; /* Green color for "Đăng ký ngay" */
+    font-weight: bold;
+}
+
+.register-link:hover .register-link-highlight {
+    text-decoration: underline; /* Underline only the highlighted part on hover */
+}
+
+/* Adjust margin for the submit button Form.Item */
+.submit-button-item.ant-form-item {
+    margin-bottom: 0 !important; /* Remove default bottom margin if needed */
+}
