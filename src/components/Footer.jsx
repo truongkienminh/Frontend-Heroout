@@ -37,7 +37,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/events"
+                  to="/event"
                   className="hover:text-white transition-colors"
                 >
                   Sự kiện
@@ -60,20 +60,20 @@ const Footer = () => {
             <ul className="space-y-2 text-gray-400">
               <li>
                 <Link
-                  to="/contact"
+                  to="/"
                   className="hover:text-white transition-colors"
                 >
                   Liên hệ
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="hover:text-white transition-colors">
+                <Link to="/" className="hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/policy"
+                  to="/"
                   className="hover:text-white transition-colors"
                 >
                   Chính sách

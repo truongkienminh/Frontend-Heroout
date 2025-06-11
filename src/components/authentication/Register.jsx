@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Form, Input, Checkbox, Typography, message } from "antd"; // Added message
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../services/axios";
 import herooutLogo from "../../assets/heroout.jpg"; // Assuming this path is correct
 
@@ -148,7 +149,9 @@ function Register() {
   return (
     <div style={styles.pageContainer}>
       <div style={styles.formCard}>
-        <img src={herooutLogo} alt="HEROOUT Logo" style={styles.logoImage} />
+        <Link to="/">
+          <img src={herooutLogo} alt="HEROOUT Logo" style={styles.logoImage} />
+        </Link>
 
         <Typography.Title level={3} style={styles.title}>
           Đăng ký tài khoản

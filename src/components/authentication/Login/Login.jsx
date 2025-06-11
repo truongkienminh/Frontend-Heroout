@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button, Form, Input } from "antd";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 import api from "../../../services/axios";
 import { toast } from "react-toastify";
 import "./login.css";
@@ -36,7 +36,9 @@ function Login() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
-          <img src={logo} alt="Heroout Logo" className="login-logo" />
+          <Link to="/">
+            <img src={logo} alt="Heroout Logo" className="login-logo" />
+          </Link>
           <h2 className="login-title">Đăng nhập</h2>
           <p className="login-subtitle">Chào mừng bạn quay trở lại</p>
         </div>
