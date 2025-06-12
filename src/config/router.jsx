@@ -13,6 +13,7 @@ import LearningCoursePage from "../pages/LearningCoursePage";
 import EventPage from "../pages/EventPage";
 import EventRegistration from "../components/Event/EventRegistration";
 import ConsultationPage from "../pages/ConsultationPage";
+import ConsultantDetailPage from "../pages/ConsultantDetailPage";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -78,6 +79,10 @@ export const router = createBrowserRouter([
       {
         path: "/consultation",
         element: <ConsultationPage />,
+      },
+      {
+        path: "/consultants/:id",
+        element: <ConsultantDetailPage />,
       },
     ],
   },
