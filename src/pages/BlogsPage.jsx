@@ -218,7 +218,7 @@ const BlogsPage = () => {
                 {Math.min(
                   indexOfLastPost,
                   filteredPosts.filter((post) => !post.featured).length
-                )}
+                )} {" "}
                 trong số {filteredPosts.filter((post) => !post.featured).length}{" "}
                 bài viết
               </span>

@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Breadcrumb from "../components/Breadcrumb";
 import { CheckCircle, Mail, Building } from "lucide-react";
+import GoogleMeetInfo from "../components/GoogleMeetInfo";
 
 const ConsultantDetailPage = () => {
   const { id } = useParams();
@@ -175,9 +176,12 @@ const ConsultantDetailPage = () => {
             </div>
 
             <div className="flex flex-col gap-3">
-              <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
-                Đặt lịch tư vấn
-              </button>
+              <Link
+                to={`/booking/${consultant.id}`}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors text-center block"
+              >
+                Đặt lịch tư vấn online
+              </Link>
             </div>
           </div>
         </div>
@@ -288,6 +292,10 @@ const ConsultantDetailPage = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Lịch hẹn khả dụng
                 </h3>
+                {/* GoogleMeetInfo component */}
+                <div className="mb-6">
+                  <GoogleMeetInfo />
+                </div>
               </div>
             )}
 

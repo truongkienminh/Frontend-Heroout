@@ -55,89 +55,56 @@ const ConsultationPage = () => {
               Hình thức tư vấn
             </h2>
             <p className="text-lg text-gray-600">
-              Chọn hình thức tư vấn phù hợp với nhu cầu của bạn
+              Tư vấn trực tuyến qua Google Meet - tiện lợi và hiệu quả
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             {/* Online Consultation */}
-            <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Video className="w-8 h-8 text-blue-600" />
+            <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col md:flex-row items-center">
+              <div className="md:w-1/3 mb-6 md:mb-0 text-center">
+                <div className="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center mx-auto">
+                  <Video className="w-10 h-10 text-blue-600" />
                 </div>
+              </div>
+
+              <div className="md:w-2/3 md:pl-8">
                 <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  Tư vấn trực tuyến
+                  Tư vấn trực tuyến qua Google Meet
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Tư vấn qua video hoặc cuộc gọi, tiện lợi và bảo mật
+                  Kết nối với chuyên gia tư vấn từ bất kỳ đâu thông qua Google
+                  Meet. Tiện lợi, bảo mật và hiệu quả.
                 </p>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                    </div>
+                    <span>Linh hoạt thời gian và địa điểm</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                    </div>
+                    <span>Bảo mật thông tin tuyệt đối</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                    </div>
+                    <span>Kết nối trực tuyến với các chuyên gia hàng đầu</span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/booking"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors inline-block"
+                >
+                  Đặt lịch ngay
+                </Link>
               </div>
-
-              <div className="flex-1 space-y-4 mb-8">
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Linh hoạt thời gian</span>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Bảo mật thông tin</span>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Chi tiết buổi tư vấn</span>
-                </div>
-              </div>
-
-              <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors">
-                Đặt lịch ngay
-              </button>
-            </div>
-
-            {/* In-person Consultation */}
-            <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-orange-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  Tư vấn trực tiếp
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Gặp mặt trực tiếp tại văn phòng hoặc địa điểm thuận tiện
-                </p>
-              </div>
-
-              <div className="flex-1 space-y-4 mb-8">
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Tương tác trực tiếp</span>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Đánh giá toàn diện</span>
-                </div>
-                <div className="flex items-center text-gray-700">
-                  <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
-                  </div>
-                  <span>Hỗ trợ gia đình</span>
-                </div>
-              </div>
-
-              <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors">
-                Đặt lịch hẹn
-              </button>
             </div>
           </div>
         </div>
