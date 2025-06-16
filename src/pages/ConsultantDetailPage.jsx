@@ -10,6 +10,8 @@ const ConsultantDetailPage = () => {
   const [consultant, setConsultant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [slots, setSlots] = useState([]);
 
   // Fetch consultant from API
   useEffect(() => {
@@ -45,9 +47,35 @@ const ConsultantDetailPage = () => {
         setLoading(false);
       }
     };
+    const fetchScheduleData = async (consultantId) => {
+      try {
+        // Fetch schedules
+        const schedulesResponse = await fetch(
+          "https://684db8e765ed08713916f5be.mockapi.io/schedule"
+        );
+        if (schedulesResponse.ok) {
+          const allSchedules = await schedulesResponse.json();
+          const consultantSchedules = allSchedules.filter(
+            (s) => s.consultant_id === Number.parseInt(consultantId)
+          );
+          setSchedules(consultantSchedules);
+        }
+        // Fetch slots
+        const slotsResponse = await fetch(
+          "https://684db8e765ed08713916f5be.mockapi.io/slot"
+        );
+        if (slotsResponse.ok) {
+          const allSlots = await slotsResponse.json();
+          setSlots(allSlots);
+        }
+      } catch (error) {
+        console.error("Error fetching schedule data:", error);
+      }
+    };
 
     if (id) {
       fetchConsultant();
+      fetchScheduleData(id);
     }
   }, [id]);
 
@@ -102,7 +130,7 @@ const ConsultantDetailPage = () => {
   const tabs = [
     { id: "overview", label: "Tổng quan" },
     { id: "schedule", label: "Lịch hẹn" },
-    { id: "reviews", label: "Đánh giá" },
+    // { id: "reviews", label: "Đánh giá" },
   ];
 
   return (
@@ -292,21 +320,127 @@ const ConsultantDetailPage = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Lịch hẹn khả dụng
                 </h3>
+
                 {/* GoogleMeetInfo component */}
                 <div className="mb-6">
                   <GoogleMeetInfo />
+                </div>
+
+                {/* Schedule Information */}
+                {schedules.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                      Thông tin lịch làm việc
+                    </h4>
+                    {schedules.map((schedule) => (
+                      <div
+                        key={schedule.id}
+                        className="bg-gray-50 rounded-lg p-4 mb-4"
+                      >
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Thời gian:</span>
+                            <p className="font-medium">
+                              {new Date(schedule.start_date).toLocaleDateString(
+                                "vi-VN"
+                              )}{" "}
+                              -{" "}
+                              {new Date(schedule.end_date).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Lặp lại:</span>
+                            <p className="font-medium">
+                              {schedule.recurrence === "weekly"
+                                ? "Hàng tuần"
+                                : schedule.recurrence}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Available Slots */}
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                    Khung giờ khả dụng
+                  </h4>
+                  {slots.filter(
+                    (slot) =>
+                      schedules.some((s) => s.id === slot.schedule_id) &&
+                      !slot.is_booked
+                  ).length > 0 ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {slots
+                        .filter(
+                          (slot) =>
+                            schedules.some((s) => s.id === slot.schedule_id) &&
+                            !slot.is_booked
+                        )
+                        .slice(0, 6) // Show first 6 available slots
+                        .map((slot) => (
+                          <div
+                            key={slot.id}
+                            className="border border-gray-200 rounded-lg p-3"
+                          >
+                            <div className="text-sm">
+                              <p className="font-medium text-gray-800">
+                                {new Date(slot.slot_start).toLocaleDateString(
+                                  "vi-VN"
+                                )}
+                              </p>
+                              <p className="text-gray-600">
+                                {new Date(slot.slot_start).toLocaleTimeString(
+                                  "vi-VN",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}{" "}
+                                -{" "}
+                                {new Date(slot.slot_end).toLocaleTimeString(
+                                  "vi-VN",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">
+                      Hiện tại không có khung giờ nào khả dụng.
+                    </p>
+                  )}
+                </div>
+
+                {/* Book Appointment Button */}
+                <div className="mt-6">
+                  <Link
+                    to={`/booking/${consultant.id}`}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-block"
+                  >
+                    Đặt lịch tư vấn
+                  </Link>
                 </div>
               </div>
             )}
 
             {/* Reviews Tab */}
-            {activeTab === "reviews" && (
+            {/* {activeTab === "reviews" && (
               <div>
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Đánh giá từ khách hàng
                 </h3>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>
