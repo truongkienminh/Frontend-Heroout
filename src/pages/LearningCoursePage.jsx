@@ -5,10 +5,9 @@ import LessonCourse from '../components/course/LessionCourse';
 
 const LearningCoursePage = () => {
   return (
-    <LearningCourseLayout>
-      <TestCourse />
-      <LessonCourse />
-    </LearningCourseLayout>
+    <LearningCourseLayout/>
+
+    
   );
 };
 

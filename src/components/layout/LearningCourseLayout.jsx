@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Menu, ArrowLeft, Loader2, Play, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import LessonCourse from "../course/LessionCourse";
+import TestCourse from "../course/TestCourse";
 
-const LearningCourseLayout = ({ children }) => {
+const LearningCourseLayout = () => {
   const navigate = useNavigate();
 
   const [expandedSections, setExpandedSections] = useState({});
@@ -15,9 +17,7 @@ const LearningCourseLayout = ({ children }) => {
   const fetchCourseSections = async () => {
     try {
       const response = await fetch('https://684c6fd0ed2578be881ecef7.mockapi.io/chapter');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -28,24 +28,18 @@ const LearningCourseLayout = ({ children }) => {
 
   const updateLessonProgress = async (lessonId, completed) => {
     try {
-      // Tìm lesson và section chứa lesson đó
-      let targetSectionId = null;
       let targetLesson = null;
-      
+
       for (const section of courseSections) {
         const lesson = section.lessons?.find(l => l.id === lessonId);
         if (lesson) {
-          targetSectionId = section.id;
           targetLesson = lesson;
           break;
         }
       }
 
-      if (!targetSectionId || !targetLesson) {
-        throw new Error('Không tìm thấy bài học');
-      }
+      if (!targetLesson) throw new Error('Không tìm thấy bài học');
 
-      // Cập nhật trạng thái completed trong state local trước
       setCourseSections(prev =>
         prev.map(section => ({
           ...section,
@@ -54,20 +48,8 @@ const LearningCourseLayout = ({ children }) => {
           ) || []
         }))
       );
-
-      // Có thể thêm API call để cập nhật trên server nếu cần
-      // const response = await fetch(`https://684c6fd0ed2578be881ecef7.mockapi.io/chapter/${targetSectionId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     ...section,
-      //     lessons: updatedLessons
-      //   }),
-      // });
-
     } catch (error) {
       console.error('Error updating lesson progress:', error);
-      // Rollback nếu có lỗi
       setCourseSections(prev =>
         prev.map(section => ({
           ...section,
@@ -83,28 +65,23 @@ const LearningCourseLayout = ({ children }) => {
     const loadCourseData = async () => {
       setLoading(true);
       setError(null);
-      
       try {
         const data = await fetchCourseSections();
-        
-        if (!Array.isArray(data)) {
-          throw new Error('Dữ liệu không đúng định dạng');
-        }
+
+        if (!Array.isArray(data)) throw new Error('Dữ liệu không đúng định dạng');
 
         setCourseSections(data);
 
-        // Tự động mở section đầu tiên và chọn lesson đầu tiên
         if (data.length > 0) {
           const firstSection = data[0];
           setExpandedSections({ [firstSection.id]: true });
-          
+
           if (firstSection.lessons && firstSection.lessons.length > 0) {
             setActiveLesson(firstSection.lessons[0].id);
           }
         }
       } catch (err) {
         setError(err.message);
-        console.error('Error loading course data:', err);
       } finally {
         setLoading(false);
       }
@@ -117,47 +94,46 @@ const LearningCourseLayout = ({ children }) => {
     setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(prev => !prev);
-  };
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const handleLessonClick = (lesson) => {
     setActiveLesson(lesson.id);
-    if (!lesson.completed) {
-      updateLessonProgress(lesson.id, true);
-    }
+    if (!lesson.completed) updateLessonProgress(lesson.id, true);
   };
 
   const getSectionStatusColor = (status) => {
     switch (status) {
       case 'active': return 'bg-blue-500';
       case 'completed': return 'bg-green-500';
-      case 'locked':
       default: return 'bg-gray-300';
     }
   };
 
   const getLessonIcon = (type) => {
     switch (type) {
-      case 'quiz':
-        return <FileText className="w-3 h-3 text-orange-600" />;
-      case 'video':
-      case 'reading':
-      case 'interactive':
-      case 'case_study':
-      default:
-        return <Play className="w-3 h-3 text-blue-600 fill-blue-600" />;
+      case 'quiz': return <FileText className="w-3 h-3 text-orange-600" />;
+      default: return <Play className="w-3 h-3 text-blue-600 fill-blue-600" />;
     }
   };
 
   const getLessonIconBackground = (type) => {
-    switch (type) {
-      case 'quiz':
-        return 'bg-orange-100';
-      default:
-        return 'bg-blue-100';
-    }
+    return type === 'quiz' ? 'bg-orange-100' : 'bg-blue-100';
   };
+
+  const getActiveLessonData = () => {
+    for (const section of courseSections) {
+      const lesson = section.lessons?.find(l => l.id === activeLesson);
+      if (lesson) return lesson;
+    }
+    return null;
+  };
+
+  const completedLessons = courseSections.reduce((acc, section) =>
+    acc + (section.lessons?.filter(l => l.completed).length || 0), 0
+  );
+  const totalLessons = courseSections.reduce((acc, section) =>
+    acc + (section.lessons?.length || 0), 0
+  );
 
   if (loading) {
     return (
@@ -188,15 +164,6 @@ const LearningCourseLayout = ({ children }) => {
     );
   }
 
-  // Tính toán số bài học đã hoàn thành và tổng số bài học
-  const completedLessons = courseSections.reduce((acc, section) => {
-    return acc + (section.lessons?.filter(l => l.completed).length || 0);
-  }, 0);
-  
-  const totalLessons = courseSections.reduce((acc, section) => {
-    return acc + (section.lessons?.length || 0);
-  }, 0);
-
   return (
     <div className="flex h-screen bg-gray-50">
       {sidebarOpen ? (
@@ -218,7 +185,7 @@ const LearningCourseLayout = ({ children }) => {
             </button>
           </div>
 
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-4 overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Nội dung khóa học</h2>
             {courseSections.map((section) => (
               <div key={section.id} className="mb-4">
@@ -264,7 +231,6 @@ const LearningCourseLayout = ({ children }) => {
                             <p className="text-xs text-gray-500">
                               {lesson.duration}
                               {lesson.questions && ` • ${lesson.questions} câu hỏi`}
-                              
                             </p>
                           </div>
                         </div>
@@ -278,15 +244,15 @@ const LearningCourseLayout = ({ children }) => {
         </div>
       ) : (
         <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-4 space-y-6">
-          <button 
-            onClick={toggleSidebar} 
-            className="p-1 hover:bg-gray-100 rounded transition-colors" 
+          <button
+            onClick={toggleSidebar}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
             aria-label="Mở sidebar"
           >
             <Menu className="w-6 h-6 text-gray-600" />
           </button>
-          <button 
-            onClick={() => navigate('/')} 
+          <button
+            onClick={() => navigate('/')}
             className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-gray-700" />
@@ -314,7 +280,18 @@ const LearningCourseLayout = ({ children }) => {
           </div>
         </div>
 
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 p-6 overflow-y-auto">
+          {(() => {
+            const lesson = getActiveLessonData();
+            if (!lesson) return <p className="text-gray-600">Không tìm thấy bài học.</p>;
+
+            if (lesson.type === 'quiz') {
+              return <TestCourse lesson={lesson} />;
+            } else {
+              return <LessonCourse lesson={lesson} />;
+            }
+          })()}
+        </div>
       </div>
     </div>
   );
