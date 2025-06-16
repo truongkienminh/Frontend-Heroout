@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Play,
-  Pause,
-  Volume2,
-  Settings,
-  Maximize,
+  PlayCircle,
+  Clock,
+  Video,
   Edit3,
   Bookmark,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
+  Play,
 } from 'lucide-react';
+
 
 const LessonCourse = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -117,51 +117,91 @@ const LessonCourse = () => {
   if (!lessonData) return <div className="p-4">Không có dữ liệu</div>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-2">{lessonData.title}</h1>
-      <p className="text-gray-600 mb-4">{lessonData.description}</p>
-      <div className="mb-4 flex items-center gap-4">
+    <div className="p-6 max-w-5xl mx-auto">
+      {/* VIDEO BOX */}
+      <div className="relative w-full bg-black rounded-xl mb-4 overflow-hidden shadow-lg" style={{ height: "440px" }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-black/50">
+          <PlayCircle className="w-20 h-20 text-white hover:scale-110 transition-all cursor-pointer" />
+        </div>
+      </div>
+
+      {/* TIÊU ĐỀ + GHI CHÚ */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-2xl font-bold">{lessonData.title}</h1>
+          <div className="flex items-center text-sm text-gray-500 mt-1 space-x-4">
+            <span>🕒 {lessonData.duration}</span>
+            <span>🎥 Video bài giảng</span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleNoteClick}
+            className="flex items-center text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-100"
+          >
+            <Edit3 className="w-4 h-4 mr-1" /> Ghi chú
+          </button>
+          <button onClick={() => toggleBookmark(lessonData.id)}>
+            <Bookmark
+              className={`w-5 h-5 ${lessonData.isBookmarked ? "text-yellow-500" : "text-gray-400"
+                }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* MÔ TẢ */}
+      <p className="text-gray-600 mb-6">{lessonData.description}</p>
+
+      {/* THANH TIẾN TRÌNH */}
+      <div className="mb-6 flex items-center gap-4">
         <button onClick={() => setIsPlaying(!isPlaying)}>
           {isPlaying ? <Pause /> : <Play />}
         </button>
         <span>
           {formatTime(currentTime)} / {formatTime(duration)}
         </span>
-        <div className="w-full bg-gray-200 h-2 rounded overflow-hidden">
+        <div className="flex-1 bg-gray-200 h-2 rounded overflow-hidden">
           <div
             className="bg-green-500 h-full"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           ></div>
         </div>
       </div>
-      <button onClick={handleNoteClick} className="mr-4">📝 Ghi chú</button>
-      <button onClick={() => toggleBookmark(lessonData.id)}>
-        <Bookmark className={lessonData.isBookmarked ? 'text-yellow-500' : ''} />
-      </button>
+
+      {/* MỤC TIÊU */}
       <div className="mt-4">
-        <h2 className="text-lg font-semibold">Mục tiêu</h2>
-        <ul className="list-disc ml-6 mt-2">
+        <h2 className="text-lg font-semibold mb-2">Mục tiêu bài học</h2>
+        <ul className="list-disc ml-6 space-y-1 text-gray-700">
           {lessonData.objectives.map((obj, i) => (
             <li key={i}>{obj}</li>
           ))}
         </ul>
       </div>
+
+      {/* NÚT ĐIỀU HƯỚNG */}
       <div className="mt-6 flex justify-between">
         <button
           onClick={handlePreviousLesson}
           disabled={lessons.findIndex((l) => l.id === lessonData.id) === 0}
+          className="px-4 py-2 bg-gray-100 rounded text-gray-700 flex items-center gap-1 disabled:opacity-50"
         >
-          <ChevronLeft /> Bài trước
+          <ChevronLeft size={18} /> Bài trước
         </button>
         <button
           onClick={handleNextLesson}
-          disabled={lessons.findIndex((l) => l.id === lessonData.id) === lessons.length - 1}
+          disabled={
+            lessons.findIndex((l) => l.id === lessonData.id) ===
+            lessons.length - 1
+          }
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1 disabled:opacity-50"
         >
-          Bài tiếp <ChevronRight />
+          Bài tiếp <ChevronRight size={18} />
         </button>
       </div>
     </div>
   );
 };
+
 
 export default LessonCourse;
