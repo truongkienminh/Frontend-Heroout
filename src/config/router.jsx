@@ -14,6 +14,7 @@ import EventPage from "../pages/EventPage";
 import EventRegistration from "../components/Event/EventRegistration";
 import ConsultationPage from "../pages/ConsultationPage";
 import ConsultantDetailPage from "../pages/ConsultantDetailPage";
+import BookingPage from "../pages/BookingPage";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -83,6 +84,14 @@ export const router = createBrowserRouter([
       {
         path: "/consultants/:id",
         element: <ConsultantDetailPage />,
+      },
+      {
+        path: "/booking/",
+        element: <BookingPage />,
+      },
+      {
+        path: "/booking/:consultantId",
+        element: <BookingPage />,
       },
     ],
   },
