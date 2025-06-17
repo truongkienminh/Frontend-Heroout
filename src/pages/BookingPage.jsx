@@ -14,6 +14,19 @@ import {
 } from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
 
+const getCurrentUser = () => {
+  // Giả lập user đã đăng nhập
+  return {
+    id: 1,
+    name: "Nguyễn Văn An",
+    email: "nguyenvanan@email.com",
+    phone: "0123456789",
+    date_of_birth: "1990-05-15",
+    address: "123 Đường ABC, Quận 1, TP.HCM",
+    profile_pic: null,
+  };
+};
+
 // Fetch schedules and slots from API
 const fetchSchedulesAndSlots = async (consultantId) => {
   try {
@@ -63,6 +76,9 @@ const BookingPage = () => {
   const { consultantId } = useParams();
   const navigate = useNavigate();
 
+  // Get current user info
+  const currentUser = getCurrentUser();
+
   // State for all steps
   const [currentStep, setCurrentStep] = useState(consultantId ? 2 : 1);
   const [consultants, setConsultants] = useState([]);
@@ -77,14 +93,14 @@ const BookingPage = () => {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // Form data
+  // Form data 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    date_of_birth: "",
-    notes: "",
+    name: currentUser?.name || "",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
+    address: currentUser?.address || "",
+    date_of_birth: currentUser?.date_of_birth || "",
+    notes: "", 
   });
 
   // Fetch consultants and selected consultant if consultantId is provided
@@ -210,10 +226,13 @@ const BookingPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // Only allow editing of notes field
+    if (name === "notes") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleNextStep = () => {
@@ -225,17 +244,6 @@ const BookingPage = () => {
     if (currentStep === 2 && !selectedSlot) {
       alert("Vui lòng chọn khung giờ tư vấn");
       return;
-    }
-
-    if (currentStep === 3) {
-      // Validate form
-      const requiredFields = ["name", "email", "phone"];
-      const missingFields = requiredFields.filter((field) => !formData[field]);
-
-      if (missingFields.length > 0) {
-        alert("Vui lòng điền đầy đủ thông tin bắt buộc");
-        return;
-      }
     }
 
     setCurrentStep((prev) => prev + 1);
@@ -265,10 +273,11 @@ const BookingPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            consultant_id: selectedConsultant.id,
+            member_id: currentUser.id,
             slot_id: selectedSlot.id,
             scheduled_at: selectedSlot.slot_start,
             status: "Booked",
+            note: formData.notes || null, 
           }),
         }
       );
@@ -383,6 +392,12 @@ const BookingPage = () => {
                   <span className="font-medium">Link Google Meet:</span> Sẽ được
                   gửi qua email trước buổi tư vấn 15 phút
                 </p>
+                {formData.notes && (
+                  <p>
+                    <span className="font-medium">Ghi chú:</span>{" "}
+                    {formData.notes}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -446,8 +461,8 @@ const BookingPage = () => {
             {[
               { step: 1, label: "Chọn chuyên gia" },
               { step: 2, label: "Chọn thời gian" },
-              { step: 3, label: "Thông tin cá nhân" },
-              { step: 4, label: "Xác nhận" },
+              { step: 3, label: "Xác nhận thông tin" },
+              { step: 4, label: "Hoàn tất" },
             ].map((item, index, array) => (
               <div key={item.step} className="flex items-center">
                 <div
@@ -831,87 +846,82 @@ const BookingPage = () => {
                   {currentStep === 3 && (
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Thông tin cá nhân
+                        Xác nhận thông tin
                       </h2>
 
                       <div className="space-y-6">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Họ và tên <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                              placeholder="Nhập họ và tên"
-                            />
-                          </div>
+                        {/* Auto-filled personal information */}
+                        <div className="bg-gray-50 rounded-lg p-6">
+                          <h3 className="font-semibold text-gray-800 mb-4">
+                            Thông tin cá nhân
+                          </h3>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Họ và tên
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.name}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                              />
+                            </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Email <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="email"
-                              name="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                              placeholder="Nhập email"
-                            />
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Email
+                              </label>
+                              <input
+                                type="email"
+                                value={formData.email}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Số điện thoại
+                              </label>
+                              <input
+                                type="tel"
+                                value={formData.phone}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Ngày sinh
+                              </label>
+                              <input
+                                type="date"
+                                value={formData.date_of_birth}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Địa chỉ
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.address}
+                                disabled
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Số điện thoại{" "}
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                              placeholder="Nhập số điện thoại"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Ngày sinh
-                            </label>
-                            <input
-                              type="date"
-                              name="date_of_birth"
-                              value={formData.date_of_birth}
-                              onChange={handleInputChange}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            />
-                          </div>
-                        </div>
-
+                        {/* Editable notes field */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Địa chỉ
-                          </label>
-                          <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            placeholder="Nhập địa chỉ"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Ghi chú
+                            Ghi chú cho chuyên gia
                           </label>
                           <textarea
                             name="notes"
@@ -921,6 +931,20 @@ const BookingPage = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             placeholder="Mô tả vấn đề cần tư vấn hoặc ghi chú khác..."
                           />
+                        </div>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <AlertCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
+                            <div className="text-sm text-blue-800">
+                              <p className="font-medium mb-1">Lưu ý:</p>
+                              <p>
+                                Thông tin cá nhân được lấy từ tài khoản của bạn.
+                                Nếu cần cập nhật, vui lòng chỉnh sửa trong phần
+                                hồ sơ cá nhân.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -945,7 +969,7 @@ const BookingPage = () => {
                   {currentStep === 4 && (
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Xác nhận thông tin
+                        Xác nhận đặt lịch
                       </h2>
 
                       <div className="space-y-6">
@@ -978,7 +1002,7 @@ const BookingPage = () => {
                               <span className="text-gray-600">Giờ:</span>
                               <p className="font-medium">{selectedSlot.time}</p>
                             </div>
-                            <div>
+                            <div className="md:col-span-2">
                               <span className="text-gray-600">Hình thức:</span>
                               <p className="font-medium">
                                 Tư vấn trực tuyến qua Google Meet
@@ -1006,26 +1030,18 @@ const BookingPage = () => {
                               </span>
                               <p className="font-medium">{formData.phone}</p>
                             </div>
-                            {formData.date_of_birth && (
-                              <div>
-                                <span className="text-gray-600">
-                                  Ngày sinh:
-                                </span>
-                                <p className="font-medium">
-                                  {new Date(
-                                    formData.date_of_birth
-                                  ).toLocaleDateString("vi-VN")}
-                                </p>
-                              </div>
-                            )}
-                            {formData.address && (
-                              <div className="md:col-span-2">
-                                <span className="text-gray-600">Địa chỉ:</span>
-                                <p className="font-medium">
-                                  {formData.address}
-                                </p>
-                              </div>
-                            )}
+                            <div>
+                              <span className="text-gray-600">Ngày sinh:</span>
+                              <p className="font-medium">
+                                {new Date(
+                                  formData.date_of_birth
+                                ).toLocaleDateString("vi-VN")}
+                              </p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <span className="text-gray-600">Địa chỉ:</span>
+                              <p className="font-medium">{formData.address}</p>
+                            </div>
                             {formData.notes && (
                               <div className="md:col-span-2">
                                 <span className="text-gray-600">Ghi chú:</span>
