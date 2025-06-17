@@ -5,21 +5,29 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import api from "../../../services/axios";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+
+import { login } from "../../../store/redux/features/counterSlice";
 import "./login.css";
 
 import logo from "../../../assets/heroout.jpg";
 
 function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (values) => {
     try {
       const response = await api.post("login", values);
 
-      const { /* role, */ token } = response.data;
+      toast.success("Success");
+      dispatch(login(response.data));
+      const { role, token } = response.data;
       localStorage.setItem("token", token);
 
-      navigate("/");
+      if (role === "MEMBER") {
+        navigate("/");
+      }
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
