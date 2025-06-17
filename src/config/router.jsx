@@ -15,6 +15,11 @@ import EventRegistration from "../components/Event/EventRegistration";
 import ConsultationPage from "../pages/ConsultationPage";
 import ConsultantDetailPage from "../pages/ConsultantDetailPage";
 import BookingPage from "../pages/BookingPage";
+import StaffLayout from "../components/layout/StaffLayout";
+import StaffDashboard from "../components/staff/StaffDashBoard";
+import StaffCourse from "../components/staff/StaffCourse";
+import StaffMember from "../components/staff/StaffMember";
+import StaffSurvey from "../components/staff/StaffSurvey";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -110,5 +115,31 @@ export const router = createBrowserRouter([
   {
     path: "/forgotpassword",
     element: <ForgotPassword />,
+  },
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      {
+        path: "",
+        element: <Navigate to="dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <StaffDashboard />,
+      },
+      {
+        path: "members",
+        element: <StaffMember />,
+      },
+      {
+        path: "courses",
+        element: <StaffCourse />,
+      },
+      {
+        path: "surveys",
+        element: <StaffSurvey />,
+      },
+    ],
   },
 ]);
