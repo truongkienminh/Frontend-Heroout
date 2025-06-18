@@ -61,7 +61,7 @@ const StaffCourse = () => {
   );
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-gradient-to-r from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Quản lý khóa học</h1>

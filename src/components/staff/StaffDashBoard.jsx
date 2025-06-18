@@ -39,7 +39,7 @@ const StaffDashboard = () => {
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-gradient-to-r from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Quản lý</h1>
