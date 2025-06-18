@@ -1,6 +1,8 @@
+// src/pages/EventPage.js
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"; // Ensure Link is imported
 
+// ... (other imports and helper functions remain the same)
 import {
   Search,
   Settings,
@@ -52,32 +54,42 @@ const EventPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("useEffect is running.");
-
+    // console.log("useEffect is running."); // Remove or comment out verbose logs
     const fetchEvents = async () => {
       try {
         const response = await api.get("/events");
-
-        console.log("API Response Data:", response.data);
+        // console.log("API Response Data:", response.data); // Remove or comment out verbose logs
 
         if (Array.isArray(response.data)) {
           setEvents(response.data);
         } else {
           console.error("API response data is not an array:", response.data);
-          setError(new Error("API returned data in unexpected format."));
+          setError(new Error("API trả về dữ liệu không đúng định dạng.")); // User-friendly error message
         }
-
         setIsLoading(false);
       } catch (err) {
         console.error("Error fetching events:", err);
-        setError(err);
+        if (err.response) {
+          setError(
+            new Error(`Lỗi khi tải danh sách sự kiện: ${err.response.status}`)
+          );
+        } else if (err.request) {
+          setError(
+            new Error(
+              "Không nhận được phản hồi từ máy chủ khi tải danh sách sự kiện."
+            )
+          );
+        } else {
+          setError(new Error(`Lỗi khi tải danh sách sự kiện: ${err.message}`));
+        }
+        setError(err); // Keep original error for console if needed
         setIsLoading(false);
       }
     };
 
     fetchEvents();
-    console.log("fetchEvents function called.");
-  }, []);
+    // console.log("fetchEvents function called."); // Remove or comment out verbose logs
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 min-h-screen">
@@ -118,38 +130,35 @@ const EventPage = () => {
 
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Tất cả Sự kiện</h3>
-
-        {console.log("Rendering based on:", {
-          isLoading,
-          error,
-          eventsLength: events.length,
-        })}
-
+        {/* console.log("Rendering based on:", { isLoading, error, eventsLength: events.length, }); */}{" "}
+        {/* Remove or comment out verbose logs */}
         {isLoading && (
-          <div className="text-center text-gray-600">Đang tải sự kiện...</div>
-        )}
-
-        {error && (
-          <div className="text-center text-red-600">
-            Lỗi khi tải sự kiện: {error.message || "Không xác định"}
+          <div className="text-center text-gray-600 text-lg">
+            Đang tải sự kiện...
           </div>
         )}
-
-        {!isLoading && !error && events.length === 0 && (
-          <div className="text-center text-gray-600">Không có sự kiện nào.</div>
+        {error && (
+          <div className="text-center text-red-600 text-lg">
+            {error.message || "Lỗi khi tải sự kiện."}{" "}
+            {/* Use user-friendly error message */}
+          </div>
         )}
-
+        {!isLoading && !error && events.length === 0 && (
+          <div className="text-center text-gray-600 text-lg">
+            Không có sự kiện nào.
+          </div>
+        )}
         {!isLoading && !error && events.length > 0 && (
           <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
             {events.map((event) => {
-              console.log("Rendering event:", event.id, event.title);
+              // console.log("Rendering event:", event.id, event.title); // Remove or comment out verbose logs
               return (
                 <div
                   key={event.id}
                   className="flex-shrink-0 w-72 min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
                 >
                   <div className="relative h-20 flex justify-center items-center bg-green-100 text-green-800">
-                    <CalendarCheck className="w-10 h-10 text-green-600" />{" "}
+                    <CalendarCheck className="w-10 h-10 text-green-600" />
                   </div>
 
                   <div className="p-4 flex-grow flex flex-col">
@@ -182,10 +191,15 @@ const EventPage = () => {
                       )}
                     </div>
 
+                    {/* Wrap the button in a Link */}
                     <div className="mt-auto">
-                      <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        Xem chi tiết
-                      </button>
+                      <Link to={`/events/${event.id}`} className="block">
+                        {" "}
+                        {/* Use Link and make it a block element */}
+                        <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                          Xem chi tiết
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
