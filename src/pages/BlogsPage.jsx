@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getBlogImage } from "../utils/blogImages"
+import { getBlogImage } from "../utils/blogImages";
+import ApiService from "../services/apiService";
 
 const BlogsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,18 +13,12 @@ const BlogsPage = () => {
   const [error, setError] = useState(null);
   const postsPerPage = 3;
 
-  // Fetch blog posts from API
+  // Fetch blog posts using ApiService
   useEffect(() => {
     const fetchBlogPosts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://684482e971eb5d1be0337d19.mockapi.io/blogs"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch blog posts");
-        }
-        const data = await response.json();
+        const data = await ApiService.getBlogs();
         setBlogPosts(data);
         setError(null);
       } catch (err) {
@@ -218,7 +213,7 @@ const BlogsPage = () => {
                 {Math.min(
                   indexOfLastPost,
                   filteredPosts.filter((post) => !post.featured).length
-                )} {" "}
+                )}{" "}
                 trong số {filteredPosts.filter((post) => !post.featured).length}{" "}
                 bài viết
               </span>

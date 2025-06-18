@@ -13,6 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
+import ApiService from "../services/apiService";
 
 const getCurrentUser = () => {
   // Giả lập user đã đăng nhập
@@ -27,15 +28,11 @@ const getCurrentUser = () => {
   };
 };
 
-// Fetch schedules and slots from API
+// Fetch schedules and slots using ApiService
 const fetchSchedulesAndSlots = async (consultantId) => {
   try {
     // Fetch all schedules
-    const schedulesResponse = await fetch(
-      "https://684db8e765ed08713916f5be.mockapi.io/schedule"
-    );
-    if (!schedulesResponse.ok) throw new Error("Failed to fetch schedules");
-    const allSchedules = await schedulesResponse.json();
+    const allSchedules = await ApiService.getSchedules();
 
     // Find schedule for this consultant
     const consultantSchedule = allSchedules.find(
@@ -44,11 +41,7 @@ const fetchSchedulesAndSlots = async (consultantId) => {
     if (!consultantSchedule) return [];
 
     // Fetch all slots
-    const slotsResponse = await fetch(
-      "https://684db8e765ed08713916f5be.mockapi.io/slot"
-    );
-    if (!slotsResponse.ok) throw new Error("Failed to fetch slots");
-    const allSlots = await slotsResponse.json();
+    const allSlots = await ApiService.getSlots();
 
     // Filter slots for this schedule that are not booked
     const availableSlots = allSlots.filter(
@@ -93,14 +86,14 @@ const BookingPage = () => {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // Form data 
+  // Form data
   const [formData, setFormData] = useState({
     name: currentUser?.name || "",
     email: currentUser?.email || "",
     phone: currentUser?.phone || "",
     address: currentUser?.address || "",
     date_of_birth: currentUser?.date_of_birth || "",
-    notes: "", 
+    notes: "",
   });
 
   // Fetch consultants and selected consultant if consultantId is provided
@@ -109,14 +102,8 @@ const BookingPage = () => {
       try {
         setLoading(true);
 
-        // Fetch all consultants
-        const response = await fetch(
-          "https://684482e971eb5d1be0337d19.mockapi.io/consultants"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch consultants");
-        }
-        const data = await response.json();
+        // Fetch all consultants using ApiService
+        const data = await ApiService.getConsultants();
         setConsultants(data);
         setFilteredConsultants(data);
 
@@ -202,7 +189,7 @@ const BookingPage = () => {
     setLoading(true);
 
     try {
-      // Fetch slots from API
+      // Fetch slots using ApiService
       const slots = await fetchSchedulesAndSlots(consultant.id);
       setAvailableSlots(slots);
     } catch (error) {
@@ -264,45 +251,23 @@ const BookingPage = () => {
     try {
       setLoading(true);
 
-      // POST appointment
-      const appointmentResponse = await fetch(
-        "https://684db9dc65ed08713916f8de.mockapi.io/appointment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            member_id: currentUser.id,
-            slot_id: selectedSlot.id,
-            scheduled_at: selectedSlot.slot_start,
-            status: "Booked",
-            note: formData.notes || null, 
-          }),
-        }
-      );
+      // Create appointment using ApiService
+      await ApiService.createAppointment({
+        member_id: currentUser.id,
+        slot_id: selectedSlot.id,
+        scheduled_at: selectedSlot.slot_start,
+        status: "Booked",
+        note: formData.notes || null,
+      });
 
-      if (!appointmentResponse.ok) {
-        throw new Error("Failed to create appointment");
-      }
-
-      // Update slot to mark as booked
-      const slotUpdateResponse = await fetch(
-        `https://684db8e765ed08713916f5be.mockapi.io/slot/${selectedSlot.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...selectedSlot,
-            is_booked: true,
-          }),
-        }
-      );
-
-      if (!slotUpdateResponse.ok) {
-        console.warn("Failed to update slot status");
+      // Update slot to mark as booked using ApiService
+      try {
+        await ApiService.updateSlot(selectedSlot.id, {
+          ...selectedSlot,
+          is_booked: true,
+        });
+      } catch (slotError) {
+        console.warn("Failed to update slot status:", slotError);
       }
 
       setBookingSuccess(true);
@@ -622,7 +587,7 @@ const BookingPage = () => {
                         </div>
                       </div>
 
-                      <div className="mb-4">
+                      <div className="mb-4 flex-1">
                         <p className="text-sm text-gray-600 mb-2">
                           Chuyên môn:
                         </p>
@@ -649,19 +614,19 @@ const BookingPage = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 mt-auto pt-4">
-                        <button
-                          onClick={() => handleConsultantSelect(consultant)}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-medium transition-colors text-center"
-                        >
-                          Chọn chuyên gia này
-                        </button>
+                      <div className="flex gap-2 mt-auto">
                         <Link
                           to={`/consultants/${consultant.id}`}
-                          className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg font-medium transition-colors text-center block"
+                          className="flex-1 border border-emerald-600 text-emerald-600 hover:bg-emerald-50 py-2 px-4 rounded-lg font-medium transition-colors text-center"
                         >
                           Xem chi tiết
                         </Link>
+                        <button
+                          onClick={() => handleConsultantSelect(consultant)}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                        >
+                          Chọn
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -671,425 +636,393 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Steps 2-4: Time Slot, Personal Info, Confirmation */}
-        {currentStep >= 2 && currentStep <= 4 && (
+        {/* Step 2: Choose Time Slot */}
+        {currentStep === 2 && selectedConsultant && (
           <div className="max-w-4xl mx-auto">
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Consultant Info Sidebar */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
-                  <div className="text-center mb-4">
-                    <div className="w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                      {selectedConsultant.avatar ||
-                        selectedConsultant.name?.charAt(0)}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {selectedConsultant.name}
-                    </h3>
-                    <p className="text-emerald-600 font-medium">
-                      {selectedConsultant.field_of_study}
-                    </p>
-                    <p className="text-gray-600 text-sm">
-                      {selectedConsultant.experience}
-                    </p>
-                  </div>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                Chọn thời gian tư vấn
+              </h1>
+              <p className="text-lg text-gray-600">
+                Chọn khung giờ phù hợp với lịch trình của bạn
+              </p>
+            </div>
 
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <Mail className="w-4 h-4 mr-2 text-emerald-600" />
-                      <span>{selectedConsultant.email}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2 text-emerald-600" />
-                      <span>{selectedConsultant.organization}</span>
-                    </div>
-                  </div>
+            {/* Selected Consultant Info */}
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+              <div className="flex items-center">
+                <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4">
+                  {selectedConsultant.avatar ||
+                    selectedConsultant.name?.charAt(0) ||
+                    "C"}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {selectedConsultant.name}
+                  </h3>
+                  <p className="text-emerald-600 font-medium">
+                    {selectedConsultant.field_of_study}
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    {selectedConsultant.experience}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-                  {selectedSlot && (
-                    <div className="mt-6 p-4 bg-emerald-50 rounded-lg">
-                      <h4 className="font-semibold text-gray-800 mb-2">
-                        Thời gian đã chọn:
-                      </h4>
-                      <div className="text-sm text-gray-600">
-                        <p className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          {new Date(selectedSlot.slot_start).toLocaleDateString(
-                            "vi-VN"
-                          )}
-                        </p>
-                        <p className="flex items-center mt-1">
-                          <Clock className="w-4 h-4 mr-2" />
-                          {selectedSlot.time}
+            {/* Available Time Slots */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-6">
+                Khung giờ có sẵn
+              </h3>
+
+              {Object.keys(groupedSlots).length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 mb-4">
+                    <Calendar className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    Chưa có lịch trống
+                  </h4>
+                  <p className="text-gray-600">
+                    Chuyên gia này hiện chưa có khung giờ trống. Vui lòng chọn
+                    chuyên gia khác hoặc quay lại sau.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(groupedSlots)
+                    .sort(([a], [b]) => new Date(a) - new Date(b))
+                    .map(([date, slots]) => (
+                      <div key={date}>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                          {new Date(date).toLocaleDateString("vi-VN", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {slots
+                            .sort(
+                              (a, b) =>
+                                new Date(a.slot_start) - new Date(b.slot_start)
+                            )
+                            .map((slot) => (
+                              <button
+                                key={slot.id}
+                                onClick={() => handleSlotSelect(slot)}
+                                className={`p-3 border rounded-lg text-center transition-colors ${
+                                  selectedSlot?.id === slot.id
+                                    ? "bg-emerald-600 text-white border-emerald-600"
+                                    : "bg-white text-gray-700 border-gray-300 hover:border-emerald-500 hover:bg-emerald-50"
+                                }`}
+                              >
+                                <div className="flex items-center justify-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  <span className="font-medium">
+                                    {slot.time}
+                                  </span>
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={handlePrevStep}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ← Quay lại
+              </button>
+              <button
+                onClick={handleNextStep}
+                disabled={!selectedSlot}
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                  selectedSlot
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Tiếp tục →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Confirm Information */}
+        {currentStep === 3 && selectedConsultant && selectedSlot && (
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                Xác nhận thông tin
+              </h1>
+              <p className="text-lg text-gray-600">
+                Kiểm tra lại thông tin trước khi hoàn tất đặt lịch
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Appointment Details */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  Thông tin lịch hẹn
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mr-3">
+                        {selectedConsultant.avatar ||
+                          selectedConsultant.name?.charAt(0) ||
+                          "C"}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">
+                          {selectedConsultant.name}
+                        </h4>
+                        <p className="text-emerald-600 text-sm">
+                          {selectedConsultant.field_of_study}
                         </p>
                       </div>
                     </div>
-                  )}
-
-                  {/* GoogleMeetInfo component */}
-                  <div className="mt-6">
-                    <GoogleMeetInfo />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center text-gray-700">
+                      <Calendar className="w-5 h-5 mr-2 text-emerald-600" />
+                      <span>
+                        {new Date(selectedSlot.slot_start).toLocaleDateString(
+                          "vi-VN",
+                          {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <Clock className="w-5 h-5 mr-2 text-emerald-600" />
+                      <span>{selectedSlot.time}</span>
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <MapPin className="w-5 h-5 mr-2 text-emerald-600" />
+                      <span>Tư vấn trực tuyến qua Google Meet</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Main Content */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-lg shadow-lg p-8">
-                  {/* Step 2: Choose Time Slot */}
-                  {currentStep === 2 && (
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Chọn thời gian tư vấn
-                      </h2>
-
-                      {availableSlots.length === 0 ? (
-                        <div className="text-center py-8">
-                          <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                            Không có lịch khả dụng
-                          </h3>
-                          <p className="text-gray-600">
-                            Chuyên gia này hiện tại không có khung giờ nào khả
-                            dụng.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="grid md:grid-cols-2 gap-8">
-                          {/* Calendar */}
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                              Chọn ngày
-                            </h3>
-                            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                              <div className="grid grid-cols-7 gap-1 mb-4">
-                                {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map(
-                                  (day) => (
-                                    <div
-                                      key={day}
-                                      className="text-center text-sm font-medium text-gray-500 py-2"
-                                    >
-                                      {day}
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                              <div className="grid grid-cols-7 gap-1">
-                                {Object.keys(groupedSlots).map((date) => {
-                                  const dateObj = new Date(date);
-                                  return (
-                                    <button
-                                      key={date}
-                                      onClick={() => setSelectedDate(date)}
-                                      className={`p-2 text-sm rounded-lg transition-colors ${
-                                        selectedDate === date
-                                          ? "bg-emerald-600 text-white"
-                                          : "hover:bg-emerald-50 text-gray-700"
-                                      }`}
-                                    >
-                                      {dateObj.getDate()}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Time Slots */}
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                              Chọn giờ{" "}
-                              {selectedDate &&
-                                `- ${new Date(selectedDate).toLocaleDateString(
-                                  "vi-VN"
-                                )}`}
-                            </h3>
-                            {selectedDate && groupedSlots[selectedDate] && (
-                              <div className="grid grid-cols-2 gap-3">
-                                {groupedSlots[selectedDate].map((slot) => (
-                                  <button
-                                    key={slot.id}
-                                    onClick={() => handleSlotSelect(slot)}
-                                    className={`p-3 border rounded-lg text-sm font-medium transition-colors ${
-                                      selectedSlot?.id === slot.id
-                                        ? "border-emerald-600 bg-emerald-50 text-emerald-700"
-                                        : "border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
-                                    }`}
-                                  >
-                                    {slot.time}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-8 flex justify-between">
-                        <button
-                          onClick={handlePrevStep}
-                          className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Quay lại
-                        </button>
-                        <button
-                          onClick={handleNextStep}
-                          disabled={!selectedSlot}
-                          className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Tiếp tục
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 3: Personal Information */}
-                  {currentStep === 3 && (
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Xác nhận thông tin
-                      </h2>
-
-                      <div className="space-y-6">
-                        {/* Auto-filled personal information */}
-                        <div className="bg-gray-50 rounded-lg p-6">
-                          <h3 className="font-semibold text-gray-800 mb-4">
-                            Thông tin cá nhân
-                          </h3>
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Họ và tên
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.name}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
-                              </label>
-                              <input
-                                type="email"
-                                value={formData.email}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Số điện thoại
-                              </label>
-                              <input
-                                type="tel"
-                                value={formData.phone}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Ngày sinh
-                              </label>
-                              <input
-                                type="date"
-                                value={formData.date_of_birth}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                              />
-                            </div>
-
-                            <div className="md:col-span-2">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Địa chỉ
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.address}
-                                disabled
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Editable notes field */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Ghi chú cho chuyên gia
-                          </label>
-                          <textarea
-                            name="notes"
-                            value={formData.notes}
-                            onChange={handleInputChange}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            placeholder="Mô tả vấn đề cần tư vấn hoặc ghi chú khác..."
-                          />
-                        </div>
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <div className="flex items-start">
-                            <AlertCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
-                            <div className="text-sm text-blue-800">
-                              <p className="font-medium mb-1">Lưu ý:</p>
-                              <p>
-                                Thông tin cá nhân được lấy từ tài khoản của bạn.
-                                Nếu cần cập nhật, vui lòng chỉnh sửa trong phần
-                                hồ sơ cá nhân.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-8 flex justify-between">
-                        <button
-                          onClick={handlePrevStep}
-                          className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Quay lại
-                        </button>
-                        <button
-                          onClick={handleNextStep}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Tiếp tục
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 4: Confirmation */}
-                  {currentStep === 4 && (
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Xác nhận đặt lịch
-                      </h2>
-
-                      <div className="space-y-6">
-                        <div className="bg-gray-50 rounded-lg p-6">
-                          <h3 className="font-semibold text-gray-800 mb-4">
-                            Thông tin lịch hẹn
-                          </h3>
-                          <div className="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Chuyên gia:</span>
-                              <p className="font-medium">
-                                {selectedConsultant.name}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Chuyên môn:</span>
-                              <p className="font-medium">
-                                {selectedConsultant.field_of_study}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Ngày:</span>
-                              <p className="font-medium">
-                                {new Date(
-                                  selectedSlot.slot_start
-                                ).toLocaleDateString("vi-VN")}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Giờ:</span>
-                              <p className="font-medium">{selectedSlot.time}</p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <span className="text-gray-600">Hình thức:</span>
-                              <p className="font-medium">
-                                Tư vấn trực tuyến qua Google Meet
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-lg p-6">
-                          <h3 className="font-semibold text-gray-800 mb-4">
-                            Thông tin cá nhân
-                          </h3>
-                          <div className="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Họ và tên:</span>
-                              <p className="font-medium">{formData.name}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Email:</span>
-                              <p className="font-medium">{formData.email}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">
-                                Số điện thoại:
-                              </span>
-                              <p className="font-medium">{formData.phone}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Ngày sinh:</span>
-                              <p className="font-medium">
-                                {new Date(
-                                  formData.date_of_birth
-                                ).toLocaleDateString("vi-VN")}
-                              </p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <span className="text-gray-600">Địa chỉ:</span>
-                              <p className="font-medium">{formData.address}</p>
-                            </div>
-                            {formData.notes && (
-                              <div className="md:col-span-2">
-                                <span className="text-gray-600">Ghi chú:</span>
-                                <p className="font-medium">{formData.notes}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <div className="flex items-start">
-                            <AlertCircle className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
-                            <div className="text-sm text-blue-800">
-                              <p className="font-medium mb-1">
-                                Lưu ý quan trọng:
-                              </p>
-                              <ul className="list-disc list-inside space-y-1">
-                                <li>Vui lòng có mặt đúng giờ đã hẹn</li>
-                                <li>
-                                  Nếu cần hủy lịch, vui lòng thông báo trước ít
-                                  nhất 24 giờ
-                                </li>
-                                <li>
-                                  Chúng tôi sẽ gửi link tham gia cho bạn qua email
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-8 flex justify-between">
-                        <button
-                          onClick={handlePrevStep}
-                          className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Quay lại
-                        </button>
-                        <button
-                          onClick={handleBookingSubmit}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                        >
-                          Xác nhận đặt lịch
-                        </button>
-                      </div>
-                    </div>
-                  )}
+              {/* Personal Information */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  Thông tin cá nhân
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Họ và tên
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ngày sinh
+                    </label>
+                    <input
+                      type="date"
+                      name="date_of_birth"
+                      value={formData.date_of_birth}
+                      onChange={handleInputChange}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Địa chỉ
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ghi chú (tùy chọn)
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows={3}
+                      placeholder="Mô tả ngắn gọn về vấn đề bạn muốn tư vấn..."
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Google Meet Information */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-lg font-semibold text-blue-800 mb-2">
+                      Thông tin quan trọng
+                    </h4>
+                    <ul className="text-blue-700 space-y-1 text-sm">
+                      <li>
+                        • Link Google Meet sẽ được gửi qua email trước buổi tư
+                        vấn 15 phút
+                      </li>
+                      <li>
+                        • Vui lòng kiểm tra email và chuẩn bị thiết bị có
+                        camera, micro
+                      </li>
+                      <li>
+                        • Nếu cần hủy hoặc đổi lịch, vui lòng liên hệ trước 2
+                        giờ
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={handlePrevStep}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ← Quay lại
+              </button>
+              <button
+                onClick={handleNextStep}
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                Xác nhận đặt lịch →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Final Confirmation */}
+        {currentStep === 4 && selectedConsultant && selectedSlot && (
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                Hoàn tất đặt lịch
+              </h1>
+              <p className="text-lg text-gray-600">
+                Xác nhận cuối cùng để hoàn tất việc đặt lịch tư vấn
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-12 h-12 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Sẵn sàng hoàn tất?
+                </h3>
+                <p className="text-gray-600">
+                  Bạn có chắc chắn muốn đặt lịch tư vấn với thông tin trên
+                  không?
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-medium">Chuyên gia:</span>{" "}
+                    {selectedConsultant.name}
+                  </p>
+                  <p>
+                    <span className="font-medium">Ngày:</span>{" "}
+                    {new Date(selectedSlot.slot_start).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                  <p>
+                    <span className="font-medium">Giờ:</span>{" "}
+                    {selectedSlot.time}
+                  </p>
+                  <p>
+                    <span className="font-medium">Hình thức:</span> Tư vấn trực
+                    tuyến qua Google Meet
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handlePrevStep}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  ← Quay lại
+                </button>
+                <button
+                  onClick={handleBookingSubmit}
+                  disabled={loading}
+                  className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors ${
+                    loading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  }`}
+                >
+                  {loading ? "Đang xử lý..." : "Xác nhận đặt lịch"}
+                </button>
               </div>
             </div>
           </div>
