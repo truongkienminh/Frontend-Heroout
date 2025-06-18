@@ -39,7 +39,9 @@ class ApiService {
 
   static async updateAccount(userId, userData) {
     try {
-      const response = await api.put(`account/${userId}`, userData);
+      const response = await api.put(`/accounts/update`, userData, {
+        params: { id: userId },
+      });
       return response.data;
     } catch (error) {
       throw this.handleError(error);
