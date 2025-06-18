@@ -36,7 +36,9 @@ function Register() {
 
       if (result.success) {
         toast.success("Đăng ký thành công!");
-        navigate("/", { replace: true });
+        setTimeout(() => {
+          navigate("/login", { replace: true });
+        }, 1500);
       } else {
         toast.error(result.error);
       }

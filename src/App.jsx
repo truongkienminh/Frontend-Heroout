@@ -8,6 +8,8 @@ import "aos/dist/aos.css";
 import { StateProvider } from "./contexts/StateProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 AOS.init({
   duration: 1000,
 });
@@ -29,6 +31,7 @@ function App() {
           </PersistGate>
         </Provider>
       </QueryClientProvider>
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
 }
