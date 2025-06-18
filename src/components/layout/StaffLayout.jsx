@@ -5,6 +5,8 @@ import {
   Users,
   GraduationCap,
   FileText,
+  FileBarChart2,
+  CalendarDays
 } from 'lucide-react';
 import HeroOutLogo from '../../assets/heroout.jpg';
 
@@ -15,6 +17,8 @@ const StaffLayout = () => {
     { icon: BarChart3, label: 'Dashboard', path: '/staff/dashboard' },
     { icon: Users, label: 'Quản lý thành viên', path: '/staff/members' },
     { icon: GraduationCap, label: 'Quản lý khóa học', path: '/staff/courses' },
+    { icon: FileBarChart2, label: 'Quản lý báo cáo', path: '/staff/reports' },
+    { icon: CalendarDays, label: 'Quản lý sự kiện', path: '/staff/events' },
     { icon: FileText, label: 'Quản lý khảo sát', path: '/staff/surveys' }
   ];
 
@@ -41,11 +45,10 @@ const StaffLayout = () => {
               <Link
                 key={index}
                 to={item.path}
-                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors outline-none focus:outline-none ring-0 ${
-                  isActive
+                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors outline-none focus:outline-none ring-0 ${isActive
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
               >
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.label}

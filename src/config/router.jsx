@@ -20,7 +20,37 @@ import StaffDashboard from "../components/staff/StaffDashBoard";
 import StaffCourse from "../components/staff/StaffCourse";
 import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
+import StaffReport from "../components/staff/StaffReport";
+import StaffEvent from "../components/staff/StaffEvent";
 import ProtectedRoute from "../components/ProtectedRoute";
+
+// Protected route components (commented out for now)
+// const ProtectedRouteAuth = ({ children }) => {
+//   const user = useSelector(selectUser);
+//   if (!user) {
+//     alertFail("You need to login first!!");
+//     return <Navigate to="/login" replace />;
+//   }
+//   return children;
+// };
+
+// const ProtectedRouteCreator = ({ children }) => {
+//   const user = useSelector(selectUser);
+//   if (user?.role === "AUDIENCE") {
+//     alertFail("You do not have permissions to access");
+//     return <Navigate to="/go-pro" replace />;
+//   }
+//   return children;
+// };
+
+// const ProtectedADMIN = ({ children }) => {
+//   const user = useSelector(selectUser);
+//   if (user?.role !== "ADMIN" && user?.role !== "MOD") {
+//     alertFail("You do not have permissions to access");
+//     return <Navigate to="/" replace />;
+//   }
+//   return children;
+// };
 
 export const router = createBrowserRouter([
   {
@@ -145,6 +175,14 @@ export const router = createBrowserRouter([
         path: "surveys",
         element: <StaffSurvey />,
       },
+      {
+        path: "reports",
+        element: <StaffReport />,
+      },
+      {
+        path: "events",
+        element: <StaffEvent />,
+      }
     ],
   },
 ]);
