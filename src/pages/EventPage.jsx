@@ -1,5 +1,4 @@
-import React from "react";
-
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -17,90 +16,81 @@ import {
   CalendarCheck,
 } from "lucide-react";
 
-const featuredEvent = {
-  id: 1,
-  type: "HỘI THẢO",
-  title: "Phòng chống tệ nạn xã hội trong môi trường học đường",
-  dateDay: "20",
-  dateMonth: "12",
-  fullDate: "20/12/2024",
-  time: "08:00 - 17:00",
-  location: "Trung tâm Hội nghị Quốc gia",
-  attendees: "245/300 người tham gia",
+import api from "../services/axios"; // Import the configured axios instance
+
+// Helper function to format ISO date string
+const formatDateTime = (isoString) => {
+  if (!isoString) return "N/A";
+  try {
+    const date = new Date(isoString);
+    const optionsDate = { year: "numeric", month: "numeric", day: "numeric" };
+    const optionsTime = { hour: "2-digit", minute: "2-digit", hour12: false };
+    const formattedDate = date.toLocaleDateString("vi-VN", optionsDate);
+    const formattedTime = date.toLocaleTimeString("vi-VN", optionsTime);
+    return `${formattedDate}, ${formattedTime}`;
+  } catch (e) {
+    console.error("Error formatting date:", isoString, e);
+    return "Invalid Date";
+  }
 };
 
-const upcomingEvents = [
-  {
-    id: 2,
-    type: "WORKSHOP",
-    title: "Workshop kỹ năng tư vấn cho thanh niên",
-    date: "22/12/2024",
-    time: "14:00",
-    location: "Online",
-    price: "Miễn phí",
-    iconType: "monitor",
-    cardColorClass: "bg-blue-100 text-blue-800",
-  },
-  {
-    id: 3,
-    type: "CỘNG ĐỒNG",
-    title: 'Ngày hội "Cùng nhau nói không với tệ nạn xã hội"',
-    date: "25/12/2024",
-    time: "09:00 - 16:00",
-    location: "Công viên Thống Nhất",
-    price: "Miễn phí",
-    iconType: "users",
-    cardColorClass: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    id: 4,
-    type: "CUỘC THI",
-    title: "Cuộc thi sáng tác poster tuyên truyền phòng chống ma túy",
-    date: "30/12/2024",
-    time: "Hạn nộp bài",
-    prize: "Giải thưởng 50 triệu",
-    price: "",
-    iconType: "award",
-    cardColorClass: "bg-red-100 text-red-800",
-  },
-];
-
-const myEvents = [
-  {
-    id: 2,
-    title: "Workshop kỹ năng tư vấn cho thanh niên",
-    status: "Bạn đã đăng ký tham gia sự kiện này",
-    date: "22/12/2024",
-    time: "14:00",
-    iconType: "calendar-check",
-  },
-];
-
+// Simplified getLucideIcon - only keeps generic detail icons
 const getLucideIcon = (type) => {
   switch (type) {
-    case "monitor":
-      return <Monitor className="w-10 h-10 text-blue-600" />;
-    case "users":
-      return <Users className="w-10 h-10 text-yellow-600" />;
-    case "award":
-      return <Award className="w-10 h-10 text-red-600" />;
-    case "calendar-check":
-      return <CalendarCheck className="w-6 h-6 text-green-600" />; // Smaller for my events
-    // Default icons for details
     case "calendar":
       return <Calendar className="w-4 h-4 text-gray-400" />;
     case "clock":
       return <Clock className="w-4 h-4 text-gray-400" />;
     case "map-pin":
       return <MapPin className="w-4 h-4 text-gray-400" />;
-    case "dollar-sign":
-      return <DollarSign className="w-4 h-4 text-gray-400" />;
     default:
       return null;
   }
 };
 
 const EventPage = () => {
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  console.log("Component rendered. Current events state:", events);
+  console.log("Is Loading:", isLoading);
+  console.log("Error:", error);
+
+  useEffect(() => {
+    console.log("useEffect is running.");
+
+    const fetchEvents = async () => {
+      try {
+        console.log("Fetching events from API...");
+        const response = await api.get("/events");
+        console.log("API Response received:", response);
+        console.log("API Response Data:", response.data); // Log data received from API
+
+        if (Array.isArray(response.data)) {
+          setEvents(response.data);
+          console.log("Events state updated with data:", response.data); // Log data used to update state
+        } else {
+          console.error("API response data is not an array:", response.data);
+          setError(new Error("API returned data in unexpected format."));
+        }
+
+        setIsLoading(false);
+        console.log("setIsLoading(false)");
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        setError(err);
+        setIsLoading(false);
+        console.log("setIsLoading(false) due to error");
+      }
+    };
+
+    fetchEvents();
+    console.log("fetchEvents function called.");
+  }, []); // Empty dependency array means this runs once on mount
+
+  // upcomingEventsFiltered logic removed. Now we render directly from 'events'.
+
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 min-h-screen">
       <div className="mb-8">
@@ -139,155 +129,97 @@ const EventPage = () => {
       </div>
 
       <div className="mb-10">
+        {/* Updated heading */}
         <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Sự kiện nổi bật
-        </h3>
-        <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="flex-shrink-0 w-full md:w-40 bg-green-500 flex flex-row md:flex-col items-center justify-center text-white p-4">
-            <div className="text-4xl font-bold">{featuredEvent.dateDay}</div>
-            <div className="text-lg font-normal md:mt-1 md:ml-0 ml-2">{`TH${featuredEvent.dateMonth}`}</div>
-          </div>
-
-          <div className="p-4 flex-grow">
-            <div className="text-xs font-bold text-amber-600 uppercase mb-1">
-              {featuredEvent.type}
-            </div>
-            <h3>{featuredEvent.title}</h3>
-            <div className="text-sm text-gray-600 mb-4">
-              <div className="flex items-center mb-2 gap-2">
-                <Clock className="w-5 h-5 text-gray-400" /> {featuredEvent.time}
-              </div>
-              <div className="flex items-center mb-2 gap-2">
-                <MapPin className="w-5 h-5 text-gray-400" />{" "}
-                {featuredEvent.location}
-              </div>
-              <div className="flex items-center mb-2 gap-2">
-                <Users className="w-5 h-5 text-gray-400" />{" "}
-                {featuredEvent.attendees}
-              </div>
-            </div>
-
-            <Link
-              to="/eventregistration"
-              className="inline-block px-6 py-2 bg-green-500 text-white rounded-md text-base hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Đăng ký ngay
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-10">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Sự kiện sắp diễn ra
+          Tất cả Sự kiện (Lấy từ API)
         </h3>
 
-        <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-          {upcomingEvents.map((event) => (
-            <div
-              key={event.id}
-              className="flex-shrink-0 w-72 min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
-            >
-              <div
-                className={`relative h-32 flex justify-center items-center ${
-                  event.cardColorClass.split(" ")[0]
-                }`}
-              >
-                {getLucideIcon(event.iconType)}
+        {/* Updated console log for rendering */}
+        {console.log("Rendering based on:", {
+          isLoading,
+          error,
+          eventsLength: events.length,
+        })}
+
+        {isLoading && (
+          <div className="text-center text-gray-600">Đang tải sự kiện...</div>
+        )}
+
+        {error && (
+          <div className="text-center text-red-600">
+            Lỗi khi tải sự kiện: {error.message || "Không xác định"}
+          </div>
+        )}
+
+        {/* Updated empty state message and condition */}
+        {!isLoading && !error && events.length === 0 && (
+          <div className="text-center text-gray-600">Không có sự kiện nào.</div>
+        )}
+
+        {!isLoading && !error && events.length > 0 && (
+          <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            {/* Mapping directly over 'events' state */}
+            {events.map((event) => {
+              console.log("Rendering event:", event.id, event.title);
+              return (
                 <div
-                  className={`absolute top-2 left-2 bg-white/80 px-2 py-1 rounded text-xs font-bold uppercase ${
-                    event.cardColorClass.split(" ")[1]
-                  }`}
+                  key={event.id}
+                  className="flex-shrink-0 w-72 min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
                 >
-                  {event.type}
-                </div>
-              </div>
-
-              <div className="p-4 flex-grow flex flex-col">
-                <div className="text-base font-bold text-gray-800 mb-2">
-                  {event.title}
-                </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  <div className="flex items-center mb-1 gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" /> {event.date}
+                  {/* Removed the colored header/icon as type/iconType is not available */}
+                  <div className="relative h-20 flex justify-center items-center bg-green-100 text-green-800">
+                    <CalendarCheck className="w-10 h-10 text-green-600" />{" "}
+                    {/* Using a generic icon */}
                   </div>
-                  <div className="flex items-center mb-1 gap-2">
-                    <Clock className="w-4 h-4 text-gray-400" /> {event.time}
-                  </div>
-                  {event.location && (
-                    <div className="flex items-center mb-1 gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />{" "}
-                      {event.location}
-                    </div>
-                  )}
-                  {event.prize && (
-                    <div className="flex items-center mb-1 gap-2">
-                      <Award className="w-4 h-4 text-gray-400" /> {event.prize}
-                    </div>
-                  )}
-                  {event.price && (
-                    <div className="flex items-center mb-1 gap-2">
-                      <DollarSign className="w-4 h-4 text-gray-400" />{" "}
-                      {event.price}
-                    </div>
-                  )}
-                </div>
 
-                <div className="mt-auto">
-                  {" "}
-                  <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    {event.type === "CUỘC THI" ? "Tham gia" : "Đăng ký"}
-                  </button>
+                  <div className="p-4 flex-grow flex flex-col">
+                    <div className="text-base font-bold text-gray-800 mb-2">
+                      {event.title}
+                    </div>
+                    {/* Display description if available */}
+                    {event.description && (
+                      <div className="text-sm text-gray-600 mb-2 line-clamp-3">
+                        {event.description}
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600 mb-4">
+                      <div className="flex items-center mb-1 gap-2">
+                        {getLucideIcon("calendar")}{" "}
+                        {formatDateTime(event.startTime).split(",")[0]}{" "}
+                        {/* Display Date */}
+                      </div>
+                      <div className="flex items-center mb-1 gap-2">
+                        {getLucideIcon("clock")}{" "}
+                        {formatDateTime(event.startTime).split(",")[1]?.trim()}{" "}
+                        {/* Display Start Time */}
+                        {event.endTime &&
+                          ` - ${formatDateTime(event.endTime)
+                            .split(",")[1]
+                            ?.trim()}`}{" "}
+                        {/* Display End Time if available */}
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center mb-1 gap-2">
+                          {getLucideIcon("map-pin")} {event.location}
+                        </div>
+                      )}
+                      {/* Price/Prize lines removed as per new data */}
+                    </div>
+
+                    <div className="mt-auto">
+                      <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        Xem chi tiết {/* Generic action */}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="mb-10">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Sự kiện của tôi
-        </h3>
-
-        <div className="flex flex-col gap-4">
-          {myEvents.map((event) => (
-            <div
-              key={event.id}
-              className="flex flex-col md:flex-row items-center bg-white rounded-lg shadow-md overflow-hidden p-4 gap-4"
-            >
-              <div className="flex-shrink-0">
-                {getLucideIcon(event.iconType)}
-              </div>
-
-              <div className="flex-grow flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-4 w-full">
-                <div className="flex-grow">
-                  <div className="text-base font-bold text-gray-800 mb-1">
-                    {event.title}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-1">
-                    {event.status}
-                  </div>
-                  <div className="text-sm text-gray-800 font-bold flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    {event.date}, <Clock className="w-4 h-4 text-gray-400" />{" "}
-                    {event.time}
-                  </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-2 flex-shrink-0">
-                  <button className="px-3 py-1.5 rounded-md text-sm border border-green-600 text-green-600 bg-transparent hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    Xem chi tiết
-                  </button>
-                  <button className="px-3 py-1.5 rounded-md text-sm border border-red-600 text-red-600 bg-transparent hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-600">
-                    Hủy đăng ký
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* The "My Events" section remains removed */}
     </div>
   );
 };
