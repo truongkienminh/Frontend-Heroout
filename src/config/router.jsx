@@ -25,6 +25,7 @@ import StaffReport from "../components/staff/StaffReport";
 import StaffEvent from "../components/staff/StaffEvent";
 import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
+import EventDetail from "../components/Event/EventDetail";
 
 
 // Protected route components (commented out for now)
@@ -83,6 +84,10 @@ export const router = createBrowserRouter([
       {
         path: "/event",
         element: <EventPage />,
+      },
+      {
+        path: "/events/:id",
+        element: <EventDetail />,
       },
       {
         path: "/eventregistration",
