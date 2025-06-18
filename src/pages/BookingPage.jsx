@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import Breadcrumb from "../components/Breadcrumb";
 import {
   Calendar,
@@ -14,19 +15,6 @@ import {
 } from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
 import ApiService from "../services/apiService";
-
-const getCurrentUser = () => {
-  // Giả lập user đã đăng nhập
-  return {
-    id: 1,
-    name: "Nguyễn Văn An",
-    email: "nguyenvanan@email.com",
-    phone: "0123456789",
-    date_of_birth: "1990-05-15",
-    address: "123 Đường ABC, Quận 1, TP.HCM",
-    profile_pic: null,
-  };
-};
 
 // Fetch schedules and slots using ApiService
 const fetchSchedulesAndSlots = async (consultantId) => {
@@ -68,9 +56,7 @@ const fetchSchedulesAndSlots = async (consultantId) => {
 const BookingPage = () => {
   const { consultantId } = useParams();
   const navigate = useNavigate();
-
-  // Get current user info
-  const currentUser = getCurrentUser();
+  const { user, isAuthenticated } = useAuth();
 
   // State for all steps
   const [currentStep, setCurrentStep] = useState(consultantId ? 2 : 1);
@@ -85,16 +71,60 @@ const BookingPage = () => {
   const [error, setError] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [memberInfo, setMemberInfo] = useState(null);
+  const [loadingMemberInfo, setLoadingMemberInfo] = useState(false);
 
-  // Form data
+  // Form data - will be populated from API
   const [formData, setFormData] = useState({
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    phone: currentUser?.phone || "",
-    address: currentUser?.address || "",
-    date_of_birth: currentUser?.date_of_birth || "",
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    date_of_birth: "",
+    gender: "",
     notes: "",
   });
+
+  // Fetch member information from API
+  const fetchMemberInfo = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoadingMemberInfo(true);
+      const memberData = await ApiService.getAccountById(user.id);
+
+      setMemberInfo(memberData);
+      setFormData({
+        name: memberData.name || "",
+        email: memberData.email || "",
+        phone: memberData.phone || "",
+        address: memberData.address || "",
+        date_of_birth: memberData.dateOfBirth || "",
+        gender: memberData.gender || "",
+        notes: "",
+      });
+    } catch (error) {
+      console.error("Error fetching member info:", error);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        date_of_birth: "",
+        gender: "",
+        notes: "",
+      });
+    } finally {
+      setLoadingMemberInfo(false);
+    }
+  };
+
+  // Fetch member info when user is available
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      fetchMemberInfo();
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Fetch consultants and selected consultant if consultantId is provided
   useEffect(() => {
@@ -213,13 +243,10 @@ const BookingPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Only allow editing of notes field
-    if (name === "notes") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleNextStep = () => {
@@ -247,13 +274,36 @@ const BookingPage = () => {
     }
   };
 
+  const validateForm = () => {
+    const requiredFields = ["name", "email", "phone"];
+    const missingFields = requiredFields.filter(
+      (field) => !formData[field]?.trim()
+    );
+
+    if (missingFields.length > 0) {
+      alert(`Vui lòng điền đầy đủ thông tin: ${missingFields.join(", ")}`);
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert("Vui lòng nhập email hợp lệ");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleBookingSubmit = async () => {
+    if (!validateForm()) return;
+
     try {
       setLoading(true);
 
       // Create appointment using ApiService
       await ApiService.createAppointment({
-        member_id: currentUser.id,
+        member_id: user.id,
         slot_id: selectedSlot.id,
         scheduled_at: selectedSlot.slot_start,
         status: "Booked",
@@ -279,6 +329,31 @@ const BookingPage = () => {
       setLoading(false);
     }
   };
+
+  // Check authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="text-red-500 mb-4">
+            <AlertCircle className="w-16 h-16 mx-auto" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Vui lòng đăng nhập
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Bạn cần đăng nhập để đặt lịch tư vấn
+          </p>
+          <Link
+            to="/login"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            Đăng nhập
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {
@@ -824,46 +899,69 @@ const BookingPage = () => {
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Thông tin cá nhân
+                  {loadingMemberInfo && (
+                    <span className="text-sm text-gray-500 ml-2">
+                      (Đang tải...)
+                    </span>
+                  )}
                 </h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Họ và tên
+                      Họ và tên <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Nhập họ và tên"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Nhập email"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Số điện thoại
+                      Số điện thoại <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Nhập số điện thoại"
+                      required
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Giới tính
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">Chọn giới tính</option>
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -874,11 +972,10 @@ const BookingPage = () => {
                       name="date_of_birth"
                       value={formData.date_of_birth}
                       onChange={handleInputChange}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Địa chỉ
                     </label>
@@ -887,8 +984,8 @@ const BookingPage = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Nhập địa chỉ"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -1001,6 +1098,17 @@ const BookingPage = () => {
                   <p>
                     <span className="font-medium">Hình thức:</span> Tư vấn trực
                     tuyến qua Google Meet
+                  </p>
+                  <p>
+                    <span className="font-medium">Người đặt:</span>{" "}
+                    {formData.name}
+                  </p>
+                  <p>
+                    <span className="font-medium">Email:</span> {formData.email}
+                  </p>
+                  <p>
+                    <span className="font-medium">Số điện thoại:</span>{" "}
+                    {formData.phone}
                   </p>
                 </div>
               </div>
