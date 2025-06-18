@@ -20,6 +20,8 @@ import StaffDashboard from "../components/staff/StaffDashBoard";
 import StaffCourse from "../components/staff/StaffCourse";
 import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
+import StaffReport from "../components/staff/StaffReport";
+import StaffEvent from "../components/staff/StaffEvent";
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -140,6 +142,14 @@ export const router = createBrowserRouter([
         path: "surveys",
         element: <StaffSurvey />,
       },
+      {
+        path: "reports",
+        element: <StaffReport />,
+      },
+      {
+        path: "events",
+        element: <StaffEvent />,
+      }
     ],
   },
 ]);

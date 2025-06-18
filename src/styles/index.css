@@ -16,11 +16,7 @@ html {
 }
 
 /* Focus styles for accessibility */
-button:focus,
-a:focus {
-  outline: 2px solid #059669;
-  outline-offset: 2px;
-}
+
 
 /* Custom colors */
 .bg-emerald-50 {
