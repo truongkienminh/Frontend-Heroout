@@ -4,6 +4,7 @@ import HomePage from "../pages/HomePage";
 import Login from "../components/authentication/Login/Login";
 import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
+import ProfilePage from "../pages/ProfilePage";
 import CoursesPage from "../pages/CoursesPage";
 import BlogsPage from "../pages/BlogsPage";
 import BlogDetailPage from "../pages/BlogDetailPage";
@@ -113,6 +114,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
@@ -182,7 +191,7 @@ export const router = createBrowserRouter([
       {
         path: "events",
         element: <StaffEvent />,
-      }
+      },
     ],
   },
 ]);
