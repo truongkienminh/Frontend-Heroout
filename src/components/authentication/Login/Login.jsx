@@ -1,38 +1,38 @@
-import React from "react";
-
+import { useState } from "react";
 import { Button, Form, Input } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import api from "../../../services/axios";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
-
-import { login } from "../../../store/redux/features/counterSlice";
+import { useAuth } from "../../../contexts/AuthContext";
 import "./login.css";
 
 import logo from "../../../assets/heroout.jpg";
 
 function Login() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const location = useLocation();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  // Get the page user was trying to access before login
+  const from = location.state?.from?.pathname || "/";
 
   const handleLogin = async (values) => {
+    setLoading(true);
     try {
-      const response = await api.post("login", values);
+      const result = await login(values);
 
-      toast.success("Success");
-      dispatch(login(response.data));
-      const { role, token } = response.data;
-      localStorage.setItem("token", token);
-
-      if (role === "MEMBER") {
-        navigate("/");
+      if (result.success) {
+        toast.success("Đăng nhập thành công!");
+        // Redirect to the page user was trying to access or home
+        navigate(from, { replace: true });
+      } else {
+        toast.error(result.error);
       }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Login failed. Please check your credentials."
-      );
+    } catch (error) {
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,7 +45,11 @@ function Login() {
       <div className="login-container">
         <div className="login-header">
           <Link to="/">
-            <img src={logo} alt="Heroout Logo" className="login-logo" />
+            <img
+              src={logo}
+              alt="Heroout Logo"
+              className="login-logo"
+            />
           </Link>
           <h2 className="login-title">Đăng nhập</h2>
           <p className="login-subtitle">Chào mừng bạn quay trở lại</p>
@@ -75,7 +79,7 @@ function Login() {
                 },
               ]}
             >
-              <Input placeholder="Nhập email của bạn" />
+              <Input placeholder="Nhập email của bạn" disabled={loading} />
             </Form.Item>
 
             <Form.Item
@@ -92,7 +96,7 @@ function Login() {
                 },
               ]}
             >
-              <Input.Password placeholder="Nhập mật khẩu" />
+              <Input.Password placeholder="Nhập mật khẩu" disabled={loading} />
             </Form.Item>
 
             <div className="form-actions">
@@ -109,8 +113,14 @@ function Login() {
             </div>
 
             <Form.Item className="submit-button-item">
-              <Button type="primary" htmlType="submit" className="login-button">
-                Đăng nhập
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="login-button"
+                loading={loading}
+                disabled={loading}
+              >
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </Form.Item>
 

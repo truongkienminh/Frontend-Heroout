@@ -8,29 +8,21 @@ import {
   Calendar,
   Bell,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import HeroOutLogo from "../assets/heroout.jpg";
-const getCurrentUser = () => {
-  // Giả lập user đã đăng nhập
-  return {
-    id: 1,
-    name: "Nguyễn Văn An",
-    email: "nguyenvanan@email.com",
-    role: "Member",
-    profile_pic: null,
-  };
-};
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const currentUser = getCurrentUser();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
-    // Xử lý logout
-    localStorage.removeItem("token");
-    window.location.href = "/login";
+    logout();
+    setIsDropdownOpen(false);
+    window.location.href = "/";
   };
 
   const getInitials = (name) => {
+    if (!name) return "U";
     return name
       .split(" ")
       .map((word) => word.charAt(0))
@@ -81,29 +73,31 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-3">
-            {currentUser ? (
-              // User is logged in
+            {isAuthenticated && user ? (
+              // User is logged in - show avatar and dropdown
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  {currentUser.profile_pic ? (
+                  {user.profile_pic ? (
                     <img
-                      src={currentUser.profile_pic || "/placeholder.svg"}
-                      alt={currentUser.name}
+                      src={user.profile_pic || "/placeholder.svg"}
+                      alt={user.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
-                      {getInitials(currentUser.name)}
+                      {getInitials(user.name)}
                     </div>
                   )}
                   <div className="text-left">
                     <p className="text-sm font-medium text-gray-800">
-                      {currentUser.name}
+                      {user.name}
                     </p>
-                    <p className="text-xs text-gray-500">{currentUser.role}</p>
+                    <p className="text-xs text-gray-500">
+                      {user.role || "Member"}
+                    </p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
@@ -114,24 +108,22 @@ const Header = () => {
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center space-x-3">
-                        {currentUser.profile_pic ? (
+                        {user.profile_pic ? (
                           <img
-                            src={currentUser.profile_pic || "/placeholder.svg"}
-                            alt={currentUser.name}
+                            src={user.profile_pic || "/placeholder.svg"}
+                            alt={user.name}
                             className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-semibold">
-                            {getInitials(currentUser.name)}
+                            {getInitials(user.name)}
                           </div>
                         )}
                         <div>
                           <p className="font-medium text-gray-800">
-                            {currentUser.name}
+                            {user.name}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            {currentUser.email}
-                          </p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
                       </div>
                     </div>
