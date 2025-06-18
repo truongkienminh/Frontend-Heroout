@@ -1,6 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import BannerImage1 from "../assets/banner1.jpg";
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Banner */}
@@ -16,7 +19,10 @@ const HomePage = () => {
                 chuyên nghiệp để giúp bạn và cộng đồng phòng ngừa tệ nạn xã hội.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="px-8 py-3 bg-white text-emerald-600 hover:bg-gray-100 rounded-md font-semibold text-lg transition-colors">
+                <button
+                  onClick={() => navigate("/risksurvey")}
+                  className="px-8 py-3 bg-white text-emerald-600 hover:bg-gray-100 rounded-md font-semibold text-lg transition-colors"
+                >
                   Bắt đầu ngay
                 </button>
                 <button className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-emerald-600 rounded-md font-semibold text-lg transition-colors">
