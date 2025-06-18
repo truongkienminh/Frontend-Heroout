@@ -6,6 +6,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { StateProvider } from "./contexts/StateProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "react-query";
 AOS.init({
   duration: 1000,
@@ -20,9 +21,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <StateProvider>
-              <RouterProvider router={router} />
-            </StateProvider>
+            <AuthProvider>
+              <StateProvider>
+                <RouterProvider router={router} />
+              </StateProvider>
+            </AuthProvider>
           </PersistGate>
         </Provider>
       </QueryClientProvider>

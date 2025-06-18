@@ -1,9 +1,10 @@
-import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import HomePage from "../pages/HomePage";
 import Login from "../components/authentication/Login/Login";
 import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
+import ProfilePage from "../pages/ProfilePage";
 import CoursesPage from "../pages/CoursesPage";
 import BlogsPage from "../pages/BlogsPage";
 import BlogDetailPage from "../pages/BlogDetailPage";
@@ -23,6 +24,8 @@ import StaffSurvey from "../components/staff/StaffSurvey";
 import StaffReport from "../components/staff/StaffReport";
 import StaffEvent from "../components/staff/StaffEvent";
 import RiskSurvey from "../components/RiskSurvey";
+import ProtectedRoute from "../components/ProtectedRoute";
+
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -83,7 +86,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/eventregistration",
-        element: <EventRegistration />,
+        element: (
+          <ProtectedRoute>
+            <EventRegistration />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/consultation",
@@ -95,11 +102,27 @@ export const router = createBrowserRouter([
       },
       {
         path: "/booking/",
-        element: <BookingPage />,
+        element: (
+          <ProtectedRoute>
+            <BookingPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/booking/:consultantId",
-        element: <BookingPage />,
+        element: (
+          <ProtectedRoute>
+            <BookingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/risksurvey",
@@ -109,23 +132,43 @@ export const router = createBrowserRouter([
   },
   {
     path: "learningcourse/:courseId",
-    element: <LearningCoursePage />,
+    element: (
+      <ProtectedRoute>
+        <LearningCoursePage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <Login />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/register",
-    element: <Register />,
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <Register />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/forgotpassword",
-    element: <ForgotPassword />,
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <ForgotPassword />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/staff",
-    element: <StaffLayout />,
+    element: (
+      <ProtectedRoute>
+        <StaffLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
