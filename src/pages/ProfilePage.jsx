@@ -124,10 +124,9 @@ const ProfilePage = () => {
       // Prepare data for API
       const updateData = {
         name: formData.name.trim(),
-        email: formData.email.trim(),
         phone: formData.phone.trim() || null,
         address: formData.address.trim() || null,
-        date_of_birth: formData.dateOfBirth || null,
+        dateOfBirth: formData.date_of_birth || null,
         gender: formData.gender || null,
         avatar: formData.avatar || null,
       };
@@ -351,6 +350,7 @@ const ProfilePage = () => {
                   type="email"
                   name="email"
                   value={formData.email}
+                  disabled
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   placeholder="Nhập email"
