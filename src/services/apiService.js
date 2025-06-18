@@ -37,6 +37,23 @@ class ApiService {
     }
   }
 
+  static async updateAccount(userId, userData) {
+    try {
+      const response = await api.put(`account/${userId}`, userData);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getAccountById(userId) {
+    try {
+      const response = await api.get(`account/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
 
   // Blog APIs
   static async getBlogs() {

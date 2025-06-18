@@ -27,10 +27,13 @@ function Login() {
         // Redirect to the page user was trying to access or home
         navigate(from, { replace: true });
       } else {
-        toast.error(result.error);
+        toast.error(
+          result.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
+        );
       }
     } catch (error) {
-      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
+      console.error("Login error:", error);
+      toast.error("Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }

@@ -109,23 +109,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post("register", userData);
-      const { token, ...newUserData } = response.data;
-
-      if (!token) {
-        return {
-          success: false,
-          error: "Token không được trả về từ server",
-        };
-      }
-
-      // Store token and user data
-      localStorage.setItem("token", token);
-      localStorage.setItem("userData", JSON.stringify(newUserData));
-
-      // Set user data (excluding token)
-      setUser(newUserData);
-      setIsAuthenticated(true);
-
+      const newUserData = response.data;
       return { success: true, user: newUserData };
     } catch (error) {
       console.error("Registration failed:", error);

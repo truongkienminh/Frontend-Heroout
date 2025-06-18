@@ -4,6 +4,7 @@ import HomePage from "../pages/HomePage";
 import Login from "../components/authentication/Login/Login";
 import Register from "../components/authentication/Register";
 import ForgotPassword from "../components/authentication/ForgotPassword";
+import ProfilePage from "../pages/ProfilePage";
 import CoursesPage from "../pages/CoursesPage";
 import BlogsPage from "../pages/BlogsPage";
 import BlogDetailPage from "../pages/BlogDetailPage";
@@ -22,8 +23,10 @@ import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
 import StaffReport from "../components/staff/StaffReport";
 import StaffEvent from "../components/staff/StaffEvent";
+import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
+
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -117,6 +120,18 @@ export const router = createBrowserRouter([
             <BookingPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/risksurvey",
+        element: <RiskSurvey />,
       },
     ],
   },
