@@ -16,9 +16,8 @@ import {
   CalendarCheck,
 } from "lucide-react";
 
-import api from "../services/axios"; // Import the configured axios instance
+import api from "../services/axios";
 
-// Helper function to format ISO date string
 const formatDateTime = (isoString) => {
   if (!isoString) return "N/A";
   try {
@@ -34,7 +33,6 @@ const formatDateTime = (isoString) => {
   }
 };
 
-// Simplified getLucideIcon - only keeps generic detail icons
 const getLucideIcon = (type) => {
   switch (type) {
     case "calendar":
@@ -53,43 +51,33 @@ const EventPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  console.log("Component rendered. Current events state:", events);
-  console.log("Is Loading:", isLoading);
-  console.log("Error:", error);
-
   useEffect(() => {
     console.log("useEffect is running.");
 
     const fetchEvents = async () => {
       try {
-        console.log("Fetching events from API...");
         const response = await api.get("/events");
-        console.log("API Response received:", response);
-        console.log("API Response Data:", response.data); // Log data received from API
+
+        console.log("API Response Data:", response.data);
 
         if (Array.isArray(response.data)) {
           setEvents(response.data);
-          console.log("Events state updated with data:", response.data); // Log data used to update state
         } else {
           console.error("API response data is not an array:", response.data);
           setError(new Error("API returned data in unexpected format."));
         }
 
         setIsLoading(false);
-        console.log("setIsLoading(false)");
       } catch (err) {
         console.error("Error fetching events:", err);
         setError(err);
         setIsLoading(false);
-        console.log("setIsLoading(false) due to error");
       }
     };
 
     fetchEvents();
     console.log("fetchEvents function called.");
-  }, []); // Empty dependency array means this runs once on mount
-
-  // upcomingEventsFiltered logic removed. Now we render directly from 'events'.
+  }, []);
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 min-h-screen">
@@ -129,12 +117,8 @@ const EventPage = () => {
       </div>
 
       <div className="mb-10">
-        {/* Updated heading */}
-        <h3 className="text-xl font-bold text-gray-800 mb-4">
-          Tất cả Sự kiện (Lấy từ API)
-        </h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Tất cả Sự kiện</h3>
 
-        {/* Updated console log for rendering */}
         {console.log("Rendering based on:", {
           isLoading,
           error,
@@ -151,14 +135,12 @@ const EventPage = () => {
           </div>
         )}
 
-        {/* Updated empty state message and condition */}
         {!isLoading && !error && events.length === 0 && (
           <div className="text-center text-gray-600">Không có sự kiện nào.</div>
         )}
 
         {!isLoading && !error && events.length > 0 && (
           <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-            {/* Mapping directly over 'events' state */}
             {events.map((event) => {
               console.log("Rendering event:", event.id, event.title);
               return (
@@ -166,17 +148,15 @@ const EventPage = () => {
                   key={event.id}
                   className="flex-shrink-0 w-72 min-w-[288px] bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
                 >
-                  {/* Removed the colored header/icon as type/iconType is not available */}
                   <div className="relative h-20 flex justify-center items-center bg-green-100 text-green-800">
                     <CalendarCheck className="w-10 h-10 text-green-600" />{" "}
-                    {/* Using a generic icon */}
                   </div>
 
                   <div className="p-4 flex-grow flex flex-col">
                     <div className="text-base font-bold text-gray-800 mb-2">
                       {event.title}
                     </div>
-                    {/* Display description if available */}
+
                     {event.description && (
                       <div className="text-sm text-gray-600 mb-2 line-clamp-3">
                         {event.description}
@@ -186,29 +166,25 @@ const EventPage = () => {
                       <div className="flex items-center mb-1 gap-2">
                         {getLucideIcon("calendar")}{" "}
                         {formatDateTime(event.startTime).split(",")[0]}{" "}
-                        {/* Display Date */}
                       </div>
                       <div className="flex items-center mb-1 gap-2">
                         {getLucideIcon("clock")}{" "}
                         {formatDateTime(event.startTime).split(",")[1]?.trim()}{" "}
-                        {/* Display Start Time */}
                         {event.endTime &&
                           ` - ${formatDateTime(event.endTime)
                             .split(",")[1]
                             ?.trim()}`}{" "}
-                        {/* Display End Time if available */}
                       </div>
                       {event.location && (
                         <div className="flex items-center mb-1 gap-2">
                           {getLucideIcon("map-pin")} {event.location}
                         </div>
                       )}
-                      {/* Price/Prize lines removed as per new data */}
                     </div>
 
                     <div className="mt-auto">
                       <button className="w-full px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        Xem chi tiết {/* Generic action */}
+                        Xem chi tiết
                       </button>
                     </div>
                   </div>
