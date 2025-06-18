@@ -1,24 +1,19 @@
 import { Link } from "react-router-dom";
 import { Video, Users, Calendar, Award } from "lucide-react";
 import { useState, useEffect } from "react";
+import ApiService from "../services/apiService";
 
 const ConsultationPage = () => {
   const [consultants, setConsultants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch consultants from API
+  // Fetch consultants using ApiService
   useEffect(() => {
     const fetchConsultants = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://684482e971eb5d1be0337d19.mockapi.io/consultants"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch consultants");
-        }
-        const data = await response.json();
+        const data = await ApiService.getConsultants();
         setConsultants(data);
         setError(null);
       } catch (err) {
