@@ -124,7 +124,7 @@ const EventDetail = () => {
   // Function to handle registration button click
   const handleRegisterClick = async () => {
     // Get accountId directly from the user object provided by useAuth
-    const accountId = user?.accountId;
+    const accountId = user?.id;
 
     if (!accountId) {
       // Handle case where user is not logged in or accountId is missing
@@ -149,7 +149,7 @@ const EventDetail = () => {
 
       // Assume the API returns 2xx status on success.
       // A 409 Conflict status might indicate already registered.
-      const response = await api.post("/api/participations", payload);
+      const response = await api.post("/participations", payload);
 
       console.log("Registration API response:", response.data); // Log response
 
