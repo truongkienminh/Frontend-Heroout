@@ -23,7 +23,9 @@ import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
 import StaffReport from "../components/staff/StaffReport";
 import StaffEvent from "../components/staff/StaffEvent";
+import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
+
 
 // Protected route components (commented out for now)
 // const ProtectedRouteAuth = ({ children }) => {
@@ -121,6 +123,10 @@ export const router = createBrowserRouter([
             <ProfilePage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "/risksurvey",
+        element: <RiskSurvey />,
       },
     ],
   },
