@@ -144,8 +144,9 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
   {
-    path: "/staff",
+    path: "",
     element: (
       <ProtectedRoute>
         <StaffLayout />
@@ -153,37 +154,35 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "",
-        element: <Navigate to="dashboard" replace />,
-      },
-      {
         path: "dashboard",
         element: <StaffDashboard />,
       },
       {
-        path: "members",
+        path: "managemembers",
         element: <StaffMember />,
       },
       {
-        path: "courses",
+        path: "managecourses",
         element: <StaffCourse />,
       },
       {
-        path: "surveys",
+        path: "managesurveys",
         element: <StaffSurvey />,
       },
       {
-        path: "reports",
+        path: "managereports",
         element: <StaffReport />,
       },
       {
-        path: "events",
+        path: "manageevents",
         element: <StaffEvent />,
       },
       {
-        path: "meetings",
+        path: "managemeetings",
         element: <StaffMeeting />,
-      }
+      },
     ],
-  },
+  }
+
+
 ]);

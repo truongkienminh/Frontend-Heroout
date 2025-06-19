@@ -26,7 +26,7 @@ function Login() {
         toast.success("Đăng nhập thành công!");
         // --- START CHANGES HERE ---
         if (result.user && result.user.role === "STAFF") {
-          navigate("/staff", { replace: true });
+          navigate("/dashboard", { replace: true });
         } else {
           // Default to / for MEMBER or if role is not specified
           navigate(from, { replace: true });

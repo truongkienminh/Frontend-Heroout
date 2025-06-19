@@ -194,10 +194,10 @@ const StaffEvent = () => {
                   <MapPin size={18} className="text-gray-400" />
                   {event.location}
                 </div>
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                   <Users size={18} className="text-gray-400" />
                   {total} người tham gia
-                </div>
+                </div> */}
               </div>
 
               <button className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90">
