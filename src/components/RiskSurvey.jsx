@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Info, Clock, Users, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const RiskSurvey = () => {
   const [surveyData, setSurveyData] = useState(null);
@@ -9,6 +10,7 @@ const RiskSurvey = () => {
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSurveyData();
@@ -18,14 +20,14 @@ const RiskSurvey = () => {
     try {
       setLoading(true);
       const response = await fetch('https://684c6fd0ed2578be881ecef7.mockapi.io/risksurvey');
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('API Response:', data);
-      
+
       // Assuming the API returns an array and we want the first item
       // Or adjust this based on your actual API response structure
       const surveyInfo = Array.isArray(data) ? data[0] : data;
@@ -216,7 +218,10 @@ const RiskSurvey = () => {
                     <div>
                       <h3 className="font-semibold text-blue-800 mb-2">Tham gia khóa học "Kỹ năng từ chối ma túy"</h3>
                       <p className="text-blue-700 text-sm mb-3">Học cách từ chối lời kéo sử dụng chất gây nghiện</p>
-                      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                      <button
+                        onClick={() => navigate('/courses')}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
                         Đăng ký
                       </button>
                     </div>
@@ -229,7 +234,9 @@ const RiskSurvey = () => {
                     <div>
                       <h3 className="font-semibold text-red-800 mb-2">Tư vấn với chuyên gia</h3>
                       <p className="text-red-700 text-sm mb-3">Gặp gỡ chuyên viên để được hỗ trợ cá nhân</p>
-                      <button className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                      <button
+                        onClick={() => navigate('/consultation')}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
                         Đặt lịch
                       </button>
                     </div>

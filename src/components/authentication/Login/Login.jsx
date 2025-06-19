@@ -24,8 +24,14 @@ function Login() {
 
       if (result.success) {
         toast.success("Đăng nhập thành công!");
-        // Redirect to the page user was trying to access or home
-        navigate(from, { replace: true });
+        // --- START CHANGES HERE ---
+        if (result.user && result.user.role === "STAFF") {
+          navigate("/staff", { replace: true });
+        } else {
+          // Default to / for MEMBER or if role is not specified
+          navigate(from, { replace: true });
+        }
+        // --- END CHANGES HERE ---
       } else {
         toast.error(
           result.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
