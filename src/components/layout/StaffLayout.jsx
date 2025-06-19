@@ -112,7 +112,7 @@ const StaffLayout = () => {
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
               >
                 <LogOut size={16} />
-                Đăng xuất
+                LogOut
               </button>
             </div>
           )}
