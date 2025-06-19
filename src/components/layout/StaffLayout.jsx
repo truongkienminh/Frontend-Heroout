@@ -27,13 +27,13 @@ const StaffLayout = () => {
   };
 
   const menuItems = [
-    { icon: BarChart3, label: "Dashboard", path: "/staff/dashboard" },
-    { icon: Users, label: "Quản lý thành viên", path: "/staff/members" },
-    { icon: GraduationCap, label: "Quản lý khóa học", path: "/staff/courses" },
-    { icon: FileBarChart2, label: "Quản lý báo cáo", path: "/staff/reports" },
-    { icon: CalendarDays, label: "Quản lý sự kiện", path: "/staff/events" },
-    { icon: FileText, label: "Quản lý khảo sát", path: "/staff/surveys" },
-    { icon: Calendar, label: "Quản lý cuộc họp", path: "/staff/meetings" },
+    { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+    { icon: Users, label: "Quản lý thành viên", path: "/managemembers" },
+    { icon: GraduationCap, label: "Quản lý khóa học", path: "/managecourses" },
+    { icon: FileBarChart2, label: "Quản lý báo cáo", path: "/managereports" },
+    { icon: CalendarDays, label: "Quản lý sự kiện", path: "/manageevents" },
+    { icon: FileText, label: "Quản lý khảo sát", path: "/managesurveys" },
+    { icon: Calendar, label: "Quản lý cuộc họp", path: "/managemeetings" },
   ];
 
   // Đóng dropdown khi click ngoài vùng
