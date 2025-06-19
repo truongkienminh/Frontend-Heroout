@@ -1,26 +1,19 @@
-import React from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import {
-  BarChart3,
-  Users,
-  GraduationCap,
-  FileText,
-  FileBarChart2,
-  CalendarDays
-} from 'lucide-react';
-import HeroOutLogo from '../../assets/heroout.jpg';
+import { Link, Outlet, useLocation } from "react-router-dom"
+import { BarChart3, Users, GraduationCap, FileText, FileBarChart2, CalendarDays, Calendar } from "lucide-react"
+import HeroOutLogo from "../../assets/heroout.jpg"
 
 const StaffLayout = () => {
-  const location = useLocation();
+  const location = useLocation()
 
   const menuItems = [
-    { icon: BarChart3, label: 'Dashboard', path: '/staff/dashboard' },
-    { icon: Users, label: 'Quản lý thành viên', path: '/staff/members' },
-    { icon: GraduationCap, label: 'Quản lý khóa học', path: '/staff/courses' },
-    { icon: FileBarChart2, label: 'Quản lý báo cáo', path: '/staff/reports' },
-    { icon: CalendarDays, label: 'Quản lý sự kiện', path: '/staff/events' },
-    { icon: FileText, label: 'Quản lý khảo sát', path: '/staff/surveys' }
-  ];
+    { icon: BarChart3, label: "Dashboard", path: "/staff/dashboard" },
+    { icon: Users, label: "Quản lý thành viên", path: "/staff/members" },
+    { icon: GraduationCap, label: "Quản lý khóa học", path: "/staff/courses" },
+    { icon: FileBarChart2, label: "Quản lý báo cáo", path: "/staff/reports" },
+    { icon: CalendarDays, label: "Quản lý sự kiện", path: "/staff/events" },
+    { icon: FileText, label: "Quản lý khảo sát", path: "/staff/surveys" },
+    { icon: Calendar, label: "Quản lý cuộc họp", path: "/staff/meetings" },
+  ]
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -29,31 +22,26 @@ const StaffLayout = () => {
         {/* Logo */}
         <div className="flex justify-center items-center h-32 border-b border-gray-200">
           <Link to="/staff/dashboard">
-            <img
-              src={HeroOutLogo}
-              alt="HeroOut Logo"
-              className="h-24 w-auto object-contain"
-            />
+            <img src={HeroOutLogo || "/placeholder.svg"} alt="HeroOut Logo" className="h-24 w-auto object-contain" />
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto mt-6">
           {menuItems.map((item, index) => {
-            const isActive = location.pathname.startsWith(item.path);
+            const isActive = location.pathname.startsWith(item.path)
             return (
               <Link
                 key={index}
                 to={item.path}
-                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors outline-none focus:outline-none ring-0 ${isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors outline-none focus:outline-none ring-0 ${
+                  isActive ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
               >
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.label}
               </Link>
-            );
+            )
           })}
         </nav>
 
@@ -76,7 +64,7 @@ const StaffLayout = () => {
         <Outlet />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default StaffLayout;
+export default StaffLayout

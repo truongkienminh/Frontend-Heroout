@@ -23,38 +23,11 @@ import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
 import StaffReport from "../components/staff/StaffReport";
 import StaffEvent from "../components/staff/StaffEvent";
+import StaffMeeting from "../components/staff/StaffMeeting";
 import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
 
-
-// Protected route components (commented out for now)
-// const ProtectedRouteAuth = ({ children }) => {
-//   const user = useSelector(selectUser);
-//   if (!user) {
-//     alertFail("You need to login first!!");
-//     return <Navigate to="/login" replace />;
-//   }
-//   return children;
-// };
-
-// const ProtectedRouteCreator = ({ children }) => {
-//   const user = useSelector(selectUser);
-//   if (user?.role === "AUDIENCE") {
-//     alertFail("You do not have permissions to access");
-//     return <Navigate to="/go-pro" replace />;
-//   }
-//   return children;
-// };
-
-// const ProtectedADMIN = ({ children }) => {
-//   const user = useSelector(selectUser);
-//   if (user?.role !== "ADMIN" && user?.role !== "MOD") {
-//     alertFail("You do not have permissions to access");
-//     return <Navigate to="/" replace />;
-//   }
-//   return children;
-// };
 
 export const router = createBrowserRouter([
   {
@@ -131,7 +104,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/risksurvey",
-        element: <RiskSurvey />,
+        element: (
+          <ProtectedRoute>
+            <RiskSurvey />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
@@ -203,6 +180,10 @@ export const router = createBrowserRouter([
         path: "events",
         element: <StaffEvent />,
       },
+      {
+        path: "meetings",
+        element: <StaffMeeting />,
+      }
     ],
   },
 ]);
