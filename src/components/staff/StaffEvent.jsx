@@ -18,6 +18,18 @@ const StaffEvent = () => {
     startTime: '',
     endTime: ''
   });
+
+  const handleEditClick = (event) => {
+    setEventToEdit(event);
+    setEditEventData({
+      title: event.title || '',
+      description: event.description || '',
+      location: event.location || '',
+      startTime: event.startTime ? event.startTime.slice(0, 16) : '',
+      endTime: event.endTime ? event.endTime.slice(0, 16) : ''
+    });
+  };
+
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -73,7 +85,22 @@ const StaffEvent = () => {
       console.error('Lỗi khi xóa sự kiện:', error);
     }
   };
-  
+
+  const handleUpdateEvent = async () => {
+    if (!eventToEdit) return;
+    try {
+      const response = await api.put(`/events/${eventToEdit.id}`, {
+        ...eventToEdit,
+        ...editEventData
+      });
+      setEvents(prev =>
+        prev.map(ev => (ev.id === eventToEdit.id ? response.data : ev))
+      );
+      setEventToEdit(null);
+    } catch (error) {
+      console.error('Lỗi khi cập nhật sự kiện:', error);
+    }
+  };
 
   const filteredEvents = events.filter(event =>
     event.title?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -166,6 +193,64 @@ const StaffEvent = () => {
         </div>
       )}
 
+      {/* Edit Event Modal */}
+      {eventToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-xl p-6 relative shadow-lg">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Chỉnh sửa sự kiện</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Tiêu đề"
+                className="p-3 border rounded-lg"
+                value={editEventData.title}
+                onChange={e => setEditEventData({ ...editEventData, title: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Địa điểm"
+                className="p-3 border rounded-lg"
+                value={editEventData.location}
+                onChange={e => setEditEventData({ ...editEventData, location: e.target.value })}
+              />
+              <input
+                type="datetime-local"
+                className="p-3 border rounded-lg"
+                value={editEventData.startTime}
+                onChange={e => setEditEventData({ ...editEventData, startTime: e.target.value })}
+              />
+              <input
+                type="datetime-local"
+                className="p-3 border rounded-lg"
+                value={editEventData.endTime}
+                onChange={e => setEditEventData({ ...editEventData, endTime: e.target.value })}
+              />
+            </div>
+            <textarea
+              placeholder="Mô tả sự kiện"
+              className="w-full p-3 border rounded-lg mb-4"
+              rows={3}
+              value={editEventData.description}
+              onChange={e => setEditEventData({ ...editEventData, description: e.target.value })}
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setEventToEdit(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleUpdateEvent}
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dashboard */}
       <h1 className="text-3xl font-bold text-gray-800">Event Dashboard</h1>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -221,7 +306,11 @@ const StaffEvent = () => {
               <div className="flex justify-between items-start mb-3">
                 <h3 className="text-xl font-bold text-gray-800">{event.title}</h3>
                 <div className="flex gap-3">
-                  <Edit2 size={18} className="text-blue-500 cursor-pointer" />
+                  <Edit2
+                    size={18}
+                    className="text-blue-500 cursor-pointer"
+                    onClick={() => handleEditClick(event)}
+                  />
                   <Trash2
                     size={18}
                     className="text-red-500 cursor-pointer"
