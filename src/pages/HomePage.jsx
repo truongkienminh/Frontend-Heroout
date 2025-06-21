@@ -59,7 +59,10 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          {/* Services Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {" "}
+            {/* Adjusted grid columns for better layout with 4 items */}
             {/* Courses */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
@@ -81,10 +84,9 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              {/* Changed h3 to Link */}
               <Link
-                to="/"
-                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline for better link behavior
+                to="/courses"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
               >
                 Khóa học trực tuyến
               </Link>
@@ -93,7 +95,6 @@ const HomePage = () => {
                 thức và tác hại của ma túy.
               </p>
             </div>
-
             {/* Events */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
@@ -115,10 +116,9 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              {/* Changed h3 to Link */}
               <Link
-                to="/"
-                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline
+                to="/events"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
               >
                 Sự kiện cộng đồng
               </Link>
@@ -127,7 +127,6 @@ const HomePage = () => {
                 lan tỏa thông điệp tích cực.
               </p>
             </div>
-
             {/* Consultation */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
@@ -149,10 +148,9 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              {/* Changed h3 to Link */}
               <Link
-                to="/"
-                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline
+                to="/consultation"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
               >
                 Tư vấn chuyên nghiệp
               </Link>
@@ -161,6 +159,44 @@ const HomePage = () => {
                 kịp thời.
               </p>
             </div>
+            {/* Add new card: Eassist Test */}
+            <div
+              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
+              data-aos="fade-up"
+              data-aos-delay="400" // Added delay
+            >
+              <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-6">
+                {" "}
+                {/* Purple icon background */}
+                {/* Icon for test/quiz (e.g., checklist or document) - Using document-text icon from Heroicons */}
+                <svg
+                  className="w-8 h-8 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              {/* Link for the new service */}
+              <Link
+                to="/eassist" // Route for the test
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
+              >
+                Làm Trắc Nghiệm
+              </Link>
+              <p className="text-gray-600 leading-relaxed">
+                Kiểm tra kiến thức và mức độ hiểu biết của bạn về phòng ngừa ma
+                túy.
+              </p>
+            </div>
+            {/* End new card */}
           </div>
         </div>
       </section>
