@@ -70,6 +70,12 @@ const Header = () => {
             >
               Tư vấn
             </Link>
+            <Link
+              to="/risksurvey"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Khảo sát Eassist
+            </Link>
           </nav>
 
           <div className="hidden md:flex items-center space-x-3">

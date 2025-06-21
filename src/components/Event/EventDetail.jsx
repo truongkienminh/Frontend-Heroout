@@ -341,7 +341,6 @@ const EventDetail = () => {
             </button>
           )}
         </div>
-        {/* End Registration Section */}
       </div>
     </div>
   );

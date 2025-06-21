@@ -24,14 +24,12 @@ function Login() {
 
       if (result.success) {
         toast.success("Đăng nhập thành công!");
-        // --- START CHANGES HERE ---
+
         if (result.user && result.user.role === "STAFF") {
           navigate("/dashboard", { replace: true });
         } else {
-          // Default to / for MEMBER or if role is not specified
           navigate(from, { replace: true });
         }
-        // --- END CHANGES HERE ---
       } else {
         toast.error(
           result.error || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."
@@ -54,11 +52,7 @@ function Login() {
       <div className="login-container">
         <div className="login-header">
           <Link to="/">
-            <img
-              src={logo}
-              alt="Heroout Logo"
-              className="login-logo"
-            />
+            <img src={logo} alt="Heroout Logo" className="login-logo" />
           </Link>
           <h2 className="login-title">Đăng nhập</h2>
           <p className="login-subtitle">Chào mừng bạn quay trở lại</p>

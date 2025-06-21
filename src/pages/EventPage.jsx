@@ -1,8 +1,6 @@
-// src/pages/EventPage.js
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Ensure Link is imported
+import { Link } from "react-router-dom";
 
-// ... (other imports and helper functions remain the same)
 import {
   Search,
   Settings,
@@ -116,6 +114,7 @@ const EventPage = () => {
           <button className="flex items-center justify-center md:justify-between gap-2 w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500">
             Tất cả
             <Settings className="w-5 h-5" />
+            ``
           </button>
         </div>
         <div className="flex border border-gray-300 rounded-md overflow-hidden w-full md:w-auto">
