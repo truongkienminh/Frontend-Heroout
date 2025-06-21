@@ -62,8 +62,6 @@ const HomePage = () => {
           {/* Services Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {" "}
-            {/* Adjusted grid columns for better layout with 4 items */}
-            {/* Courses */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
               data-aos="fade-up"
@@ -117,7 +115,7 @@ const HomePage = () => {
                 </svg>
               </div>
               <Link
-                to="/events"
+                to="/event"
                 className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
               >
                 Sự kiện cộng đồng
@@ -127,7 +125,6 @@ const HomePage = () => {
                 lan tỏa thông điệp tích cực.
               </p>
             </div>
-            {/* Consultation */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
               data-aos="fade-up"
@@ -159,16 +156,13 @@ const HomePage = () => {
                 kịp thời.
               </p>
             </div>
-            {/* Add new card: Eassist Test */}
             <div
               className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-8 text-center"
               data-aos="fade-up"
-              data-aos-delay="400" // Added delay
+              data-aos-delay="400"
             >
               <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-6">
                 {" "}
-                {/* Purple icon background */}
-                {/* Icon for test/quiz (e.g., checklist or document) - Using document-text icon from Heroicons */}
                 <svg
                   className="w-8 h-8 text-purple-600"
                   fill="none"
@@ -184,9 +178,9 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              {/* Link for the new service */}
+
               <Link
-                to="/eassist" // Route for the test
+                to="/risksurvey"
                 className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline"
               >
                 Làm Trắc Nghiệm
@@ -196,7 +190,6 @@ const HomePage = () => {
                 túy.
               </p>
             </div>
-            {/* End new card */}
           </div>
         </div>
       </section>
