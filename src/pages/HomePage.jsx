@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Import Link
 import BannerImage1 from "../assets/banner1.jpg";
 
 const HomePage = () => {
@@ -81,9 +81,13 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              {/* Changed h3 to Link */}
+              <Link
+                to="/"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline for better link behavior
+              >
                 Khóa học trực tuyến
-              </h3>
+              </Link>
               <p className="text-gray-600 leading-relaxed">
                 Các khóa học được thiết kế bởi chuyên gia, giúp nâng cao nhận
                 thức và tác hại của ma túy.
@@ -111,9 +115,13 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              {/* Changed h3 to Link */}
+              <Link
+                to="/"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline
+              >
                 Sự kiện cộng đồng
-              </h3>
+              </Link>
               <p className="text-gray-600 leading-relaxed">
                 Tham gia các hoạt động giáo dục, tuyên truyền trong cộng đồng để
                 lan tỏa thông điệp tích cực.
@@ -141,9 +149,13 @@ const HomePage = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              {/* Changed h3 to Link */}
+              <Link
+                to="/"
+                className="text-xl font-semibold text-gray-800 mb-4 inline-block hover:underline" // Added inline-block and hover:underline
+              >
                 Tư vấn chuyên nghiệp
-              </h3>
+              </Link>
               <p className="text-gray-600 leading-relaxed">
                 Đặt lịch tư vấn với các chuyên gia tâm lý, bác sĩ để được hỗ trợ
                 kịp thời.
