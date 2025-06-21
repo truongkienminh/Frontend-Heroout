@@ -5,10 +5,19 @@ import {
 import api from '../../services/axios';
 
 const StaffEvent = () => {
+  const [eventToDelete, setEventToDelete] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [eventToEdit, setEventToEdit] = useState(null);
+  const [editEventData, setEditEventData] = useState({
+    title: '',
+    description: '',
+    location: '',
+    startTime: '',
+    endTime: ''
+  });
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -54,6 +63,18 @@ const StaffEvent = () => {
     }
   };
 
+  const handleDeleteEvent = async (id) => {
+    setEventToDelete(null);
+    if (!id) return;
+    try {
+      await api.delete(`/events/${id}`);
+      setEvents(prev => prev.filter(event => event.id !== id));
+    } catch (error) {
+      console.error('Lỗi khi xóa sự kiện:', error);
+    }
+  };
+  
+
   const filteredEvents = events.filter(event =>
     event.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -63,6 +84,28 @@ const StaffEvent = () => {
   return (
     <div className="p-8 space-y-8 bg-gradient-to-r from-blue-50 to-indigo-100 min-h-screen">
       {/* Modal */}
+      {eventToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-md p-6 relative shadow-lg">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Xác nhận xóa sự kiện</h2>
+            <p className="mb-6">Bạn có chắc muốn xóa sự kiện <span className="font-semibold">{eventToDelete.title}</span>?</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setEventToDelete(null)}
+                className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => handleDeleteEvent(eventToDelete.id)}
+                className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-xl p-6 relative shadow-lg">
@@ -179,7 +222,11 @@ const StaffEvent = () => {
                 <h3 className="text-xl font-bold text-gray-800">{event.title}</h3>
                 <div className="flex gap-3">
                   <Edit2 size={18} className="text-blue-500 cursor-pointer" />
-                  <Trash2 size={18} className="text-red-500 cursor-pointer" />
+                  <Trash2
+                    size={18}
+                    className="text-red-500 cursor-pointer"
+                    onClick={() => setEventToDelete(event)}
+                  />
                 </div>
               </div>
 
