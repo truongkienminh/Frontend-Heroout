@@ -325,6 +325,12 @@ const StaffEvent = () => {
                 <div className="flex items-center gap-3">
                   <Calendar size={18} className="text-gray-400" />
                   {event.startTime?.slice(0, 16).replace('T', ' lúc ')}
+                  {event.endTime &&
+                    <>
+                      <span className="mx-1 text-gray-400">-</span>
+                      {event.endTime.slice(0, 16).replace('T', ' lúc ')}
+                    </>
+                  }
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin size={18} className="text-gray-400" />
