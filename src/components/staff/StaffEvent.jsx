@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Calendar, Users, MapPin, Plus, Edit2, Trash2, Search, Filter
+  Calendar, Users, MapPin, Plus, Edit2, Trash2, Search, Filter, X, CheckCircle, Circle, UserCheck, UserX
 } from 'lucide-react';
 import api from '../../services/axios';
 
@@ -19,6 +19,12 @@ const StaffEvent = () => {
     endTime: ''
   });
 
+  // Participant management states
+  const [showParticipantModal, setShowParticipantModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [participantSearch, setParticipantSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'checkin', 'checkout'
+
   const handleEditClick = (event) => {
     setEventToEdit(event);
     setEditEventData({
@@ -28,6 +34,13 @@ const StaffEvent = () => {
       startTime: event.startTime ? event.startTime.slice(0, 16) : '',
       endTime: event.endTime ? event.endTime.slice(0, 16) : ''
     });
+  };
+
+  const handleManageParticipants = (event) => {
+    setSelectedEvent(event);
+    setShowParticipantModal(true);
+    setParticipantSearch('');
+    setActiveTab('all');
   };
 
   const [newEvent, setNewEvent] = useState({
@@ -45,6 +58,7 @@ const StaffEvent = () => {
         setEvents(response.data);
       } catch (error) {
         console.error('Error fetching events:', error);
+        setEvents([]); 
       } finally {
         setLoading(false);
       }
@@ -57,7 +71,10 @@ const StaffEvent = () => {
     sum + (e.participants?.filter(p => p.checkedIn)?.length || 0)
   ), 0);
 
-  const totalCheckout = NaN;
+  const totalCheckout = events.reduce((sum, e) => (
+    sum + (e.participants?.filter(p => p.checkedOut)?.length || 0)
+  ), 0);
+  
   const totalParticipants = events.reduce((sum, e) => sum + (e.participants?.length || 0), 0);
   const attendanceRate = totalParticipants ? `${Math.round((totalCheckin / totalParticipants) * 100)}%` : '0%';
 
@@ -102,15 +119,58 @@ const StaffEvent = () => {
     }
   };
 
+  const handleCheckIn = async (participantId) => {
+    try {
+      const response = await api.put(`/events/${selectedEvent.id}/participants/${participantId}/checkin`);
+      setEvents(prev =>
+        prev.map(ev => (ev.id === selectedEvent.id ? response.data : ev))
+      );
+      setSelectedEvent(response.data);
+    } catch (error) {
+      console.error('Lỗi khi check-in:', error);
+    }
+  };
+
+  const handleCheckOut = async (participantId) => {
+    try {
+      const response = await api.put(`/events/${selectedEvent.id}/participants/${participantId}/checkout`);
+      setEvents(prev =>
+        prev.map(ev => (ev.id === selectedEvent.id ? response.data : ev))
+      );
+      setSelectedEvent(response.data);
+    } catch (error) {
+      console.error('Lỗi khi check-out:', error);
+    }
+  };
+
   const filteredEvents = events.filter(event =>
     event.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Filter participants based on search and tab
+  const getFilteredParticipants = () => {
+    if (!selectedEvent?.participants) return [];
+    
+    let filtered = selectedEvent.participants.filter(participant =>
+      participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+      participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+    );
+
+    switch (activeTab) {
+      case 'checkin':
+        return filtered.filter(p => p.checkedIn && !p.checkedOut);
+      case 'checkout':
+        return filtered.filter(p => p.checkedOut);
+      default:
+        return filtered;
+    }
+  };
 
   if (loading) return <div className="p-8 text-lg">Loading...</div>;
 
   return (
     <div className="p-8 space-y-8 bg-gradient-to-r from-blue-50 to-indigo-100 min-h-screen">
-      {/* Modal */}
+      {/* Delete Event Modal */}
       {eventToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md p-6 relative shadow-lg">
@@ -133,6 +193,8 @@ const StaffEvent = () => {
           </div>
         </div>
       )}
+
+      {/* Create Event Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-xl p-6 relative shadow-lg">
@@ -251,12 +313,187 @@ const StaffEvent = () => {
         </div>
       )}
 
+      {/* Participant Management Modal */}
+      {showParticipantModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+              <div>
+                <h2 className="text-2xl font-bold">Quản lý Người tham gia</h2>
+                <p className="text-blue-100 mt-1">{selectedEvent.title}</p>
+              </div>
+              <button
+                onClick={() => setShowParticipantModal(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Search Bar */}
+              <div className="flex items-center bg-gray-50 border rounded-xl px-4 py-3 mb-6">
+                <Search size={20} className="text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo tên hoặc email..."
+                  className="flex-grow outline-none bg-transparent text-base"
+                  value={participantSearch}
+                  onChange={(e) => setParticipantSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 mb-6 border-b">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
+                    activeTab === 'all'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Users size={18} className="inline mr-2" />
+                  Tất cả ({selectedEvent.participants?.length || 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('checkin')}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
+                    activeTab === 'checkin'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <UserCheck size={18} className="inline mr-2" />
+                  Check-in ({selectedEvent.participants?.filter(p => p.checkedIn && !p.checkedOut)?.length || 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('checkout')}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
+                    activeTab === 'checkout'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <UserX size={18} className="inline mr-2" />
+                  Check-out ({selectedEvent.participants?.filter(p => p.checkedOut)?.length || 0})
+                </button>
+              </div>
+
+              {/* Participants List */}
+              <div className="max-h-96 overflow-y-auto">
+                {getFilteredParticipants().length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Users size={48} className="mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg">
+                      {participantSearch 
+                        ? 'Không tìm thấy người tham gia nào' 
+                        : 'Chưa có người tham gia nào'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {getFilteredParticipants().map((participant) => (
+                      <div
+                        key={participant.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            {participant.name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-800 text-base">
+                              {participant.name || 'Không có tên'}
+                            </h4>
+                            <p className="text-gray-500 text-sm">{participant.email}</p>
+                            <div className="flex items-center gap-4 mt-1">
+                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                                participant.checkedIn 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {participant.checkedIn ? <CheckCircle size={12} /> : <Circle size={12} />}
+                                Check-in: {participant.checkedIn ? 'Đã vào' : 'Chưa vào'}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                                participant.checkedOut 
+                                  ? 'bg-red-100 text-red-700' 
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {participant.checkedOut ? <CheckCircle size={12} /> : <Circle size={12} />}
+                                Check-out: {participant.checkedOut ? 'Đã ra' : 'Chưa ra'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {!participant.checkedIn ? (
+                            <button
+                              onClick={() => handleCheckIn(participant.id)}
+                              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                            >
+                              Check-in
+                            </button>
+                          ) : (
+                            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                              ✓ Đã vào
+                            </span>
+                          )}
+                          
+                          {participant.checkedIn && !participant.checkedOut ? (
+                            <button
+                              onClick={() => handleCheckOut(participant.id)}
+                              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                            >
+                              Check-out
+                            </button>
+                          ) : participant.checkedOut ? (
+                            <span className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium">
+                              ✓ Đã ra
+                            </span>
+                          ) : (
+                            <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                              Chưa vào
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t p-6 bg-gray-50">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  Tổng: {selectedEvent.participants?.length || 0} người |
+                  Check-in: {selectedEvent.participants?.filter(p => p.checkedIn)?.length || 0} |
+                  Check-out: {selectedEvent.participants?.filter(p => p.checkedOut)?.length || 0}
+                </div>
+                <button
+                  onClick={() => setShowParticipantModal(false)}
+                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dashboard */}
       <h1 className="text-3xl font-bold text-gray-800">Event Dashboard</h1>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
         <StatBox title="Tổng sự kiện" value={events.length} color="text-blue-600" />
         <StatBox title="Tổng lượt check-in" value={totalCheckin} color="text-green-600" />
-        <StatBox title="Tổng lượt check-out" value={isNaN(totalCheckout) ? 'NaN' : totalCheckout} color="text-red-600" />
+        <StatBox title="Tổng lượt check-out" value={totalCheckout} color="text-red-600" />
         <StatBox title="Tỷ lệ tham dự" value={attendanceRate} color="text-yellow-600" />
       </div>
 
@@ -336,13 +573,12 @@ const StaffEvent = () => {
                   <MapPin size={18} className="text-gray-400" />
                   {event.location}
                 </div>
-                {/* <div className="flex items-center gap-3">
-                  <Users size={18} className="text-gray-400" />
-                  {total} người tham gia
-                </div> */}
               </div>
 
-              <button className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90">
+              <button 
+                onClick={() => handleManageParticipants(event)}
+                className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90"
+              >
                 Quản lý Người tham gia
               </button>
             </div>
