@@ -6,8 +6,9 @@ import api from '../../services/axios';
 
 const StaffEvent = () => {
   const [registeredParticipants, setRegisteredParticipants] = useState([]);
+  const [checkedInParticipants, setCheckedInParticipants] = useState([]);
+  const [checkedOutParticipants, setCheckedOutParticipants] = useState([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
-  
   const [eventToDelete, setEventToDelete] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,23 +56,37 @@ const StaffEvent = () => {
   });
 
   useEffect(() => {
-    const fetchRegisteredParticipants = async () => {
-      if (showParticipantModal && activeTab === 'all' && selectedEvent) {
-        setLoadingParticipants(true);
-        try {
+    const fetchParticipants = async () => {
+      if (!showParticipantModal || !selectedEvent) return;
+
+      setLoadingParticipants(true);
+      try {
+        if (activeTab === 'all') {
           const response = await api.get('/participations/registered', {
             params: { eventId: selectedEvent.id }
           });
           setRegisteredParticipants(response.data);
-        } catch (error) {
-          setRegisteredParticipants([]);
-          console.error('Lỗi khi lấy danh sách người tham gia:', error);
-        } finally {
-          setLoadingParticipants(false);
+        } else if (activeTab === 'checkin') {
+          const response = await api.get('/participations/checked-in', {
+            params: { eventId: selectedEvent.id }
+          });
+          setCheckedInParticipants(response.data);
+        } else if (activeTab === 'checkout') {
+          const response = await api.get('/participations/checked-out', {
+            params: { eventId: selectedEvent.id }
+          });
+          setCheckedOutParticipants(response.data);
         }
+      } catch (error) {
+        if (activeTab === 'all') setRegisteredParticipants([]);
+        if (activeTab === 'checkin') setCheckedInParticipants([]);
+        if (activeTab === 'checkout') setCheckedOutParticipants([]);
+        console.error('Lỗi khi lấy danh sách người tham gia:', error);
+      } finally {
+        setLoadingParticipants(false);
       }
     };
-    fetchRegisteredParticipants();
+    fetchParticipants();
   }, [showParticipantModal, activeTab, selectedEvent]);
 
   useEffect(() => {
@@ -175,26 +190,25 @@ const StaffEvent = () => {
     if (!selectedEvent) return [];
 
     if (activeTab === 'all') {
-      let filtered = registeredParticipants.filter(participant =>
+      return registeredParticipants.filter(participant =>
         participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
         participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
       );
-      return filtered;
+    }
+    if (activeTab === 'checkin') {
+      return checkedInParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
+    }
+    if (activeTab === 'checkout') {
+      return checkedOutParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
     }
 
-    let filtered = selectedEvent.participants?.filter(participant =>
-      participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
-      participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-    ) || [];
-
-    switch (activeTab) {
-      case 'checkin':
-        return filtered.filter(p => p.checkedIn && !p.checkedOut);
-      case 'checkout':
-        return filtered.filter(p => p.checkedOut);
-      default:
-        return filtered;
-    }
+    return [];
   };
 
   if (loading) return <div className="p-8 text-lg">Loading...</div>;
