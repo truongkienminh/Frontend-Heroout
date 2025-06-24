@@ -53,7 +53,7 @@ const StaffLayout = () => {
       <div className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col fixed top-0 bottom-0">
         {/* Logo */}
         <div className="flex justify-center items-center h-32 border-b border-gray-200">
-          <Link to="/staff/dashboard">
+          <Link to="/dashboard">
             <img
               src={HeroOutLogo || "/placeholder.svg"}
               alt="HeroOut Logo"
