@@ -5,6 +5,9 @@ import {
 import api from '../../services/axios';
 
 const StaffEvent = () => {
+  const [registeredParticipants, setRegisteredParticipants] = useState([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  
   const [eventToDelete, setEventToDelete] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,13 +55,33 @@ const StaffEvent = () => {
   });
 
   useEffect(() => {
+    const fetchRegisteredParticipants = async () => {
+      if (showParticipantModal && activeTab === 'all' && selectedEvent) {
+        setLoadingParticipants(true);
+        try {
+          const response = await api.get('/participations/registered', {
+            params: { eventId: selectedEvent.id }
+          });
+          setRegisteredParticipants(response.data);
+        } catch (error) {
+          setRegisteredParticipants([]);
+          console.error('Lỗi khi lấy danh sách người tham gia:', error);
+        } finally {
+          setLoadingParticipants(false);
+        }
+      }
+    };
+    fetchRegisteredParticipants();
+  }, [showParticipantModal, activeTab, selectedEvent]);
+
+  useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await api.get('/events');
         setEvents(response.data);
       } catch (error) {
         console.error('Error fetching events:', error);
-        setEvents([]); 
+        setEvents([]);
       } finally {
         setLoading(false);
       }
@@ -74,7 +97,7 @@ const StaffEvent = () => {
   const totalCheckout = events.reduce((sum, e) => (
     sum + (e.participants?.filter(p => p.checkedOut)?.length || 0)
   ), 0);
-  
+
   const totalParticipants = events.reduce((sum, e) => sum + (e.participants?.length || 0), 0);
   const attendanceRate = totalParticipants ? `${Math.round((totalCheckin / totalParticipants) * 100)}%` : '0%';
 
@@ -149,12 +172,20 @@ const StaffEvent = () => {
 
   // Filter participants based on search and tab
   const getFilteredParticipants = () => {
-    if (!selectedEvent?.participants) return [];
-    
-    let filtered = selectedEvent.participants.filter(participant =>
+    if (!selectedEvent) return [];
+
+    if (activeTab === 'all') {
+      let filtered = registeredParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
+      return filtered;
+    }
+
+    let filtered = selectedEvent.participants?.filter(participant =>
       participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
       participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-    );
+    ) || [];
 
     switch (activeTab) {
       case 'checkin':
@@ -349,33 +380,30 @@ const StaffEvent = () => {
               <div className="flex gap-2 mb-6 border-b">
                 <button
                   onClick={() => setActiveTab('all')}
-                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
-                    activeTab === 'all'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${activeTab === 'all'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   <Users size={18} className="inline mr-2" />
-                  Tất cả ({selectedEvent.participants?.length || 0})
+                  Đã đăng ký ({selectedEvent.participants?.length || 0})
                 </button>
                 <button
                   onClick={() => setActiveTab('checkin')}
-                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
-                    activeTab === 'checkin'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${activeTab === 'checkin'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   <UserCheck size={18} className="inline mr-2" />
                   Check-in ({selectedEvent.participants?.filter(p => p.checkedIn && !p.checkedOut)?.length || 0})
                 </button>
                 <button
                   onClick={() => setActiveTab('checkout')}
-                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${
-                    activeTab === 'checkout'
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`px-6 py-3 font-medium text-base border-b-2 transition-colors ${activeTab === 'checkout'
+                    ? 'border-red-500 text-red-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   <UserX size={18} className="inline mr-2" />
                   Check-out ({selectedEvent.participants?.filter(p => p.checkedOut)?.length || 0})
@@ -384,12 +412,14 @@ const StaffEvent = () => {
 
               {/* Participants List */}
               <div className="max-h-96 overflow-y-auto">
-                {getFilteredParticipants().length === 0 ? (
+                {loadingParticipants ? (
+                  <div className="text-center py-12 text-gray-500">Đang tải danh sách...</div>
+                ) : getFilteredParticipants().length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <Users size={48} className="mx-auto mb-4 text-gray-300" />
                     <p className="text-lg">
-                      {participantSearch 
-                        ? 'Không tìm thấy người tham gia nào' 
+                      {participantSearch
+                        ? 'Không tìm thấy người tham gia nào'
                         : 'Chưa có người tham gia nào'}
                     </p>
                   </div>
@@ -410,19 +440,17 @@ const StaffEvent = () => {
                             </h4>
                             <p className="text-gray-500 text-sm">{participant.email}</p>
                             <div className="flex items-center gap-4 mt-1">
-                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                                participant.checkedIn 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
+                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${participant.checkedIn
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-500'
+                                }`}>
                                 {participant.checkedIn ? <CheckCircle size={12} /> : <Circle size={12} />}
                                 Check-in: {participant.checkedIn ? 'Đã vào' : 'Chưa vào'}
                               </span>
-                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                                participant.checkedOut 
-                                  ? 'bg-red-100 text-red-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
+                              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${participant.checkedOut
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-500'
+                                }`}>
                                 {participant.checkedOut ? <CheckCircle size={12} /> : <Circle size={12} />}
                                 Check-out: {participant.checkedOut ? 'Đã ra' : 'Chưa ra'}
                               </span>
@@ -443,7 +471,7 @@ const StaffEvent = () => {
                               ✓ Đã vào
                             </span>
                           )}
-                          
+
                           {participant.checkedIn && !participant.checkedOut ? (
                             <button
                               onClick={() => handleCheckOut(participant.id)}
@@ -575,7 +603,7 @@ const StaffEvent = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => handleManageParticipants(event)}
                 className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90"
               >
