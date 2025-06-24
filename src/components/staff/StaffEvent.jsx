@@ -7,9 +7,8 @@ import api from '../../services/axios';
 const StaffEvent = () => {
   const [registeredParticipants, setRegisteredParticipants] = useState([]);
   const [checkedInParticipants, setCheckedInParticipants] = useState([]);
-
+  const [checkedOutParticipants, setCheckedOutParticipants] = useState([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
-
   const [eventToDelete, setEventToDelete] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,12 +71,16 @@ const StaffEvent = () => {
             params: { eventId: selectedEvent.id }
           });
           setCheckedInParticipants(response.data);
-        } 
-        
+        } else if (activeTab === 'checkout') {
+          const response = await api.get('/participations/checked-out', {
+            params: { eventId: selectedEvent.id }
+          });
+          setCheckedOutParticipants(response.data);
+        }
       } catch (error) {
         if (activeTab === 'all') setRegisteredParticipants([]);
         if (activeTab === 'checkin') setCheckedInParticipants([]);
-        
+        if (activeTab === 'checkout') setCheckedOutParticipants([]);
         console.error('Lỗi khi lấy danh sách người tham gia:', error);
       } finally {
         setLoadingParticipants(false);
@@ -184,24 +187,29 @@ const StaffEvent = () => {
 
   // Filter participants based on search and tab
   const getFilteredParticipants = () => {
-  if (!selectedEvent) return [];
+    if (!selectedEvent) return [];
 
-  if (activeTab === 'all') {
-    return registeredParticipants.filter(participant =>
-      participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
-      participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-    );
-  }
-  if (activeTab === 'checkin') {
-    return checkedInParticipants.filter(participant =>
-      participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
-      participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-    );
-  }
- 
+    if (activeTab === 'all') {
+      return registeredParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
+    }
+    if (activeTab === 'checkin') {
+      return checkedInParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
+    }
+    if (activeTab === 'checkout') {
+      return checkedOutParticipants.filter(participant =>
+        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+      );
+    }
 
-  return [];
-};
+    return [];
+  };
 
   if (loading) return <div className="p-8 text-lg">Loading...</div>;
 
