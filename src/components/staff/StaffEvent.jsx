@@ -6,8 +6,10 @@ import api from '../../services/axios';
 
 const StaffEvent = () => {
   const [registeredParticipants, setRegisteredParticipants] = useState([]);
+  const [checkedInParticipants, setCheckedInParticipants] = useState([]);
+
   const [loadingParticipants, setLoadingParticipants] = useState(false);
-  
+
   const [eventToDelete, setEventToDelete] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,23 +57,33 @@ const StaffEvent = () => {
   });
 
   useEffect(() => {
-    const fetchRegisteredParticipants = async () => {
-      if (showParticipantModal && activeTab === 'all' && selectedEvent) {
-        setLoadingParticipants(true);
-        try {
+    const fetchParticipants = async () => {
+      if (!showParticipantModal || !selectedEvent) return;
+
+      setLoadingParticipants(true);
+      try {
+        if (activeTab === 'all') {
           const response = await api.get('/participations/registered', {
             params: { eventId: selectedEvent.id }
           });
           setRegisteredParticipants(response.data);
-        } catch (error) {
-          setRegisteredParticipants([]);
-          console.error('Lỗi khi lấy danh sách người tham gia:', error);
-        } finally {
-          setLoadingParticipants(false);
-        }
+        } else if (activeTab === 'checkin') {
+          const response = await api.get('/participations/checked-in', {
+            params: { eventId: selectedEvent.id }
+          });
+          setCheckedInParticipants(response.data);
+        } 
+        
+      } catch (error) {
+        if (activeTab === 'all') setRegisteredParticipants([]);
+        if (activeTab === 'checkin') setCheckedInParticipants([]);
+        
+        console.error('Lỗi khi lấy danh sách người tham gia:', error);
+      } finally {
+        setLoadingParticipants(false);
       }
     };
-    fetchRegisteredParticipants();
+    fetchParticipants();
   }, [showParticipantModal, activeTab, selectedEvent]);
 
   useEffect(() => {
@@ -172,30 +184,24 @@ const StaffEvent = () => {
 
   // Filter participants based on search and tab
   const getFilteredParticipants = () => {
-    if (!selectedEvent) return [];
+  if (!selectedEvent) return [];
 
-    if (activeTab === 'all') {
-      let filtered = registeredParticipants.filter(participant =>
-        participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
-        participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-      );
-      return filtered;
-    }
-
-    let filtered = selectedEvent.participants?.filter(participant =>
+  if (activeTab === 'all') {
+    return registeredParticipants.filter(participant =>
       participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
       participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
-    ) || [];
+    );
+  }
+  if (activeTab === 'checkin') {
+    return checkedInParticipants.filter(participant =>
+      participant.name?.toLowerCase().includes(participantSearch.toLowerCase()) ||
+      participant.email?.toLowerCase().includes(participantSearch.toLowerCase())
+    );
+  }
+ 
 
-    switch (activeTab) {
-      case 'checkin':
-        return filtered.filter(p => p.checkedIn && !p.checkedOut);
-      case 'checkout':
-        return filtered.filter(p => p.checkedOut);
-      default:
-        return filtered;
-    }
-  };
+  return [];
+};
 
   if (loading) return <div className="p-8 text-lg">Loading...</div>;
 
