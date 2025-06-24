@@ -98,10 +98,24 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: userData };
     } catch (error) {
-      console.error("Login failed:", error);
+      const rawMessage =
+        error.response?.data?.message || error.response?.data || "";
+      const normalized = rawMessage.toLowerCase();
+
+      let errorMessage = "Đăng nhập thất bại";
+
+      // Kiểm tra nếu có từ khóa 'vô hiệu hóa'
+      if (
+        normalized.includes("vô hiệu hóa") ||
+        normalized.includes("inactive")
+      ) {
+        errorMessage =
+          "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.";
+      }
+
       return {
         success: false,
-        error: error.response?.data?.message || "Đăng nhập thất bại",
+        error: errorMessage,
       };
     }
   };
