@@ -1,8 +1,17 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Breadcrumb from "../components/Breadcrumb";
-import { CheckCircle, Mail, Building } from "lucide-react";
+import {
+  CheckCircle,
+  Mail,
+  Building,
+  Phone,
+  MapPin,
+  Calendar,
+  User,
+} from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
+import ApiService from "../services/apiService";
 
 const ConsultantDetailPage = () => {
   const { id } = useParams();
@@ -13,32 +22,12 @@ const ConsultantDetailPage = () => {
   const [schedules, setSchedules] = useState([]);
   const [slots, setSlots] = useState([]);
 
-  // Fetch consultant from API
   useEffect(() => {
     const fetchConsultant = async () => {
       try {
         setLoading(true);
-
-        // Fetch all consultants (vì endpoint single consultant không hoạt động)
-        const response = await fetch(
-          "https://684482e971eb5d1be0337d19.mockapi.io/consultants"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch consultants");
-        }
-
-        const allConsultants = await response.json();
-
-        // Tìm consultant theo ID
-        const foundConsultant = allConsultants.find(
-          (c) => c.id === Number.parseInt(id)
-        );
-
-        if (!foundConsultant) {
-          throw new Error("Consultant not found");
-        }
-
-        setConsultant(foundConsultant);
+        const consultantData = await ApiService.getConsultant(id);
+        setConsultant(consultantData);
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -47,9 +36,9 @@ const ConsultantDetailPage = () => {
         setLoading(false);
       }
     };
+
     const fetchScheduleData = async (consultantId) => {
       try {
-        // Fetch schedules
         const schedulesResponse = await fetch(
           "https://684db8e765ed08713916f5be.mockapi.io/schedule"
         );
@@ -60,7 +49,7 @@ const ConsultantDetailPage = () => {
           );
           setSchedules(consultantSchedules);
         }
-        // Fetch slots
+
         const slotsResponse = await fetch(
           "https://684db8e765ed08713916f5be.mockapi.io/slot"
         );
@@ -79,7 +68,6 @@ const ConsultantDetailPage = () => {
     }
   }, [id]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -93,7 +81,6 @@ const ConsultantDetailPage = () => {
     );
   }
 
-  // Error state
   if (error || !consultant) {
     return (
       <div className="min-h-screen bg-white">
@@ -130,7 +117,6 @@ const ConsultantDetailPage = () => {
   const tabs = [
     { id: "overview", label: "Tổng quan" },
     { id: "schedule", label: "Lịch hẹn" },
-    // { id: "reviews", label: "Đánh giá" },
   ];
 
   return (
@@ -144,7 +130,6 @@ const ConsultantDetailPage = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Consultant Header */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="w-32 h-32 bg-emerald-600 text-white rounded-full flex items-center justify-center text-4xl font-bold flex-shrink-0">
@@ -156,7 +141,7 @@ const ConsultantDetailPage = () => {
                 {consultant.name}
               </h1>
               <p className="text-xl text-emerald-600 font-medium mb-3">
-                {consultant.field_of_study}
+                {consultant.fieldOfStudy}
               </p>
               <p className="text-gray-600 mb-4">{consultant.bio}</p>
 
@@ -195,11 +180,7 @@ const ConsultantDetailPage = () => {
                   >
                     {specialty}
                   </span>
-                )) || (
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-sm rounded-full">
-                    {consultant.field_of_study}
-                  </span>
-                )}
+                ))}
               </div>
             </div>
 
@@ -214,7 +195,6 @@ const ConsultantDetailPage = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
@@ -235,18 +215,45 @@ const ConsultantDetailPage = () => {
           </div>
 
           <div className="p-8">
-            {/* Overview Tab */}
             {activeTab === "overview" && (
               <div className="space-y-8">
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    Thông tin liên hệ
+                    Thông tin cá nhân
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="flex items-center text-gray-600">
                       <Mail className="w-5 h-5 mr-3 text-emerald-600" />
                       <span>{consultant.email}</span>
                     </div>
+                    <div className="flex items-center text-gray-600">
+                      <Phone className="w-5 h-5 mr-3 text-emerald-600" />
+                      <span>{consultant.phone || "Chưa cập nhật"}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <MapPin className="w-5 h-5 mr-3 text-emerald-600" />
+                      <span>{consultant.address || "Chưa cập nhật"}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <User className="w-5 h-5 mr-3 text-emerald-600" />
+                      <span>
+                        {consultant.gender === "MALE"
+                          ? "Nam"
+                          : consultant.gender === "FEMALE"
+                          ? "Nữ"
+                          : "Chưa cập nhật"}
+                      </span>
+                    </div>
+                    {consultant.dateOfBirth && ( 
+                      <div className="flex items-center text-gray-600">
+                        <Calendar className="w-5 h-5 mr-3 text-emerald-600" />
+                        <span>
+                          {new Date(consultant.dateOfBirth).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center text-gray-600">
                       <Building className="w-5 h-5 mr-3 text-emerald-600" />
                       <span>{consultant.organization}</span>
@@ -259,74 +266,70 @@ const ConsultantDetailPage = () => {
                     Chứng chỉ & Bằng cấp
                   </h3>
                   <div className="space-y-4">
-                    {consultant.certifications?.map((cert, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-gray-800">
-                              {cert.name}
-                            </h4>
-                            <p className="text-gray-600">{cert.organization}</p>
-                            <p className="text-sm text-gray-500">
-                              Cấp:{" "}
-                              {new Date(cert.issued).toLocaleDateString(
-                                "vi-VN"
-                              )}{" "}
-                              - Hết hạn:{" "}
-                              {new Date(cert.expiry).toLocaleDateString(
-                                "vi-VN"
-                              )}
-                            </p>
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-gray-800">
+                            {consultant.degreeLevel} {/* Sửa thành camelCase */}
+                          </h4>
+                          <p className="text-gray-600">
+                            {consultant.organization}
+                          </p>
+                          <p className="text-gray-600 mb-2">
+                            Chuyên ngành: {consultant.fieldOfStudy}{" "}
+                          </p>
+                          <div className="text-sm text-gray-500">
+                            {consultant.issuedDate && ( 
+                              <p>
+                                Cấp:{" "}
+                                {new Date(
+                                  consultant.issuedDate
+                                ).toLocaleDateString("vi-VN")}
+                              </p>
+                            )}
+                            {consultant.expiryDate && ( 
+                              <p>
+                                Hết hạn:{" "}
+                                {new Date(
+                                  consultant.expiryDate
+                                ).toLocaleDateString("vi-VN")}
+                              </p>
+                            )}
                           </div>
-                          <CheckCircle className="w-6 h-6 text-emerald-600" />
                         </div>
+                        <CheckCircle className="w-6 h-6 text-emerald-600" />
                       </div>
-                    )) || (
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-gray-800">
-                              Chứng chỉ {consultant.degree_level}
-                            </h4>
-                            <p className="text-gray-600">
-                              {consultant.organization}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Cấp:{" "}
-                              {new Date(
-                                consultant.issued_date
-                              ).toLocaleDateString("vi-VN")}
-                              {consultant.expiry_date &&
-                                ` - Hết hạn: ${new Date(
-                                  consultant.expiry_date
-                                ).toLocaleDateString("vi-VN")}`}
-                            </p>
-                          </div>
-                          <CheckCircle className="w-6 h-6 text-emerald-600" />
-                        </div>
-                      </div>
-                    )}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                    Kinh nghiệm & Chuyên môn
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 mb-2">
+                      <strong>Kinh nghiệm:</strong> {consultant.experience}
+                    </p>
+                    <p className="text-gray-700">
+                      <strong>Số buổi tư vấn đã thực hiện:</strong>{" "}
+                      {consultant.consultations} buổi
+                    </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Schedule Tab */}
             {activeTab === "schedule" && (
               <div>
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Lịch hẹn khả dụng
                 </h3>
 
-                {/* GoogleMeetInfo component */}
                 <div className="mb-6">
                   <GoogleMeetInfo />
                 </div>
 
-                {/* Schedule Information */}
                 {schedules.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-3">
@@ -364,7 +367,6 @@ const ConsultantDetailPage = () => {
                   </div>
                 )}
 
-                {/* Available Slots */}
                 <div className="mb-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-3">
                     Khung giờ khả dụng
@@ -381,7 +383,7 @@ const ConsultantDetailPage = () => {
                             schedules.some((s) => s.id === slot.schedule_id) &&
                             !slot.is_booked
                         )
-                        .slice(0, 6) // Show first 6 available slots
+                        .slice(0, 6)
                         .map((slot) => (
                           <div
                             key={slot.id}
@@ -421,7 +423,6 @@ const ConsultantDetailPage = () => {
                   )}
                 </div>
 
-                {/* Book Appointment Button */}
                 <div className="mt-6">
                   <Link
                     to={`/booking/${consultant.id}`}
@@ -432,15 +433,6 @@ const ConsultantDetailPage = () => {
                 </div>
               </div>
             )}
-
-            {/* Reviews Tab */}
-            {/* {activeTab === "reviews" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">
-                  Đánh giá từ khách hàng
-                </h3>
-              </div>
-            )} */}
           </div>
         </div>
       </div>

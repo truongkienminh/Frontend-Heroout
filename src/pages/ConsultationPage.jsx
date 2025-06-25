@@ -8,7 +8,6 @@ const ConsultationPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch consultants using ApiService
   useEffect(() => {
     const fetchConsultants = async () => {
       try {
@@ -156,6 +155,12 @@ const ConsultationPage = () => {
                   Thử lại
                 </button>
               </div>
+            </div>
+          ) : consultants.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <p className="text-gray-600">
+                Không có chuyên gia nào để hiển thị.
+              </p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -6,7 +6,6 @@ const MOCK_APIS = {
   schedule: "https://684db8e765ed08713916f5be.mockapi.io/schedule",
   slot: "https://684db8e765ed08713916f5be.mockapi.io/slot",
   blog: "https://684482e971eb5d1be0337d19.mockapi.io/blogs",
-  consultant: "https://684482e971eb5d1be0337d19.mockapi.io/consultants",
 };
 
 class ApiService {
@@ -85,6 +84,133 @@ class ApiService {
     }
   }
 
+  // Consultant APIs
+  static async getConsultants() {
+    try {
+      // Lấy thông tin consultant từ bảng consultants
+      const consultantsResponse = await api.get("consultants");
+      const allConsultants = consultantsResponse.data;
+      console.log("All consultants from /api/consultants:", allConsultants);
+
+      if (!allConsultants || allConsultants.length === 0) {
+        console.warn("No consultants found in /api/consultants.");
+        return [];
+      }
+
+      // Lấy tất cả accounts để bổ sung thông tin bổ sung nếu cần
+      const accountsResponse = await api.get("accounts");
+      const allAccounts = accountsResponse.data;
+      console.log("All accounts from /api/accounts:", allAccounts);
+
+      // Map consultant data, sử dụng account từ consultant
+      const consultantsWithAccountInfo = allConsultants.map((consultant) => {
+        const account = consultant.account;
+        if (!account) {
+          console.warn(
+            `No account info found for consultant ID: ${consultant.id}`
+          );
+          return null;
+        }
+
+        // Tìm account chi tiết từ /api/accounts nếu cần
+        const fullAccount = allAccounts.find((acc) => acc.id === account.id);
+
+        return {
+          id: account.id,
+          name: account.name || "Chưa cập nhật",
+          email: account.email || "",
+          phone: account.phone || "",
+          avatar: account.avatar || account.name?.charAt(0) || "C",
+          address: account.address || "",
+          gender: account.gender || "",
+          date_of_birth: account.dateOfBirth || null,
+          status: account.status || "ACTIVE",
+          bio: consultant.bio || "Chưa có thông tin",
+          consultations: consultant.consultations || 0,
+          degree_level: consultant.degreeLevel || "Chưa cập nhật",
+          experience: consultant.experience || "Chưa cập nhật",
+          expiry_date: consultant.expiryDate || null,
+          field_of_study: consultant.fieldOfStudy || "Chưa cập nhật",
+          issued_date: consultant.issuedDate || null,
+          organization: consultant.organization || "Chưa cập nhật",
+          rating: consultant.rating || 5.0,
+          specialties: consultant.specialities
+            ? consultant.specialities
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0)
+            : ["Tư vấn tâm lý"],
+          consultant_id: consultant.id || null,
+        };
+      });
+
+      // Lọc bỏ các null
+      const finalConsultants = consultantsWithAccountInfo.filter(
+        (consultant) => consultant !== null
+      );
+      console.log("Final consultants:", finalConsultants);
+
+      return finalConsultants;
+    } catch (error) {
+      console.error("Error in getConsultants:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  static async getConsultant(id) {
+    try {
+      // Lấy thông tin account từ endpoint thực tế
+      const accountResponse = await api.get(`account/${id}`);
+      const account = accountResponse.data;
+
+      if (account.role !== "CONSULTANT") {
+        throw new Error("Account is not a consultant");
+      }
+
+      // Lấy thông tin consultant
+      const consultantsResponse = await api.get("consultants");
+      const allConsultants = consultantsResponse.data;
+      const consultantInfo = allConsultants.find(
+        (consultant) => Number.parseInt(consultant.account?.id) === account.id
+      );
+
+      if (!consultantInfo) {
+        throw new Error("Consultant information not found");
+      }
+
+      return {
+        id: account.id,
+        name: account.name || "Chưa cập nhật",
+        email: account.email || "",
+        phone: account.phone || "",
+        avatar: account.avatar || account.name?.charAt(0) || "C",
+        address: account.address || "",
+        gender: account.gender || "",
+        dateOfBirth: account.dateOfBirth || null,
+        status: account.status || "ACTIVE",
+        bio: consultantInfo.bio || "Chưa có thông tin",
+        consultations: consultantInfo.consultations || 0,
+        degreeLevel: consultantInfo.degreeLevel || "Chưa cập nhật",
+        experience: consultantInfo.experience || "Chưa cập nhật",
+        expiryDate: consultantInfo.expiryDate || null,
+        fieldOfStudy: consultantInfo.fieldOfStudy || "Chưa cập nhật",
+        issuedDate: consultantInfo.issuedDate || null,
+        organization: consultantInfo.organization || "Chưa cập nhật",
+        rating: consultantInfo.rating || 5.0,
+        specialties: consultantInfo.specialities
+          ? consultantInfo.specialities
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0)
+          : ["Tư vấn tâm lý"],
+        consultant_id: consultantInfo.id,
+      };
+    } catch (error) {
+      console.error("Error in getConsultant:", error);
+      throw this.handleError(error);
+    }
+  }
+
   // Blog APIs
   static async getBlogs() {
     try {
@@ -103,27 +229,6 @@ class ApiService {
       return await response.json();
     } catch (error) {
       throw new Error(`Error fetching blog: ${error.message}`);
-    }
-  }
-
-  // Consultant APIs
-  static async getConsultants() {
-    try {
-      const response = await fetch(MOCK_APIS.consultant);
-      if (!response.ok) throw new Error("Failed to fetch consultants");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error fetching consultants: ${error.message}`);
-    }
-  }
-
-  static async getConsultant(id) {
-    try {
-      const response = await fetch(`${MOCK_APIS.consultant}/${id}`);
-      if (!response.ok) throw new Error("Failed to fetch consultant");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error fetching consultant: ${error.message}`);
     }
   }
 
