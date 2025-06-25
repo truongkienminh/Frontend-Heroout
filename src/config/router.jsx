@@ -12,7 +12,6 @@ import Layout from "../components/layout";
 import CourseDetail from "../pages/CourseDetail";
 import LearningCoursePage from "../pages/LearningCoursePage";
 import EventPage from "../pages/EventPage";
-import EventRegistration from "../components/Event/EventRegistration";
 import ConsultationPage from "../pages/ConsultationPage";
 import ConsultantDetailPage from "../pages/ConsultantDetailPage";
 import BookingPage from "../pages/BookingPage";
@@ -61,14 +60,6 @@ export const router = createBrowserRouter([
       {
         path: "/events/:id",
         element: <EventDetail />,
-      },
-      {
-        path: "/eventregistration",
-        element: (
-          <ProtectedRoute>
-            <EventRegistration />
-          </ProtectedRoute>
-        ),
       },
       {
         path: "/consultation",
