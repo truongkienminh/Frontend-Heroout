@@ -4,7 +4,7 @@ const StaffReport = () => {
 
   return (
     <div >
-     report
+     blog
     </div>
   );
 };

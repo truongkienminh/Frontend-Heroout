@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, Navigate } from "react-router-dom";
 import {
   BarChart3,
   Users,
@@ -20,21 +20,53 @@ const StaffLayout = () => {
   const location = useLocation();
   const dropdownRef = useRef();
 
+  const getAllMenuItems = () => [
+    { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+    { icon: Users, label: "Quản lý thành viên", path: "/managemembers" },
+    { icon: GraduationCap, label: "Quản lý khóa học", path: "/managecourses" },
+    { icon: FileBarChart2, label: "Quản lý blogs", path: "/manageblogs" },
+    { icon: CalendarDays, label: "Quản lý sự kiện", path: "/manageevents" },
+    { icon: FileText, label: "Quản lý khảo sát", path: "/managesurveys" },
+    { icon: Calendar, label: "Quản lý lịch hẹn", path: "/managemeetings" },
+  ];
+
+  const getConsultantMenuItems = () => [
+    { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+    { icon: FileBarChart2, label: "Quản lý blogs", path: "/manageblogs" },
+    { icon: Calendar, label: "Quản lý lịch hẹn", path: "/managemeetings" },
+  ];
+
+  const getMenuItems = () => {
+    const userRole = user?.role?.toLowerCase();
+
+    if (userRole === "consultant") {
+      return getConsultantMenuItems();
+    } else if (userRole === "admin" || userRole === "staff") {
+      return getAllMenuItems();
+    }
+
+    return [];
+  };
+
+  const menuItems = getMenuItems();
+
+  // Kiểm tra quyền truy cập dashboard
+  const hasAccessToDashboard = () => {
+    if (!user || !user.role) return false;
+    const allowedRoles = ["admin", "staff", "consultant"];
+    return allowedRoles.includes(user.role.toLowerCase());
+  };
+
+  // Nếu không có quyền truy cập, redirect về trang chủ
+  if (!hasAccessToDashboard()) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleLogout = () => {
     logout();
     setIsDropdownOpen(false);
     window.location.href = "/";
   };
-
-  const menuItems = [
-    { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-    { icon: Users, label: "Quản lý thành viên", path: "/managemembers" },
-    { icon: GraduationCap, label: "Quản lý khóa học", path: "/managecourses" },
-    { icon: FileBarChart2, label: "Quản lý báo cáo", path: "/managereports" },
-    { icon: CalendarDays, label: "Quản lý sự kiện", path: "/manageevents" },
-    { icon: FileText, label: "Quản lý khảo sát", path: "/managesurveys" },
-    { icon: Calendar, label: "Quản lý cuộc họp", path: "/managemeetings" },
-  ];
 
   // Đóng dropdown khi click ngoài vùng
   useEffect(() => {
@@ -84,7 +116,10 @@ const StaffLayout = () => {
         </nav>
 
         {/* User Info with Dropdown */}
-        <div className="p-6 border-t border-gray-200 relative" ref={dropdownRef}>
+        <div
+          className="p-6 border-t border-gray-200 relative"
+          ref={dropdownRef}
+        >
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center justify-between w-full focus:outline-none"
@@ -92,14 +127,14 @@ const StaffLayout = () => {
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 bg-yellow-400 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium text-sm uppercase">
-                  {user?.name?.[0] || "S"}
+                  {user?.name?.[0] || "U"}
                 </span>
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-gray-900">
-                  {user?.name || "Staff User"}
+                  {user?.name || "User"}
                 </p>
-                <p className="text-xs text-gray-500">{user?.role}</p>
+                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
               </div>
             </div>
             <ChevronDown size={18} className="text-gray-500 ml-2" />
