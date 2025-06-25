@@ -284,7 +284,7 @@ const StaffEvent = () => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-xl text-base font-medium hover:opacity-90"
+          className="bg-blue-600 text-white px-5 py-3 rounded-xl text-base font-medium hover:opacity-90"
         >
           <Plus size={18} className="inline mr-2" />
           Tạo Sự kiện
@@ -364,7 +364,7 @@ function EventCard({ event, onEdit, onDelete, onManageParticipants }) {
       </div>
       <button
         onClick={() => onManageParticipants(event)}
-        className="mt-5 w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90"
+        className="mt-5 w-full bg-blue-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90"
       >
         Quản lý Người tham gia
       </button>
