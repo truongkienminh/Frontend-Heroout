@@ -1,4 +1,4 @@
-import { Navigate, createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 
 import HomePage from "../pages/HomePage";
 import Login from "../components/authentication/Login/Login";
@@ -20,13 +20,12 @@ import StaffDashboard from "../components/staff/StaffDashBoard";
 import StaffCourse from "../components/staff/StaffCourse";
 import StaffMember from "../components/staff/StaffMember";
 import StaffSurvey from "../components/staff/StaffSurvey";
-import StaffReport from "../components/staff/StaffReport";
+import StaffBlog from "../components/staff/StaffBlog";
 import StaffEvent from "../components/staff/StaffEvent";
 import StaffMeeting from "../components/staff/StaffMeeting";
 import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
-
 
 export const router = createBrowserRouter([
   {
@@ -161,8 +160,8 @@ export const router = createBrowserRouter([
         element: <StaffSurvey />,
       },
       {
-        path: "managereports",
-        element: <StaffReport />,
+        path: "manageblogs",
+        element: <StaffBlog />,
       },
       {
         path: "manageevents",
@@ -173,7 +172,5 @@ export const router = createBrowserRouter([
         element: <StaffMeeting />,
       },
     ],
-  }
-
-
+  },
 ]);
