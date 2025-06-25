@@ -57,6 +57,34 @@ class ApiService {
     }
   }
 
+  // Dashboard Statistics APIs
+  static async getAllAccounts() {
+    try {
+      const response = await api.get("accounts");
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getCourses() {
+    try {
+      const response = await api.get("courses");
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getEvents() {
+    try {
+      const response = await api.get("events");
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Blog APIs
   static async getBlogs() {
     try {
