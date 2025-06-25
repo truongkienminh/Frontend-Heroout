@@ -25,9 +25,16 @@ function Login() {
       if (result.success) {
         toast.success("Đăng nhập thành công!");
 
-        if (result.user && result.user.role === "STAFF") {
+        // Redirect based on user role
+        if (
+          result.user &&
+          (result.user.role === "ADMIN" ||
+            result.user.role === "STAFF" ||
+            result.user.role === "CONSULTANT")
+        ) {
           navigate("/dashboard", { replace: true });
         } else {
+          // For MEMBER role, redirect to home or the page they were trying to access
           navigate(from, { replace: true });
         }
       } else {
@@ -52,7 +59,11 @@ function Login() {
       <div className="login-container">
         <div className="login-header">
           <Link to="/">
-            <img src={logo} alt="Heroout Logo" className="login-logo" />
+            <img
+              src={logo}
+              alt="Heroout Logo"
+              className="login-logo"
+            />
           </Link>
           <h2 className="login-title">Đăng nhập</h2>
           <p className="login-subtitle">Chào mừng bạn quay trở lại</p>

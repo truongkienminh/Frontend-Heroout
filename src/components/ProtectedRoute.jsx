@@ -1,32 +1,56 @@
 import { useAuth } from "../contexts/AuthContext";
 import { Navigate, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ children, requireAuth = true }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({
+  children,
+  requireAuth = true,
+  requireStaffRole = false,
+}) => {
+  const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  // Show loading spinner while checking auth status
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
-  // If route requires authentication but user is not authenticated
-  if (requireAuth && !isAuthenticated) {
-    // Redirect to login page
+  // If requireStaffRole is true, check for admin/staff/consultant roles
+  if (requireStaffRole) {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    if (
+      !user ||
+      (user.role !== "ADMIN" &&
+        user.role !== "STAFF" &&
+        user.role !== "CONSULTANT")
+    ) {
+      return <Navigate to="/" replace />;
+    }
+
+    return children;
+  }
+
+  // For routes that don't require auth (like login, register)
+  if (!requireAuth) {
+    if (isAuthenticated && user) {
+      // If user is admin/staff/consultant, redirect to dashboard
+      if (
+        user.role === "ADMIN" ||
+        user.role === "STAFF" ||
+        user.role === "CONSULTANT"
+      ) {
+        return <Navigate to="/dashboard" replace />;
+      }
+      // If user is member, redirect to home
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  }
+
+  // For routes that require auth
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // If route is for non-authenticated users only (like login/register) but user is authenticated
-  if (!requireAuth && isAuthenticated) {
-    // Redirect to home page or dashboard
-    return <Navigate to="/" replace />;
   }
 
   return children;

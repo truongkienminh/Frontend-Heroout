@@ -26,11 +26,16 @@ import StaffMeeting from "../components/staff/StaffMeeting";
 import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
+import MemberProtectedRoute from "../components/MemberProtectedRoute";
 
 export const router = createBrowserRouter([
   {
     path: "",
-    element: <Layout />,
+    element: (
+      <MemberProtectedRoute>
+        <Layout />
+      </MemberProtectedRoute>
+    ),
     children: [
       {
         path: "/",
@@ -105,9 +110,11 @@ export const router = createBrowserRouter([
   {
     path: "learningcourse/:courseId",
     element: (
-      <ProtectedRoute>
-        <LearningCoursePage />
-      </ProtectedRoute>
+      <MemberProtectedRoute>
+        <ProtectedRoute>
+          <LearningCoursePage />
+        </ProtectedRoute>
+      </MemberProtectedRoute>
     ),
   },
   {
@@ -134,11 +141,10 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-
   {
     path: "",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requireStaffRole={true}>
         <StaffLayout />
       </ProtectedRoute>
     ),
