@@ -51,7 +51,7 @@ const CoursesPage = () => {
     const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
     const { user } = useAuth();
-    const [noti, setNoti] = useState(null);
+   
 
     useEffect(() => {
       const timer = setTimeout(() => setIsVisible(true), delay);
@@ -62,20 +62,7 @@ const CoursesPage = () => {
       navigate(`/coursedetail/${course.id}`);
     };
 
-    const handleRegister = async (e) => {
-      e.stopPropagation();
-      setNoti(null);
-      if (!user || !user.id) {
-        setNoti({ type: 'error', message: 'Vui lòng đăng nhập để đăng ký khóa học!' });
-        return;
-      }
-      try {
-        await api.post(`/enrollments/start?courseId=${course.id}&accountId=${user.id}`);
-        setNoti({ type: 'success', message: 'Đăng ký thành công!' });
-      } catch (error) {
-        setNoti({ type: 'error', message: 'Đăng ký thất bại!' });
-      }
-    };
+   
 
     return (
       <div
@@ -123,18 +110,6 @@ const CoursesPage = () => {
           >
             Xem chi tiết
           </button>
-
-          {/* Notification section */}
-          {noti && (
-            <div
-              className={`mt-3 text-sm rounded px-3 py-2 ${noti.type === 'success'
-                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                : 'bg-red-100 text-red-700 border border-red-300'
-                }`}
-            >
-              {noti.message}
-            </div>
-          )}
         </div>
       </div>
     );
