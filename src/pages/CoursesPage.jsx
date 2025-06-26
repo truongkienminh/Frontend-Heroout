@@ -1,10 +1,144 @@
-import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
-import { CourseCard } from '../components/CourseCard';
-
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, BookOpen, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import api from '../services/axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const CoursesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get('/courses');
+        setCourses(res.data || []);
+      } catch (error) {
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  // Lọc courses theo searchTerm (không phân biệt hoa thường)
+  const filteredCourses = courses.filter(course =>
+    course.title.toLowerCase().includes((searchTerm || '').toLowerCase())
+  );
+
+  // Tính toán carousel
+  const coursesPerSlide = 3;
+  const totalSlides = Math.ceil(filteredCourses.length / coursesPerSlide);
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < totalSlides - 1;
+
+  const handlePrevious = () => {
+    if (canGoPrev) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoNext) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const CourseCardItem = ({ course, delay }) => {
+    const navigate = useNavigate();
+    const [isVisible, setIsVisible] = useState(false);
+    const { user } = useAuth();
+    const [noti, setNoti] = useState(null);
+
+    useEffect(() => {
+      const timer = setTimeout(() => setIsVisible(true), delay);
+      return () => clearTimeout(timer);
+    }, [delay]);
+
+    const handleCardClick = () => {
+      navigate(`/coursedetail/${course.id}`);
+    };
+
+    const handleRegister = async (e) => {
+      e.stopPropagation();
+      setNoti(null);
+      if (!user || !user.id) {
+        setNoti({ type: 'error', message: 'Vui lòng đăng nhập để đăng ký khóa học!' });
+        return;
+      }
+      try {
+        await api.post(`/enrollments/start?courseId=${course.id}&accountId=${user.id}`);
+        setNoti({ type: 'success', message: 'Đăng ký thành công!' });
+      } catch (error) {
+        setNoti({ type: 'error', message: 'Đăng ký thất bại!' });
+      }
+    };
+
+    return (
+      <div
+        className={`rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-500 transform hover:scale-[1.01] 
+    ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+        style={{ transitionDelay: `${delay}ms` }}
+      >
+        {/* Header icon section - matching the image */}
+        <div className="w-full bg-gradient-to-r from-blue-100 to-indigo-100 h-24 flex items-center justify-center rounded-t-xl">
+          <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+            <BookOpen className="w-6 h-6 text-white" strokeWidth={2.5} />
+          </div>
+        </div>
+
+        {/* Content section */}
+        <div className="p-6 flex flex-col">
+          {/* Title - larger and bolder */}
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{course.title}</h3>
+
+          {/* Description - gray text */}
+          <p className="text-gray-600 text-base mb-6">{course.description}</p>
+
+          {/* Event details with icons */}
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-3 text-gray-600">
+              <span className="text-sm">
+                {course.ageGroup}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-3 text-gray-600">
+              <span className="text-sm">
+                {course.createdAt
+                  ? new Date(course.createdAt).toLocaleDateString()
+                  : ''}
+              </span>
+            </div>
+          </div>
+
+          {/* Button - matching the blue style */}
+          <button
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+            onClick={handleCardClick}
+          >
+            Xem chi tiết
+          </button>
+
+          {/* Notification section */}
+          {noti && (
+            <div
+              className={`mt-3 text-sm rounded px-3 py-2 ${noti.type === 'success'
+                ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                : 'bg-red-100 text-red-700 border border-red-300'
+                }`}
+            >
+              {noti.message}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,22 +156,79 @@ const CoursesPage = () => {
                 placeholder="Tìm kiếm khóa học..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
-            
           </div>
         </div>
 
-        {/* Course Grid */}
+        {/* Course Carousel */}
+        {loading ? (
+          <div className="text-center py-10 text-gray-600 text-lg">Đang tải...</div>
+        ) : (
+          <div className="relative">
+            {/* Carousel Container with Side Navigation */}
+            <div className="flex items-center">
+              {/* Left Navigation Button */}
+              <button
+                onClick={handlePrevious}
+                disabled={!canGoPrev}
+                className={`p-3 rounded-full border-2 transition-all duration-200 mr-4 flex-shrink-0 ${
+                  canGoPrev 
+                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg' 
+                    : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                }`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
 
-          <CourseCard searchTerm={searchTerm} />
+              {/* Carousel Content */}
+              <div className="flex-1 overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                >
+                  {Array.from({ length: totalSlides }, (_, slideIndex) => (
+                    <div key={slideIndex} className="w-full flex-shrink-0">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+                        {filteredCourses
+                          .slice(slideIndex * coursesPerSlide, (slideIndex + 1) * coursesPerSlide)
+                          .map((course, index) => (
+                            <CourseCardItem 
+                              key={course.id} 
+                              course={course} 
+                              delay={(slideIndex * coursesPerSlide + index) * 100} 
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
+              {/* Right Navigation Button */}
+              <button
+                onClick={handleNext}
+                disabled={!canGoNext}
+                className={`p-3 rounded-full border-2 transition-all duration-200 ml-4 flex-shrink-0 ${
+                  canGoNext 
+                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg' 
+                    : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {filteredCourses.length === 0 && (
+              <div className="text-center text-gray-500 py-10">Không tìm thấy khóa học phù hợp.</div>
+            )}
+          </div>
+        )}
 
         {/* My Courses Section */}
-        <div className="mb-8">
+        <div className="mb-8 mt-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Khóa học của tôi</h2>
-         
         </div>
       </div>
     </div>
