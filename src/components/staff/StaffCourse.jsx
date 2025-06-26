@@ -1,73 +1,162 @@
-import React, { useState } from 'react';
-import { Search, Filter, Star, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Star, Eye, Plus, Trash2, Pencil } from 'lucide-react';
+import api from '../../services/axios';
 
 const StaffCourse = () => {
+  // ...existing state...
   const [searchTerm, setSearchTerm] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample course data
-  const courses = [
-    {
-      id: 1,
-      title: "Phòng ngừa ma túy có bản",
-      description: "Khóa học giúp hiểu rõ về tác hại của ma túy...",
-      image: "/api/placeholder/300/200",
-      students: 456,
-      status: "HOẠT ĐỘNG",
-      rating: 4.8,
-      duration: "4 tuần",
-      lessons: 12,
-      createdDate: "01/10/2024"
-    },
-    {
-      id: 2,
-      title: "Tư vấn và hỗ trợ cộng đồng",
-      description: "Kỹ năng tư vấn và hỗ trợ người có nguy cơ...",
-      image: "/api/placeholder/300/200",
-      students: 100,
-      status: "HOẠT ĐỘNG",
-      rating: null,
-      duration: "6 tuần",
-      lessons: 18,
-      createdDate: "15/11/2024"
-    },
-    {
-      id: 3,
-      title: "Phục hồi và tái hòa nhập",
-      description: "Hỗ trợ quá trình phục hồi và tái hòa nhập...",
-      image: "/api/placeholder/300/200",
-      students: 234,
-      status: "HOẠT ĐỘNG",
-      rating: 4.7,
-      duration: "8 tuần",
-      lessons: 24,
-      createdDate: "20/09/2024"
-    }
-  ];
+  // Create modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [newCourse, setNewCourse] = useState({
+    title: '',
+    description: '',
+    objectives: '',
+    overview: '',
+    ageGroup: '',
+  });
+
+  // Edit modal state
+  const [showEdit, setShowEdit] = useState(false);
+  const [editCourse, setEditCourse] = useState({
+    id: '',
+    title: '',
+    description: '',
+    objectives: '',
+    overview: '',
+    ageGroup: '',
+  });
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get('/courses');
+        setCourses(res.data || []);
+      } catch (error) {
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const stats = [
     {
       title: "Tổng khóa học",
-      value: "24"
+      value: courses.length
     },
     {
       title: "Tổng đăng ký",
-      value: "1,456",
+      value: courses.reduce((sum, c) => sum + (c.students || 0), 0),
       color: "text-blue-600"
     }
   ];
 
   const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes(searchTerm.toLowerCase())
+    course.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Input change handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewCourse((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditCourse((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Create course
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/courses', newCourse);
+      const res = await api.get('/courses');
+      setCourses(res.data || []);
+      setShowCreate(false);
+      setNewCourse({
+        title: '',
+        description: '',
+        objectives: '',
+        overview: '',
+        ageGroup: '',
+      });
+    } catch (error) {
+      alert('Tạo khóa học thất bại!');
+    }
+  };
+
+  // Edit course
+  const handleEditCourse = (course) => {
+    setEditCourse({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      objectives: course.objectives,
+      overview: course.overview,
+      ageGroup: course.ageGroup,
+    });
+    setShowEdit(true);
+  };
+
+  const handleUpdateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/courses/${editCourse.id}`, {
+        title: editCourse.title,
+        description: editCourse.description,
+        objectives: editCourse.objectives,
+        overview: editCourse.overview,
+        ageGroup: editCourse.ageGroup,
+      });
+      const res = await api.get('/courses');
+      setCourses(res.data || []);
+      setShowEdit(false);
+    } catch (error) {
+      alert('Cập nhật khóa học thất bại!');
+    }
+  };
+
+  // Delete course
+  const handleDeleteCourse = async (id) => {
+    if (!window.confirm('Bạn có chắc muốn xóa khóa học này?')) return;
+    try {
+      await api.delete(`/courses/${id}`);
+      setCourses((prev) => prev.filter((c) => c.id !== id));
+    } catch (error) {
+      alert('Xóa khóa học thất bại!');
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-10 text-gray-600 text-lg">Đang tải...</div>;
+  }
+
   return (
-    <div className="p-8 bg-gradient-to-r from-blue-50 to-indigo-100">
+    <div className="min-h-screen w-full p-8 bg-gradient-to-r from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Quản lý khóa học</h1>
-        
-        {/* Search and Filter */}
         <div className="flex items-center space-x-4">
+          {/* Create Course Button */}
+          <button
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            onClick={() => setShowCreate(true)}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tạo khóa học</span>
+          </button>
+          {/* Search and Filter */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -85,6 +174,172 @@ const StaffCourse = () => {
         </div>
       </div>
 
+      {/* Create Course Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-8 relative">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
+              onClick={() => setShowCreate(false)}
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-6 text-gray-900">Tạo khóa học mới</h2>
+            <form onSubmit={handleCreateCourse} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên khóa học</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newCourse.title}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+                <textarea
+                  name="description"
+                  value={newCourse.description}
+                  onChange={handleInputChange}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mục tiêu</label>
+                <input
+                  type="text"
+                  name="objectives"
+                  value={newCourse.objectives}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tổng quan</label>
+                <input
+                  type="text"
+                  name="overview"
+                  value={newCourse.overview}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm tuổi</label>
+                <input
+                  type="text"
+                  name="ageGroup"
+                  value={newCourse.ageGroup}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="mr-3 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setShowCreate(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition"
+                >
+                  Tạo mới
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Course Modal */}
+      {showEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-8 relative">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
+              onClick={() => setShowEdit(false)}
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-6 text-gray-900">Chỉnh sửa khóa học</h2>
+            <form onSubmit={handleUpdateCourse} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên khóa học</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={editCourse.title}
+                  onChange={handleEditInputChange}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+                <textarea
+                  name="description"
+                  value={editCourse.description}
+                  onChange={handleEditInputChange}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mục tiêu</label>
+                <input
+                  type="text"
+                  name="objectives"
+                  value={editCourse.objectives}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tổng quan</label>
+                <input
+                  type="text"
+                  name="overview"
+                  value={editCourse.overview}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nhóm tuổi</label>
+                <input
+                  type="text"
+                  name="ageGroup"
+                  value={editCourse.ageGroup}
+                  onChange={handleEditInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="mr-3 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setShowEdit(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                >
+                  Lưu thay đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-6 mb-8">
         {stats.map((stat, index) => (
@@ -101,48 +356,7 @@ const StaffCourse = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {filteredCourses.map((course) => (
           <div key={course.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Course Image */}
-            <div className="h-48 bg-gray-200 relative">
-              <img 
-                src={course.image} 
-                alt={course.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 left-4">
-                <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
-                  {course.status}
-                </span>
-              </div>
-              <div className="absolute top-4 right-4 text-white text-sm font-medium">
-                {course.students} học viên
-              </div>
-            </div>
-
-            {/* Course Content */}
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                {course.title}
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                {course.description}
-              </p>
-
-              {/* Course Stats */}
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                {course.rating && (
-                  <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span>{course.rating}</span>
-                  </div>
-                )}
-                <span>{course.duration}</span>
-              </div>
-
-              {/* Action Button */}
-              <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
-                Xem
-              </button>
-            </div>
+            {/* ...existing card code... */}
           </div>
         ))}
       </div>
@@ -160,7 +374,7 @@ const StaffCourse = () => {
                   Tên khóa học
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
+                  Nhóm tuổi
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Học viên
@@ -185,24 +399,32 @@ const StaffCourse = () => {
                         {course.title}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {course.duration} • {course.lessons} bài học
+                        {(course.duration || "") + (course.lessons ? ` • ${course.lessons} bài học` : "")}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
-                      {course.status}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {course.ageGroup || NULL}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.students}
+                    {course.totalEnrollmentCourse || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {course.createdDate}
+                    {course.createdDate || (course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "")}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex space-x-2">
+                    <button className="text-blue-500 hover:text-blue-700" title="Sửa" onClick={() => handleEditCourse(course)}>
+                      <Pencil className="w-4 h-4" />
+                    </button>
                     <button className="text-gray-400 hover:text-gray-600">
                       <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      title="Xóa"
+                      onClick={() => handleDeleteCourse(course.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
@@ -215,4 +437,4 @@ const StaffCourse = () => {
   );
 };
 
-export default StaffCourse; 
+export default StaffCourse;
