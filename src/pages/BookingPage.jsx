@@ -12,46 +12,11 @@ import {
   Users,
   Award,
   Search,
+  Lock,
 } from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
 import ApiService from "../services/apiService";
-
-// Fetch schedules and slots using ApiService
-const fetchSchedulesAndSlots = async (consultantId) => {
-  try {
-    // Fetch all schedules
-    const allSchedules = await ApiService.getSchedules();
-
-    // Find schedule for this consultant
-    const consultantSchedule = allSchedules.find(
-      (s) => s.consultant_id === consultantId
-    );
-    if (!consultantSchedule) return [];
-
-    // Fetch all slots
-    const allSlots = await ApiService.getSlots();
-
-    // Filter slots for this schedule that are not booked
-    const availableSlots = allSlots.filter(
-      (slot) => slot.schedule_id === consultantSchedule.id && !slot.is_booked
-    );
-
-    // Transform slots to include date and time for easier handling
-    const transformedSlots = availableSlots.map((slot) => ({
-      ...slot,
-      date: new Date(slot.slot_start).toISOString().split("T")[0],
-      time: new Date(slot.slot_start).toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    }));
-
-    return transformedSlots;
-  } catch (error) {
-    console.error("Error fetching schedules and slots:", error);
-    return [];
-  }
-};
+import { alertSuccess, alertFail } from "../hooks/useNotification";
 
 const BookingPage = () => {
   const { consultantId } = useParams();
@@ -65,16 +30,15 @@ const BookingPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [selectedConsultant, setSelectedConsultant] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [availableSchedules, setAvailableSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [memberInfo, setMemberInfo] = useState(null);
   const [loadingMemberInfo, setLoadingMemberInfo] = useState(false);
 
-  // Form data - will be populated from API
+  // Form data
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -119,6 +83,14 @@ const BookingPage = () => {
     }
   };
 
+  // Kiểm tra schedule đã được đặt dựa vào is_booked
+  const isScheduleBooked = (schedule) => {
+    if (schedule.hasOwnProperty("bookedStatus")) {
+      return schedule.bookedStatus; // True nếu đã đặt, false nếu chưa đặt
+    }
+    return false;
+  };
+
   // Fetch member info when user is available
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -132,12 +104,12 @@ const BookingPage = () => {
       try {
         setLoading(true);
 
-        // Fetch all consultants using ApiService
+        // Fetch all consultants
         const data = await ApiService.getConsultants();
         setConsultants(data);
         setFilteredConsultants(data);
 
-        // If consultantId is provided, set the selected consultant and fetch slots
+        // If consultantId is provided, set the selected consultant and fetch schedules
         if (consultantId) {
           const foundConsultant = data.find(
             (c) => c.id === Number.parseInt(consultantId)
@@ -147,9 +119,11 @@ const BookingPage = () => {
           }
           setSelectedConsultant(foundConsultant);
 
-          // Fetch available slots for the selected consultant
-          const slots = await fetchSchedulesAndSlots(foundConsultant.id);
-          setAvailableSlots(slots);
+          // Fetch available schedules for the selected consultant
+          const schedules = await ApiService.getConsultantSchedules(
+            foundConsultant.consultant_id
+          );
+          setAvailableSchedules(schedules);
         }
 
         setError(null);
@@ -219,12 +193,15 @@ const BookingPage = () => {
     setLoading(true);
 
     try {
-      // Fetch slots using ApiService
-      const slots = await fetchSchedulesAndSlots(consultant.id);
-      setAvailableSlots(slots);
+      // Fetch schedules for the consultant
+      const schedules = await ApiService.getConsultantSchedules(
+        consultant.consultant_id
+      );
+      setAvailableSchedules(schedules);
     } catch (error) {
-      console.error("Error loading slots:", error);
-      setAvailableSlots([]);
+      console.error("Error loading schedules:", error);
+      setAvailableSchedules([]);
+      // Không hiển thị alert error nếu chỉ là không có data
     } finally {
       setLoading(false);
     }
@@ -236,9 +213,13 @@ const BookingPage = () => {
     setCurrentStep(2);
   };
 
-  const handleSlotSelect = (slot) => {
-    setSelectedSlot(slot);
-    setSelectedDate(slot.date);
+  const handleScheduleSelect = (schedule) => {
+    // Don't allow selection of booked schedules
+    if (isScheduleBooked(schedule)) {
+      alertFail("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
+      return;
+    }
+    setSelectedSchedule(schedule);
   };
 
   const handleInputChange = (e) => {
@@ -251,12 +232,12 @@ const BookingPage = () => {
 
   const handleNextStep = () => {
     if (currentStep === 1 && !selectedConsultant) {
-      alert("Vui lòng chọn chuyên gia tư vấn");
+      alertFail("Vui lòng chọn chuyên gia tư vấn");
       return;
     }
 
-    if (currentStep === 2 && !selectedSlot) {
-      alert("Vui lòng chọn khung giờ tư vấn");
+    if (currentStep === 2 && !selectedSchedule) {
+      alertFail("Vui lòng chọn khung giờ tư vấn");
       return;
     }
 
@@ -264,10 +245,8 @@ const BookingPage = () => {
   };
 
   const handlePrevStep = () => {
-    // If we're at step 2 and there's no consultantId in the URL, go back to step 1
     if (currentStep === 2 && !consultantId) {
       setCurrentStep(1);
-      // Update URL to remove consultantId
       navigate("/booking", { replace: true });
     } else if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
@@ -281,14 +260,14 @@ const BookingPage = () => {
     );
 
     if (missingFields.length > 0) {
-      alert(`Vui lòng điền đầy đủ thông tin: ${missingFields.join(", ")}`);
+      alertFail(`Vui lòng điền đầy đủ thông tin: ${missingFields.join(", ")}`);
       return false;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      alert("Vui lòng nhập email hợp lệ");
+      alertFail("Vui lòng nhập email hợp lệ");
       return false;
     }
 
@@ -301,33 +280,39 @@ const BookingPage = () => {
     try {
       setLoading(true);
 
-      // Create appointment using ApiService
-      await ApiService.createAppointment({
-        member_id: user.id,
-        slot_id: selectedSlot.id,
-        scheduled_at: selectedSlot.slot_start,
-        status: "Booked",
-        note: formData.notes || null,
-      });
-
-      // Update slot to mark as booked using ApiService
-      try {
-        await ApiService.updateSlot(selectedSlot.id, {
-          ...selectedSlot,
-          is_booked: true,
-        });
-      } catch (slotError) {
-        console.warn("Failed to update slot status:", slotError);
+      // Tìm slotId từ selectedSchedule
+      const slotId = selectedSchedule.slotId;
+      if (!slotId) {
+        throw new Error("Không tìm thấy slot ID");
       }
 
+      const appointmentData = {
+        slotId: slotId,
+        consultantId: selectedConsultant.consultant_id,
+        description: formData.notes || "",
+        appointmentDate: selectedSchedule.date,
+      };
+
+      await ApiService.createAppointment(appointmentData);
+
+      alertSuccess(
+        "Đặt lịch thành công! Chúng tôi sẽ gửi thông tin chi tiết qua email."
+      );
       setBookingSuccess(true);
       setCurrentStep(5);
     } catch (err) {
-      alert("Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại.");
+      alertFail(err.message || "Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại.");
       console.error("Booking error:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to format time from API response
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    // Lấy "HH:MM" từ chuỗi "HH:MM:SS"
+    return timeString.substring(0, 5);
   };
 
   // Check authentication
@@ -417,12 +402,12 @@ const BookingPage = () => {
                 </p>
                 <p>
                   <span className="font-medium">Ngày:</span>{" "}
-                  {new Date(selectedSlot.slot_start).toLocaleDateString(
-                    "vi-VN"
-                  )}
+                  {new Date(selectedSchedule.date).toLocaleDateString("vi-VN")}
                 </p>
                 <p>
-                  <span className="font-medium">Giờ:</span> {selectedSlot.time}
+                  <span className="font-medium">Giờ:</span>{" "}
+                  {formatTime(selectedSchedule.slot.slotStart)} -{" "}
+                  {formatTime(selectedSchedule.slot.slotEnd)}
                 </p>
                 <p>
                   <span className="font-medium">Hình thức:</span> Tư vấn trực
@@ -461,19 +446,20 @@ const BookingPage = () => {
     );
   }
 
-  const groupSlotsByDate = (slots) => {
+  // Group schedules by date
+  const groupSchedulesByDate = (schedules) => {
     const grouped = {};
-    slots.forEach((slot) => {
-      if (!grouped[slot.date]) {
-        grouped[slot.date] = [];
+    schedules.forEach((schedule) => {
+      if (!grouped[schedule.date]) {
+        grouped[schedule.date] = [];
       }
-      grouped[slot.date].push(slot);
+      grouped[schedule.date].push(schedule);
     });
     return grouped;
   };
 
-  const groupedSlots = selectedConsultant
-    ? groupSlotsByDate(availableSlots)
+  const groupedSchedules = selectedConsultant
+    ? groupSchedulesByDate(availableSchedules)
     : {};
 
   return (
@@ -711,7 +697,7 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Step 2: Choose Time Slot */}
+        {/* Step 2: Choose Time Schedule */}
         {currentStep === 2 && selectedConsultant && (
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
@@ -745,13 +731,13 @@ const BookingPage = () => {
               </div>
             </div>
 
-            {/* Available Time Slots */}
+            {/* Available Time Schedules */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-6">
                 Khung giờ có sẵn
               </h3>
 
-              {Object.keys(groupedSlots).length === 0 ? (
+              {Object.keys(groupedSchedules).length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-gray-500 mb-4">
                     <Calendar className="w-16 h-16 mx-auto" />
@@ -766,9 +752,9 @@ const BookingPage = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {Object.entries(groupedSlots)
+                  {Object.entries(groupedSchedules)
                     .sort(([a], [b]) => new Date(a) - new Date(b))
-                    .map(([date, slots]) => (
+                    .map(([date, schedules]) => (
                       <div key={date}>
                         <h4 className="text-lg font-semibold text-gray-800 mb-3">
                           {new Date(date).toLocaleDateString("vi-VN", {
@@ -779,29 +765,44 @@ const BookingPage = () => {
                           })}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                          {slots
-                            .sort(
-                              (a, b) =>
-                                new Date(a.slot_start) - new Date(b.slot_start)
-                            )
-                            .map((slot) => (
+                          {schedules.map((schedule) => {
+                            const isBooked = isScheduleBooked(schedule);
+                            const isSelected =
+                              selectedSchedule?.id === schedule.id;
+                            return (
                               <button
-                                key={slot.id}
-                                onClick={() => handleSlotSelect(slot)}
-                                className={`p-3 border rounded-lg text-center transition-colors ${
-                                  selectedSlot?.id === slot.id
+                                key={schedule.id}
+                                onClick={() => handleScheduleSelect(schedule)}
+                                disabled={isBooked}
+                                className={`p-3 border rounded-lg text-center transition-colors relative ${
+                                  isBooked
+                                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
+                                    : isSelected
                                     ? "bg-emerald-600 text-white border-emerald-600"
                                     : "bg-white text-gray-700 border-gray-300 hover:border-emerald-500 hover:bg-emerald-50"
                                 }`}
                               >
                                 <div className="flex items-center justify-center">
-                                  <Clock className="w-4 h-4 mr-1" />
+                                  {isBooked ? (
+                                    <Lock className="w-4 h-4 mr-1" />
+                                  ) : (
+                                    <Clock className="w-4 h-4 mr-1" />
+                                  )}
                                   <span className="font-medium">
-                                    {slot.time}
+                                    {formatTime(schedule.slot.slotStart)} -{" "}
+                                    {formatTime(schedule.slot.slotEnd)}
                                   </span>
                                 </div>
+                                {isBooked && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-90 rounded-lg">
+                                    <span className="text-xs text-gray-600 font-medium">
+                                      Đã đặt
+                                    </span>
+                                  </div>
+                                )}
                               </button>
-                            ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -819,9 +820,9 @@ const BookingPage = () => {
               </button>
               <button
                 onClick={handleNextStep}
-                disabled={!selectedSlot}
+                disabled={!selectedSchedule}
                 className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                  selectedSlot
+                  selectedSchedule
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
@@ -833,7 +834,7 @@ const BookingPage = () => {
         )}
 
         {/* Step 3: Confirm Information */}
-        {currentStep === 3 && selectedConsultant && selectedSlot && (
+        {currentStep === 3 && selectedConsultant && selectedSchedule && (
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
@@ -872,7 +873,7 @@ const BookingPage = () => {
                     <div className="flex items-center text-gray-700">
                       <Calendar className="w-5 h-5 mr-2 text-emerald-600" />
                       <span>
-                        {new Date(selectedSlot.slot_start).toLocaleDateString(
+                        {new Date(selectedSchedule.date).toLocaleDateString(
                           "vi-VN",
                           {
                             weekday: "long",
@@ -885,7 +886,10 @@ const BookingPage = () => {
                     </div>
                     <div className="flex items-center text-gray-700">
                       <Clock className="w-5 h-5 mr-2 text-emerald-600" />
-                      <span>{selectedSlot.time}</span>
+                      <span>
+                        {formatTime(selectedSchedule.slot.slotStart)} -{" "}
+                        {formatTime(selectedSchedule.slot.slotEnd)}
+                      </span>
                     </div>
                     <div className="flex items-center text-gray-700">
                       <MapPin className="w-5 h-5 mr-2 text-emerald-600" />
@@ -990,14 +994,15 @@ const BookingPage = () => {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ghi chú (tùy chọn)
+                      Ghi chú về vấn đề cần tư vấn{" "}
+                      <span className="text-gray-500">(tùy chọn)</span>
                     </label>
                     <textarea
                       name="notes"
                       value={formData.notes}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="Mô tả ngắn gọn về vấn đề bạn muốn tư vấn..."
+                      placeholder="Mô tả ngắn gọn về vấn đề bạn muốn tư vấn để chuyên gia có thể chuẩn bị tốt hơn..."
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
@@ -1054,7 +1059,7 @@ const BookingPage = () => {
         )}
 
         {/* Step 4: Final Confirmation */}
-        {currentStep === 4 && selectedConsultant && selectedSlot && (
+        {currentStep === 4 && selectedConsultant && selectedSchedule && (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
@@ -1087,13 +1092,14 @@ const BookingPage = () => {
                   </p>
                   <p>
                     <span className="font-medium">Ngày:</span>{" "}
-                    {new Date(selectedSlot.slot_start).toLocaleDateString(
+                    {new Date(selectedSchedule.date).toLocaleDateString(
                       "vi-VN"
                     )}
                   </p>
                   <p>
                     <span className="font-medium">Giờ:</span>{" "}
-                    {selectedSlot.time}
+                    {formatTime(selectedSchedule.slot.slotStart)} -{" "}
+                    {formatTime(selectedSchedule.slot.slotEnd)}
                   </p>
                   <p>
                     <span className="font-medium">Hình thức:</span> Tư vấn trực
@@ -1110,6 +1116,12 @@ const BookingPage = () => {
                     <span className="font-medium">Số điện thoại:</span>{" "}
                     {formData.phone}
                   </p>
+                  {formData.notes && (
+                    <p>
+                      <span className="font-medium">Ghi chú:</span>{" "}
+                      {formData.notes}
+                    </p>
+                  )}
                 </div>
               </div>
 
