@@ -9,9 +9,12 @@ import {
   MapPin,
   Calendar,
   User,
+  Clock,
+  Lock,
 } from "lucide-react";
 import GoogleMeetInfo from "../components/GoogleMeetInfo";
 import ApiService from "../services/apiService";
+import { alertFail } from "../hooks/useNotification";
 
 const ConsultantDetailPage = () => {
   const { id } = useParams();
@@ -20,7 +23,6 @@ const ConsultantDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [schedules, setSchedules] = useState([]);
-  const [slots, setSlots] = useState([]);
 
   useEffect(() => {
     const fetchConsultant = async () => {
@@ -32,41 +34,51 @@ const ConsultantDetailPage = () => {
       } catch (err) {
         setError(err.message);
         console.error("Error fetching consultant:", err);
+        alertFail("Không thể tải thông tin chuyên gia");
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchScheduleData = async (consultantId) => {
+    const fetchScheduleData = async () => {
       try {
-        const schedulesResponse = await fetch(
-          "https://684db8e765ed08713916f5be.mockapi.io/schedule"
-        );
-        if (schedulesResponse.ok) {
-          const allSchedules = await schedulesResponse.json();
-          const consultantSchedules = allSchedules.filter(
-            (s) => s.consultant_id === Number.parseInt(consultantId)
-          );
-          setSchedules(consultantSchedules);
-        }
+        // Lấy consultant data để có consultant_id
+        const consultantData = await ApiService.getConsultant(id);
 
-        const slotsResponse = await fetch(
-          "https://684db8e765ed08713916f5be.mockapi.io/slot"
+        // Lấy schedules của consultant từ API đúng
+        const consultantSchedules = await ApiService.getConsultantSchedules(
+          consultantData.consultant_id
         );
-        if (slotsResponse.ok) {
-          const allSlots = await slotsResponse.json();
-          setSlots(allSlots);
-        }
+        setSchedules(consultantSchedules || []);
       } catch (error) {
         console.error("Error fetching schedule data:", error);
+        setSchedules([]);
       }
     };
 
     if (id) {
       fetchConsultant();
-      fetchScheduleData(id);
+      fetchScheduleData();
     }
   }, [id]);
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    // Lấy "HH:MM" từ chuỗi "HH:MM:SS"
+    return timeString.substring(0, 5);
+  };
+
+  const isScheduleBooked = (schedule) => {
+    if (schedule.hasOwnProperty("bookedStatus")) {
+      return schedule.bookedStatus; // True nếu đã đặt, false nếu chưa đặt
+    }
+    console.warn(
+      "Schedule",
+      schedule.id,
+      "no bookedStatus field, assuming available"
+    );
+    return false;
+  };
 
   if (loading) {
     return (
@@ -118,6 +130,20 @@ const ConsultantDetailPage = () => {
     { id: "overview", label: "Tổng quan" },
     { id: "schedule", label: "Lịch hẹn" },
   ];
+
+  // Group schedules by date
+  const groupSchedulesByDate = (schedules) => {
+    const grouped = {};
+    schedules.forEach((schedule) => {
+      if (!grouped[schedule.date]) {
+        grouped[schedule.date] = [];
+      }
+      grouped[schedule.date].push(schedule);
+    });
+    return grouped;
+  };
+
+  const groupedSchedules = groupSchedulesByDate(schedules);
 
   return (
     <div className="min-h-screen bg-white">
@@ -244,7 +270,7 @@ const ConsultantDetailPage = () => {
                           : "Chưa cập nhật"}
                       </span>
                     </div>
-                    {consultant.dateOfBirth && ( 
+                    {consultant.dateOfBirth && (
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-5 h-5 mr-3 text-emerald-600" />
                         <span>
@@ -270,16 +296,16 @@ const ConsultantDetailPage = () => {
                       <div className="flex items-start justify-between">
                         <div>
                           <h4 className="font-semibold text-gray-800">
-                            {consultant.degreeLevel} {/* Sửa thành camelCase */}
+                            {consultant.degreeLevel}
                           </h4>
                           <p className="text-gray-600">
                             {consultant.organization}
                           </p>
                           <p className="text-gray-600 mb-2">
-                            Chuyên ngành: {consultant.fieldOfStudy}{" "}
+                            Chuyên ngành: {consultant.fieldOfStudy}
                           </p>
                           <div className="text-sm text-gray-500">
-                            {consultant.issuedDate && ( 
+                            {consultant.issuedDate && (
                               <p>
                                 Cấp:{" "}
                                 {new Date(
@@ -287,7 +313,7 @@ const ConsultantDetailPage = () => {
                                 ).toLocaleDateString("vi-VN")}
                               </p>
                             )}
-                            {consultant.expiryDate && ( 
+                            {consultant.expiryDate && (
                               <p>
                                 Hết hạn:{" "}
                                 {new Date(
@@ -330,88 +356,64 @@ const ConsultantDetailPage = () => {
                   <GoogleMeetInfo />
                 </div>
 
-                {schedules.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3">
-                      Thông tin lịch làm việc
-                    </h4>
-                    {schedules.map((schedule) => (
-                      <div
-                        key={schedule.id}
-                        className="bg-gray-50 rounded-lg p-4 mb-4"
-                      >
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Thời gian:</span>
-                            <p className="font-medium">
-                              {new Date(schedule.start_date).toLocaleDateString(
-                                "vi-VN"
-                              )}{" "}
-                              -{" "}
-                              {new Date(schedule.end_date).toLocaleDateString(
-                                "vi-VN"
-                              )}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Lặp lại:</span>
-                            <p className="font-medium">
-                              {schedule.recurrence === "weekly"
-                                ? "Hàng tuần"
-                                : schedule.recurrence}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 <div className="mb-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-3">
                     Khung giờ khả dụng
                   </h4>
-                  {slots.filter(
-                    (slot) =>
-                      schedules.some((s) => s.id === slot.schedule_id) &&
-                      !slot.is_booked
-                  ).length > 0 ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {slots
-                        .filter(
-                          (slot) =>
-                            schedules.some((s) => s.id === slot.schedule_id) &&
-                            !slot.is_booked
-                        )
-                        .slice(0, 6)
-                        .map((slot) => (
-                          <div
-                            key={slot.id}
-                            className="border border-gray-200 rounded-lg p-3"
-                          >
-                            <div className="text-sm">
-                              <p className="font-medium text-gray-800">
-                                {new Date(slot.slot_start).toLocaleDateString(
-                                  "vi-VN"
-                                )}
-                              </p>
-                              <p className="text-gray-600">
-                                {new Date(slot.slot_start).toLocaleTimeString(
-                                  "vi-VN",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}{" "}
-                                -{" "}
-                                {new Date(slot.slot_end).toLocaleTimeString(
-                                  "vi-VN",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
-                              </p>
+                  {Object.keys(groupedSchedules).length > 0 ? (
+                    <div className="space-y-6">
+                      {Object.entries(groupedSchedules)
+                        .sort(([a], [b]) => new Date(a) - new Date(b))
+                        .map(([date, schedules]) => (
+                          <div key={date}>
+                            <h5 className="text-md font-semibold text-gray-800 mb-3">
+                              {new Date(date).toLocaleDateString("vi-VN", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                              {schedules.map((schedule) => {
+                                const isBooked = isScheduleBooked(schedule);
+                                const slotStart =
+                                  schedule.slot?.slotStart || "";
+                                const slotEnd = schedule.slot?.slotEnd || "";
+                                return (
+                                  <div
+                                    key={schedule.id}
+                                    className={`p-3 border rounded-lg text-center ${
+                                      isBooked
+                                        ? "border-gray-300 bg-gray-100 opacity-60"
+                                        : "border-gray-200 bg-white"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-center">
+                                      {isBooked ? (
+                                        <Lock className="w-4 h-4 mr-1 text-gray-500" />
+                                      ) : (
+                                        <Clock className="w-4 h-4 mr-1 text-emerald-600" />
+                                      )}
+                                      <span
+                                        className={`font-medium ${
+                                          isBooked
+                                            ? "text-gray-500"
+                                            : "text-gray-700"
+                                        }`}
+                                      >
+                                        {formatTime(slotStart)} -{" "}
+                                        {formatTime(slotEnd)}
+                                      </span>
+                                    </div>
+                                    {isBooked && (
+                                      <div className="text-xs text-red-500 mt-1">
+                                        Đã được đặt
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
