@@ -1,13 +1,5 @@
 import api from "./axios";
 
-// Mock API URLs
-const MOCK_APIS = {
-  appointment: "https://684db9dc65ed08713916f8de.mockapi.io/appointment",
-  schedule: "https://684db8e765ed08713916f5be.mockapi.io/schedule",
-  slot: "https://684db8e765ed08713916f5be.mockapi.io/slot",
-  blog: "https://684482e971eb5d1be0337d19.mockapi.io/blogs",
-};
-
 class ApiService {
   static async login(credentials) {
     try {
@@ -87,22 +79,13 @@ class ApiService {
   // Consultant APIs
   static async getConsultants() {
     try {
-      // Lấy thông tin consultant từ bảng consultants
       const consultantsResponse = await api.get("consultants");
       const allConsultants = consultantsResponse.data;
-      console.log("All consultants from /api/consultants:", allConsultants);
-
       if (!allConsultants || allConsultants.length === 0) {
         console.warn("No consultants found in /api/consultants.");
         return [];
       }
 
-      // Lấy tất cả accounts để bổ sung thông tin bổ sung nếu cần
-      const accountsResponse = await api.get("accounts");
-      const allAccounts = accountsResponse.data;
-      console.log("All accounts from /api/accounts:", allAccounts);
-
-      // Map consultant data, sử dụng account từ consultant
       const consultantsWithAccountInfo = allConsultants.map((consultant) => {
         const account = consultant.account;
         if (!account) {
@@ -111,9 +94,6 @@ class ApiService {
           );
           return null;
         }
-
-        // Tìm account chi tiết từ /api/accounts nếu cần
-        const fullAccount = allAccounts.find((acc) => acc.id === account.id);
 
         return {
           id: account.id,
@@ -144,11 +124,9 @@ class ApiService {
         };
       });
 
-      // Lọc bỏ các null
       const finalConsultants = consultantsWithAccountInfo.filter(
         (consultant) => consultant !== null
       );
-      console.log("Final consultants:", finalConsultants);
 
       return finalConsultants;
     } catch (error) {
@@ -159,7 +137,6 @@ class ApiService {
 
   static async getConsultant(id) {
     try {
-      // Lấy thông tin account từ endpoint thực tế
       const accountResponse = await api.get(`account/${id}`);
       const account = accountResponse.data;
 
@@ -167,7 +144,6 @@ class ApiService {
         throw new Error("Account is not a consultant");
       }
 
-      // Lấy thông tin consultant
       const consultantsResponse = await api.get("consultants");
       const allConsultants = consultantsResponse.data;
       const consultantInfo = allConsultants.find(
@@ -211,10 +187,152 @@ class ApiService {
     }
   }
 
+  // Schedule APIs
+  static async getSchedules() {
+    try {
+      const response = await api.get("schedules");
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getSchedule(id) {
+    try {
+      const response = await api.get(`schedules/${id}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getConsultantSchedules(consultantId) {
+    try {
+      const response = await api.get(`schedules/consultant/${consultantId}`);
+      const schedules = response.data || [];
+
+      // Chuyển đổi dữ liệu để phù hợp với frontend
+      return schedules.map((schedule) => {
+        return {
+          id: schedule.id,
+          date: schedule.date,
+          recurrence: schedule.recurrence,
+          bookedStatus: schedule.bookedStatus === 0, // Giả định 0 = true (đã đặt), 1 = false (chưa đặt)
+          slotId: schedule.slotId,
+          slot: {
+            slotStart: schedule.slot.slotStart,
+            slotEnd: schedule.slot.slotEnd,
+          },
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching consultant schedules:", error);
+      return [];
+    }
+  }
+
+  // Slot APIs
+  static async getSlots() {
+    try {
+      const response = await api.get("slot");
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async createSlot(slotData) {
+    try {
+      const response = await api.post("slot", slotData);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Đăng ký lịch làm việc cho consultant
+  static async registerSchedule(scheduleData) {
+    try {
+      const response = await api.post("slot/register", scheduleData);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Appointment APIs
+  static async createAppointment(appointmentData) {
+    try {
+      const payload = {
+        slotId: appointmentData.slotId,
+        consultantId: appointmentData.consultantId,
+        description: appointmentData.description || "",
+        appointmentDate: appointmentData.appointmentDate,
+      };
+
+      console.log("Final payload:", payload);
+      const response = await api.post("appointment", payload);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      if (error.response?.status === 500) {
+        throw new Error(
+          "Lỗi server: Không thể tạo lịch hẹn. Vui lòng liên hệ admin"
+        );
+      } else if (error.response?.status === 400) {
+        throw new Error(
+          "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin."
+        );
+      } else if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw this.handleError(error);
+    }
+  }
+
+  static async updateAppointment(id, appointmentData) {
+    try {
+      const response = await api.put(`appointments/${id}`, appointmentData);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async deleteAppointment(id) {
+    try {
+      const response = await api.delete(`appointments/${id}`);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  static async getAppointments() {
+    try {
+      const response = await api.get("appointment");
+      const appointments = response.data || [];
+
+      return appointments.map((appointment) => ({
+        id: appointment.id,
+        createAt: appointment.createAt,
+        description: appointment.description || "",
+        status: appointment.status || "BOOKED",
+        accountId: appointment.accountId,
+        consultantId: appointment.consultantId,
+      }));
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      throw this.handleError(error);
+    }
+  }
+
   // Blog APIs
   static async getBlogs() {
     try {
-      const response = await fetch(MOCK_APIS.blog);
+      const response = await fetch(
+        "https://684482e971eb5d1be0337d19.mockapi.io/blogs"
+      );
       if (!response.ok) throw new Error("Failed to fetch blogs");
       return await response.json();
     } catch (error) {
@@ -224,7 +342,9 @@ class ApiService {
 
   static async getBlog(id) {
     try {
-      const response = await fetch(`${MOCK_APIS.blog}/${id}`);
+      const response = await fetch(
+        `https://684482e971eb5d1be0337d19.mockapi.io/blogs/${id}`
+      );
       if (!response.ok) throw new Error("Failed to fetch blog");
       return await response.json();
     } catch (error) {
@@ -232,111 +352,15 @@ class ApiService {
     }
   }
 
-  // Schedule APIs
-  static async getSchedules() {
-    try {
-      const response = await fetch(MOCK_APIS.schedule);
-      if (!response.ok) throw new Error("Failed to fetch schedules");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error fetching schedules: ${error.message}`);
-    }
-  }
-
-  // Slot APIs
-  static async getSlots() {
-    try {
-      const response = await fetch(MOCK_APIS.slot);
-      if (!response.ok) throw new Error("Failed to fetch slots");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error fetching slots: ${error.message}`);
-    }
-  }
-
-  static async updateSlot(slotId, slotData) {
-    try {
-      const response = await fetch(`${MOCK_APIS.slot}/${slotId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(slotData),
-      });
-      if (!response.ok) throw new Error("Failed to update slot");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error updating slot: ${error.message}`);
-    }
-  }
-
-  // Appointment APIs
-  static async getAppointments() {
-    try {
-      const response = await fetch(MOCK_APIS.appointment);
-      if (!response.ok) throw new Error("Failed to fetch appointments");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error fetching appointments: ${error.message}`);
-    }
-  }
-
-  static async createAppointment(appointmentData) {
-    try {
-      const response = await fetch(MOCK_APIS.appointment, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(appointmentData),
-      });
-      if (!response.ok) throw new Error("Failed to create appointment");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error creating appointment: ${error.message}`);
-    }
-  }
-
-  static async updateAppointment(id, appointmentData) {
-    try {
-      const response = await fetch(`${MOCK_APIS.appointment}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(appointmentData),
-      });
-      if (!response.ok) throw new Error("Failed to update appointment");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error updating appointment: ${error.message}`);
-    }
-  }
-
-  static async deleteAppointment(id) {
-    try {
-      const response = await fetch(`${MOCK_APIS.appointment}/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete appointment");
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Error deleting appointment: ${error.message}`);
-    }
-  }
-
   // handle API errors
   static handleError(error) {
     console.error("API Error:", error);
     if (error.response) {
-      // Server responded with error status
       const message = error.response.data?.message || "Server error occurred";
       return new Error(message);
     } else if (error.request) {
-      // Request was made but no response received
       return new Error("Network error - please check your connection");
     } else {
-      // Something else happened
       return new Error("An unexpected error occurred");
     }
   }
