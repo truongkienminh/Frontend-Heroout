@@ -157,6 +157,7 @@ const StaffCourse = () => {
     }
   };
 
+
   if (loading) {
     return <div className="text-center py-10 text-gray-600 text-lg">Đang tải...</div>;
   }
@@ -430,7 +431,7 @@ const StaffCourse = () => {
                     {course.ageGroup || ""}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.total || 0}
+                    {course.totalEnrollment || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {course.createdDate || (course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "")}
@@ -465,7 +466,10 @@ const StaffCourse = () => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white relative">
               <button
                 className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
-                onClick={() => setShowChapter(false)}
+                onClick={() => {
+                  setShowChapter(false);
+                  setExpandedChapterId(null);
+                }}
               >
                 <X className="w-6 h-6" />
               </button>
@@ -474,6 +478,13 @@ const StaffCourse = () => {
                 <div>
                   <h2 className="text-2xl font-bold">Danh sách Chapter</h2>
                   <p className="text-blue-100 mt-1">{chapterCourse?.title}</p>
+                  {/* Hiển thị content của course (nội dung chung) nếu có */}
+                  {chapterCourse?.content && (
+                    <div className="mt-2 text-blue-50 text-base whitespace-pre-line">
+                      <span className="font-semibold text-white">Nội dung khóa học: </span>
+                      <span>{chapterCourse.content}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -491,36 +502,29 @@ const StaffCourse = () => {
                   <p className="text-gray-500 text-lg">Chưa có chương nào cho khóa học này.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-8">
                   {chapters.map((chapter, idx) => (
                     <div
                       key={chapter.id}
-                      className="group border-2 border-gray-100 rounded-xl p-6 hover:border-blue-200 hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                      className="bg-blue-50 rounded-xl p-8 shadow-sm border border-blue-100"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
-                              Chương {idx + 1}
-                            </span>
-                          </div>
-                          <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-700 transition-colors">
-                            {chapter.title}
-                          </h3>
-                          <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                            {chapter.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="w-4 h-4" />
-                              <span>{chapter.lessons?.length || 0} bài học</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="ml-6 flex items-center">
-                          <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                        </div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1 rounded-full">
+                          Chapter {idx + 1}
+                        </span>
                       </div>
+                      <h3 className="font-bold text-2xl text-gray-900 mb-4">{chapter.title}</h3>
+                      <hr className="my-4 border-blue-100" />
+                      <div className="mb-4">
+                        <span className="block text-blue-700 font-semibold text-lg mb-1">Nội dung:</span>
+                      </div>
+                      {/* Danh sách bài học */}
+                      {chapter.content && chapter.content.length > 0 ? (
+                        <div className="text-gray-700 whitespace-pre-line">{chapter.content || <span className="italic text-gray-400">Không có nội dung</span>}</div>
+
+                      ) : (
+                        <div className="text-gray-500 text-sm mt-2">Chưa có bài học nào trong chương này.</div>
+                      )}
                     </div>
                   ))}
                 </div>
