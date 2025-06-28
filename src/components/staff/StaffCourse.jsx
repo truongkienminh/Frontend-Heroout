@@ -474,28 +474,37 @@ const StaffCourse = () => {
 
       {/* Chapter Popup */}
       {showChapter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white relative">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-6 relative">
               <button
-                className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
-                onClick={() => {
-                  setShowChapter(false);
-                }}
+                className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
+                onClick={() => setShowChapter(false)}
               >
-                <X className="w-6 h-6" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
-              <div className="flex items-center gap-3">
-                <BookOpen className="w-8 h-8" />
-                <div>
-                  <h2 className="text-2xl font-bold">Danh sách Chapter</h2>
-                  <p className="text-blue-100 mt-1">{chapterCourse?.title}</p>
-                  {/* Hiển thị content của course (nội dung chung) nếu có */}
+
+              <div className="flex items-start gap-4">
+                <div className="bg-white/20 rounded-xl p-3">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white">Danh sách chương</h2>
+                  <p className="text-green-100 mt-1 text-lg font-medium">{chapterCourse?.title}</p>
                   {chapterCourse?.content && (
-                    <div className="mt-2 text-blue-50 text-base whitespace-pre-line">
-                      <span className="font-semibold text-white">Nội dung khóa học: </span>
-                      <span>{chapterCourse.content}</span>
+                    <div className="mt-3 bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                      <span className="block text-white font-semibold mb-2 flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Mô tả khóa học:
+                      </span>
+                      <p className="text-green-50 whitespace-pre-line leading-relaxed">{chapterCourse.content}</p>
                     </div>
                   )}
                 </div>
@@ -503,45 +512,106 @@ const StaffCourse = () => {
             </div>
 
             {/* Content */}
-            <div className="p-8 max-h-[calc(90vh-140px)] overflow-y-auto">
-              {chapterLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">Đang tải chương...</span>
-                </div>
-              ) : chapters.length === 0 ? (
-                <div className="text-center py-12">
-                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">Chưa có chương nào cho khóa học này.</p>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {chapters.map((chapter, idx) => (
-                    <div
-                      key={chapter.id}
-                      className="bg-blue-50 rounded-xl p-8 shadow-sm border border-blue-100"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1 rounded-full">
-                          Chapter {idx + 1}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-2xl text-gray-900 mb-4">{chapter.title}</h3>
-                      <hr className="my-4 border-blue-100" />
-                      <div className="mb-4">
-                        <span className="block text-blue-700 font-semibold text-lg mb-1">Nội dung:</span>
-                      </div>
-                      {/* Danh sách bài học */}
-                      {chapter.content && chapter.content.length > 0 ? (
-                        <div className="text-gray-700 whitespace-pre-line">{chapter.content || <span className="italic text-gray-400">Không có nội dung</span>}</div>
-
-                      ) : (
-                        <div className="text-gray-500 text-sm mt-2">Chưa có bài học nào trong chương này.</div>
-                      )}
+            <div className="max-h-[calc(90vh-200px)] overflow-y-auto">
+              <div className="p-8">
+                {chapterLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200"></div>
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent absolute top-0 left-0"></div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <span className="mt-4 text-gray-600 font-medium">Đang tải danh sách chương...</span>
+                  </div>
+                ) : chapters.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có chương nào</h3>
+                    <p className="text-gray-500">Khóa học này chưa có chương nào được tạo.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Chapter Statistics */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="bg-green-100 rounded-full p-3 mr-4">
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800">Tổng quan khóa học</h3>
+                            <p className="text-gray-600">Thông tin chi tiết về các chương</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-green-600">{chapters.length}</div>
+                          <div className="text-sm text-gray-500">Chương</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chapters List */}
+                    <div className="space-y-6">
+                      {chapters.map((chapter, idx) => (
+                        <div
+                          key={chapter.id}
+                          className="group border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50 hover:border-green-300 hover:shadow-lg transition-all duration-300"
+                        >
+                          <div className="flex items-start gap-4">
+                            {/* Chapter Number Badge */}
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
+                                {idx + 1}
+                              </div>
+                            </div>
+
+                            {/* Chapter Content */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <span className="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
+                                  Chương {idx + 1}
+                                </span>
+                                <div className="flex-1 h-px bg-gradient-to-r from-green-200 to-transparent"></div>
+                              </div>
+
+                              <h3 className="font-bold text-xl text-gray-900 mb-4 group-hover:text-green-700 transition-colors duration-200">
+                                {chapter.title}
+                              </h3>
+
+                              <div className="bg-white rounded-lg p-4 border border-gray-100">
+                                <div className="flex items-center mb-3">
+                                  <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  <span className="font-semibold text-gray-700">Nội dung chương:</span>
+                                </div>
+
+                                {chapter.content && chapter.content.length > 0 ? (
+                                  <div className="text-gray-700 leading-relaxed whitespace-pre-line p-4 ">
+                                    {chapter.content}
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-400 italic text-center py-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                                    <svg className="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Chương này chưa có nội dung
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

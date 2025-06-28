@@ -108,7 +108,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "learningcourse/:courseId",
+    path: "learningcourse/:id",
     element: (
       <MemberProtectedRoute>
         <ProtectedRoute>
