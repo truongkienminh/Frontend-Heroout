@@ -32,7 +32,26 @@ const CoursesPage = () => {
     fetchCourses();
   }, [user]);
 
-  
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        if (!user || !user.id) {
+          setCourses([]);
+          setLoading(false);
+          return;
+        }
+        const res = await api.get(`/courses/in-progress`, {
+          params: { accountId: user.id }
+        });
+        setCourses(res.data || []);
+      } catch (error) {
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, [user]);
 
   // Lọc courses theo searchTerm (không phân biệt hoa thường)
   const filteredCourses = courses.filter(course =>
@@ -155,8 +174,8 @@ const CoursesPage = () => {
                 onClick={handlePrevious}
                 disabled={!canGoPrev}
                 className={`p-3 rounded-full border-2 transition-all duration-200 mr-4 flex-shrink-0 ${canGoPrev
-                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
-                    : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                  ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
+                  : 'border-gray-300 text-gray-300 cursor-not-allowed'
                   }`}
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -191,8 +210,8 @@ const CoursesPage = () => {
                 onClick={handleNext}
                 disabled={!canGoNext}
                 className={`p-3 rounded-full border-2 transition-all duration-200 ml-4 flex-shrink-0 ${canGoNext
-                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
-                    : 'border-gray-300 text-gray-300 cursor-not-allowed'
+                  ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
+                  : 'border-gray-300 text-gray-300 cursor-not-allowed'
                   }`}
               >
                 <ChevronRight className="w-6 h-6" />
