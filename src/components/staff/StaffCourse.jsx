@@ -92,10 +92,9 @@ const StaffCourse = () => {
         ageGroup: '',
       });
     } catch (error) {
-      alert('Tạo khóa học thất bại!');
+      console.error('Tạo khóa học thất bại:', error); 
     }
   };
-
   // Edit course
   const handleEditCourse = (course) => {
     setEditCourse({
@@ -123,7 +122,7 @@ const StaffCourse = () => {
       setCourses(res.data || []);
       setShowEdit(false);
     } catch (error) {
-      alert('Cập nhật khóa học thất bại!');
+      console.error('Cập nhật khóa học thất bại:', error);
     }
   };
 
@@ -134,7 +133,7 @@ const StaffCourse = () => {
       await api.delete(`/courses/${id}`);
       setCourses((prev) => prev.filter((c) => c.id !== id));
     } catch (error) {
-      alert('Xóa khóa học thất bại!');
+      console.error('Xóa khóa học thất bại:', error);
     }
   };
 
@@ -407,7 +406,7 @@ const StaffCourse = () => {
                     {course.ageGroup || NULL}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.totalEnrollmentCourse || 0}
+                    {course.total || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {course.createdDate || (course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "")}

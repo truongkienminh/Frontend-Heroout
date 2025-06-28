@@ -5,6 +5,7 @@ import api from '../services/axios';
 import { useAuth } from '../contexts/AuthContext';
 
 const CoursesPage = () => {
+  const { user } = useAuth(); // Lấy user từ context
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,14 @@ const CoursesPage = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await api.get('/courses');
+        if (!user || !user.id) {
+          setCourses([]);
+          setLoading(false);
+          return;
+        }
+        const res = await api.get(`/courses/not-started`, {
+          params: { accountId: user.id }
+        });
         setCourses(res.data || []);
       } catch (error) {
         setCourses([]);
@@ -22,7 +30,9 @@ const CoursesPage = () => {
       }
     };
     fetchCourses();
-  }, []);
+  }, [user]);
+
+  
 
   // Lọc courses theo searchTerm (không phân biệt hoa thường)
   const filteredCourses = courses.filter(course =>
@@ -50,8 +60,6 @@ const CoursesPage = () => {
   const CourseCardItem = ({ course, delay }) => {
     const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
-    const { user } = useAuth();
-   
 
     useEffect(() => {
       const timer = setTimeout(() => setIsVisible(true), delay);
@@ -61,8 +69,6 @@ const CoursesPage = () => {
     const handleCardClick = () => {
       navigate(`/coursedetail/${course.id}`);
     };
-
-   
 
     return (
       <div
@@ -148,18 +154,17 @@ const CoursesPage = () => {
               <button
                 onClick={handlePrevious}
                 disabled={!canGoPrev}
-                className={`p-3 rounded-full border-2 transition-all duration-200 mr-4 flex-shrink-0 ${
-                  canGoPrev 
-                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg' 
+                className={`p-3 rounded-full border-2 transition-all duration-200 mr-4 flex-shrink-0 ${canGoPrev
+                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
                     : 'border-gray-300 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
 
               {/* Carousel Content */}
               <div className="flex-1 overflow-hidden">
-                <div 
+                <div
                   className="flex transition-transform duration-500 ease-in-out"
                   style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                 >
@@ -169,10 +174,10 @@ const CoursesPage = () => {
                         {filteredCourses
                           .slice(slideIndex * coursesPerSlide, (slideIndex + 1) * coursesPerSlide)
                           .map((course, index) => (
-                            <CourseCardItem 
-                              key={course.id} 
-                              course={course} 
-                              delay={(slideIndex * coursesPerSlide + index) * 100} 
+                            <CourseCardItem
+                              key={course.id}
+                              course={course}
+                              delay={(slideIndex * coursesPerSlide + index) * 100}
                             />
                           ))}
                       </div>
@@ -185,11 +190,10 @@ const CoursesPage = () => {
               <button
                 onClick={handleNext}
                 disabled={!canGoNext}
-                className={`p-3 rounded-full border-2 transition-all duration-200 ml-4 flex-shrink-0 ${
-                  canGoNext 
-                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg' 
+                className={`p-3 rounded-full border-2 transition-all duration-200 ml-4 flex-shrink-0 ${canGoNext
+                    ? 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white shadow-md hover:shadow-lg'
                     : 'border-gray-300 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
