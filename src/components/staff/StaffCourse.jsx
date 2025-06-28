@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Star, Eye, Plus, Trash2, Pencil } from 'lucide-react';
+import { Search, Filter, Star, Eye, Plus, Trash2, Pencil, X, BookOpen, ChevronRight } from 'lucide-react';
 import api from '../../services/axios';
 
 const StaffCourse = () => {
@@ -7,6 +7,12 @@ const StaffCourse = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Popup chapter state
+  const [showChapter, setShowChapter] = useState(false);
+  const [chapterCourse, setChapterCourse] = useState(null);
+  const [chapters, setChapters] = useState([]);
+  const [chapterLoading, setChapterLoading] = useState(false);
 
   // Create modal state
   const [showCreate, setShowCreate] = useState(false);
@@ -92,7 +98,7 @@ const StaffCourse = () => {
         ageGroup: '',
       });
     } catch (error) {
-      console.error('Tạo khóa học thất bại:', error); 
+      console.error('Tạo khóa học thất bại:', error);
     }
   };
   // Edit course
@@ -134,6 +140,20 @@ const StaffCourse = () => {
       setCourses((prev) => prev.filter((c) => c.id !== id));
     } catch (error) {
       console.error('Xóa khóa học thất bại:', error);
+    }
+  };
+
+  const handleShowChapters = async (course) => {
+    setChapterCourse(course);
+    setShowChapter(true);
+    setChapterLoading(true);
+    try {
+      const res = await api.get(`/chapters/course/${course.id}`);
+      setChapters(res.data || []);
+    } catch (error) {
+      setChapters([]);
+    } finally {
+      setChapterLoading(false);
     }
   };
 
@@ -388,7 +408,11 @@ const StaffCourse = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCourses.map((course, index) => (
-                <tr key={course.id} className="hover:bg-gray-50">
+                <tr
+                  key={course.id}
+                  className="hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleShowChapters(course)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {String(index + 1).padStart(3, '0')}
                   </td>
@@ -403,7 +427,7 @@ const StaffCourse = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.ageGroup || NULL}
+                    {course.ageGroup || ""}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {course.total || 0}
@@ -412,16 +436,16 @@ const StaffCourse = () => {
                     {course.createdDate || (course.createdAt ? new Date(course.createdAt).toLocaleDateString() : "")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex space-x-2">
-                    <button className="text-blue-500 hover:text-blue-700" title="Sửa" onClick={() => handleEditCourse(course)}>
+                    <button className="text-blue-500 hover:text-blue-700" title="Sửa" onClick={e => { e.stopPropagation(); handleEditCourse(course); }}>
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <button className="text-gray-400 hover:text-gray-600" onClick={e => e.stopPropagation()}>
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       className="text-red-500 hover:text-red-700"
                       title="Xóa"
-                      onClick={() => handleDeleteCourse(course.id)}
+                      onClick={e => { e.stopPropagation(); handleDeleteCourse(course.id); }}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -432,6 +456,79 @@ const StaffCourse = () => {
           </table>
         </div>
       </div>
+
+      {/* Chapter Popup */}
+      {showChapter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white relative">
+              <button
+                className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
+                onClick={() => setShowChapter(false)}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <div className="flex items-center gap-3">
+                <BookOpen className="w-8 h-8" />
+                <div>
+                  <h2 className="text-2xl font-bold">Danh sách Chapter</h2>
+                  <p className="text-blue-100 mt-1">{chapterCourse?.title}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8 max-h-[calc(90vh-140px)] overflow-y-auto">
+              {chapterLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Đang tải chương...</span>
+                </div>
+              ) : chapters.length === 0 ? (
+                <div className="text-center py-12">
+                  <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">Chưa có chương nào cho khóa học này.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {chapters.map((chapter, idx) => (
+                    <div
+                      key={chapter.id}
+                      className="group border-2 border-gray-100 rounded-xl p-6 hover:border-blue-200 hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+                              Chương {idx + 1}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-blue-700 transition-colors">
+                            {chapter.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                            {chapter.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{chapter.lessons?.length || 0} bài học</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="ml-6 flex items-center">
+                          <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
