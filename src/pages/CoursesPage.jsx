@@ -230,7 +230,7 @@ const CoursesPage = () => {
           ) : (
             myCourses.map((course) => {
               // Giả sử API trả về các trường: title, progress, completedLessons, totalLessons
-              const percent = course.progress || Math.round(((course.completedLessons || 0) / (course.totalLessons || 1)) * 100);
+              const percent = course.progress || Math.round(((course.completedChapter || 0) / (course.totalChapter || 1)) * 100);
               return (
                 <div key={course.id} className="bg-white rounded-xl shadow-sm border border-gray-200 flex items-center px-6 py-4 mb-6 max-w-full">
                   {/* Image placeholder */}
@@ -243,7 +243,7 @@ const CoursesPage = () => {
                       <div>
                         <div className="font-semibold text-gray-900 text-base truncate">{course.title}</div>
                         <div className="text-gray-500 text-sm mt-1">
-                          {percent}% hoàn thành • Bài {course.completedLessons || 0}/{course.totalLessons || 0}
+                          {percent}% hoàn thành • Bài {course.completedChapter || 0}/{course.totalChapter || 0}
                         </div>
                       </div>
                       <button
