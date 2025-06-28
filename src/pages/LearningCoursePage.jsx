@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, Menu, ChevronRight, BookOpen, Play, Clock, Check } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/axios';
+import { useAuth } from '../contexts/AuthContext';
 
 const LearningCoursePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-
+  const { user } = useAuth();
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedChapter, setSelectedChapter] = useState(null);
+  const [completing, setCompleting] = useState(false);
+  const [completedChapters, setCompletedChapters] = useState([]);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -25,11 +28,22 @@ const LearningCoursePage = () => {
     }
   };
 
-  const handleConfirmCompletion = () => {
-    // Add your completion logic here
-    console.log('Chapter completed:', selectedChapter.title);
-    // You can add API call to mark chapter as completed
-    // Example: api.post(`/chapters/${selectedChapter.id}/complete`)
+  const completeChapter = async (chapterId) => {
+    if (!user?.id) return;
+    setCompleting(true);
+    try {
+      await api.post(`/enrollments/complete-chapter`, null, {
+        params: {
+          chapterId,
+          accountId: user.id,
+        },
+      });
+      setCompletedChapters(prev => [...prev, chapterId]);
+    } catch (error) {
+      console.error('Error completing chapter:', error);
+    } finally {
+      setCompleting(false);
+    }
   };
 
   useEffect(() => {
@@ -173,6 +187,12 @@ const LearningCoursePage = () => {
                             <span>Đang học</span>
                           </div>
                         )}
+                        {completedChapters.includes(chapter.id) && (
+                          <div className="flex items-center text-xs text-green-600 font-medium ml-2">
+                            <Check className="w-3 h-3 mr-1" />
+                            <span>Đã hoàn thành</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -283,7 +303,20 @@ const LearningCoursePage = () => {
                 )}
               </div>
 
-
+              {/* Completion Button */}
+              <div className="flex justify-end mt-8">
+                <button
+                  onClick={() => completeChapter(selectedChapter.id)}
+                  className={`flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold
+                    ${completing ? 'opacity-60 cursor-not-allowed' : ''}
+                    ${completedChapters.includes(selectedChapter.id) ? 'bg-green-500 hover:bg-green-600 from-green-500 to-green-600' : ''}
+                  `}
+                  disabled={completing || completedChapters.includes(selectedChapter.id)}
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  {completedChapters.includes(selectedChapter.id) ? 'Đã hoàn thành' : completing ? 'Đang xác nhận...' : 'Xác nhận hoàn thành'}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -297,17 +330,6 @@ const LearningCoursePage = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Completion Button - Bottom Right Corner */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button 
-          onClick={handleConfirmCompletion}
-          className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold"
-        >
-          <Check className="w-5 h-5 mr-2" />
-          Xác nhận hoàn thành
-        </button>
       </div>
     </div>
   );
