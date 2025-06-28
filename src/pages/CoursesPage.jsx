@@ -10,6 +10,7 @@ const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [myCourses, setMyCourses] = useState([]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -33,24 +34,21 @@ const CoursesPage = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchMyCourses = async () => {
       try {
         if (!user || !user.id) {
-          setCourses([]);
-          setLoading(false);
+          setMyCourses([]);
           return;
         }
         const res = await api.get(`/courses/in-progress`, {
           params: { accountId: user.id }
         });
-        setCourses(res.data || []);
+        setMyCourses(res.data || []);
       } catch (error) {
-        setCourses([]);
-      } finally {
-        setLoading(false);
+        setMyCourses([]);
       }
     };
-    fetchCourses();
+    fetchMyCourses();
   }, [user]);
 
   // Lọc courses theo searchTerm (không phân biệt hoa thường)
@@ -227,6 +225,48 @@ const CoursesPage = () => {
         {/* My Courses Section */}
         <div className="mb-8 mt-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Khóa học của tôi</h2>
+          {myCourses.length === 0 ? (
+            <div className="text-gray-500">Bạn chưa có khóa học nào đang học.</div>
+          ) : (
+            myCourses.map((course) => {
+              // Giả sử API trả về các trường: title, progress, completedLessons, totalLessons
+              const percent = course.progress || Math.round(((course.completedLessons || 0) / (course.totalLessons || 1)) * 100);
+              return (
+                <div key={course.id} className="bg-white rounded-xl shadow-sm border border-gray-200 flex items-center px-6 py-4 mb-6 max-w-full">
+                  {/* Image placeholder */}
+                  <div className="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mr-5">
+                    <span className="text-blue-500 font-semibold text-xs">IMG</span>
+                  </div>
+                  {/* Course info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900 text-base truncate">{course.title}</div>
+                        <div className="text-gray-500 text-sm mt-1">
+                          {percent}% hoàn thành • Bài {course.completedLessons || 0}/{course.totalLessons || 0}
+                        </div>
+                      </div>
+                      <button
+                        className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200"
+                        onClick={() => window.location.href = `/learningcourse/${course.id}`}
+                      >
+                        Tiếp tục
+                      </button>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="mt-4">
+                      <div className="w-full h-2 bg-gray-200 rounded-full">
+                        <div
+                          className="h-2 bg-green-500 rounded-full"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
