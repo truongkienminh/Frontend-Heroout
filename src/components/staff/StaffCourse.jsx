@@ -129,7 +129,7 @@ const StaffCourse = () => {
         <div className="flex items-center space-x-4">
           {/* Create Course Button */}
           <button
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:bg-green-700 transition"
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 to-emerald-600 text-white rounded-lg hover:bg-blue-700 transition"
             onClick={() => setShowCreate(true)}
           >
             <Plus className="w-4 h-4" />
@@ -158,7 +158,7 @@ const StaffCourse = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-6 relative">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 relative">
               <button
                 className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
                 onClick={() => setShowCreate(false)}
@@ -168,7 +168,7 @@ const StaffCourse = () => {
                 </svg>
               </button>
               <h2 className="text-2xl font-bold text-white">Tạo khóa học mới</h2>
-              <p className="text-green-100 mt-1">Điền thông tin để tạo khóa học của bạn</p>
+              <p className="text-blue-100 mt-1">Điền thông tin để tạo khóa học của bạn</p>
             </div>
 
             {/* Form Content */}
@@ -177,7 +177,7 @@ const StaffCourse = () => {
                 {/* Course Title */}
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-semibold text-gray-700">
-                    <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                     Tên khóa học *
@@ -189,14 +189,14 @@ const StaffCourse = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="Nhập tên khóa học..."
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all duration-200 hover:border-gray-300"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-200 hover:border-gray-300"
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-semibold text-gray-700">
-                    <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                     </svg>
                     Mô tả
@@ -207,7 +207,7 @@ const StaffCourse = () => {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Mô tả ngắn gọn về khóa học..."
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all duration-200 hover:border-gray-300 resize-none"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-200 hover:border-gray-300 resize-none"
                   />
                 </div>
 
@@ -215,7 +215,7 @@ const StaffCourse = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="flex items-center text-sm font-semibold text-gray-700">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Mục tiêu
@@ -226,13 +226,13 @@ const StaffCourse = () => {
                       value={newCourse.objectives}
                       onChange={handleInputChange}
                       placeholder="Mục tiêu học tập..."
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all duration-200 hover:border-gray-300"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-200 hover:border-gray-300"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <label className="flex items-center text-sm font-semibold text-gray-700">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
@@ -244,7 +244,7 @@ const StaffCourse = () => {
                       value={newCourse.overview}
                       onChange={handleInputChange}
                       placeholder="Tổng quan về khóa học..."
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all duration-200 hover:border-gray-300"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-200 hover:border-gray-300"
                     />
                   </div>
                 </div>
@@ -252,7 +252,7 @@ const StaffCourse = () => {
                 {/* Age Group */}
                 <div className="space-y-2">
                   <label className="flex items-center text-sm font-semibold text-gray-700">
-                    <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                     </svg>
                     Nhóm tuổi
@@ -261,7 +261,7 @@ const StaffCourse = () => {
                     name="ageGroup"
                     value={newCourse.ageGroup}
                     onChange={handleInputChange}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all duration-200 hover:border-gray-300 bg-white"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all duration-200 hover:border-gray-300 bg-white"
                   >
                     <option value="">-- Chọn nhóm tuổi --</option>
                     <option value="CHILDREN">Trẻ em (CHILDREN)</option>
@@ -276,7 +276,7 @@ const StaffCourse = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="flex items-center text-sm font-semibold text-gray-700">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
                       Chương trình học
@@ -291,7 +291,7 @@ const StaffCourse = () => {
                       <div key={index} className="border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-gray-50 to-white hover:border-gray-300 transition-all duration-200">
                         <div className="flex justify-between items-center mb-4">
                           <div className="flex items-center">
-                            <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                            <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">
                               {index + 1}
                             </div>
                             <span className="text-sm font-semibold text-gray-800">Chương {index + 1}</span>
@@ -320,14 +320,14 @@ const StaffCourse = () => {
                             placeholder="Tiêu đề chương..."
                             value={chapter.title}
                             onChange={(e) => handleChapterChange(index, 'title', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all duration-200"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:borblue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-200"
                           />
                           <textarea
                             placeholder="Nội dung chi tiết của chương..."
                             value={chapter.content}
                             onChange={(e) => handleChapterChange(index, 'content', e.target.value)}
                             rows={3}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all duration-200 resize-none"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all duration-200 resize-none"
                           />
                         </div>
                       </div>
@@ -342,7 +342,7 @@ const StaffCourse = () => {
                         chapters: [...newCourse.chapters, { title: '', content: '' }],
                       })
                     }
-                    className="w-full border-2 border-dashed border-green-300 rounded-xl py-4 text-green-600 hover:border-green-400 hover:bg-green-50 transition-all duration-200 flex items-center justify-center group"
+                    className="w-full border-2 border-dashed border-blue-300 rounded-xl py-4 text-blue-600 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 flex items-center justify-center group"
                   >
                     <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -368,7 +368,7 @@ const StaffCourse = () => {
               <button
                 type="submit"
                 onClick={handleCreateCourse}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center"
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -477,7 +477,7 @@ const StaffCourse = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-6 relative">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 to-emerald-600 px-8 py-6 relative">
               <button
                 className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200"
                 onClick={() => setShowChapter(false)}
@@ -495,7 +495,7 @@ const StaffCourse = () => {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-white">Danh sách chương</h2>
-                  <p className="text-green-100 mt-1 text-lg font-medium">{chapterCourse?.title}</p>
+                  <p className="text-blue-100 mt-1 text-lg font-medium">{chapterCourse?.title}</p>
                   {chapterCourse?.content && (
                     <div className="mt-3 bg-white/10 rounded-lg p-4 backdrop-blur-sm">
                       <span className="block text-white font-semibold mb-2 flex items-center">
@@ -504,7 +504,7 @@ const StaffCourse = () => {
                         </svg>
                         Mô tả khóa học:
                       </span>
-                      <p className="text-green-50 whitespace-pre-line leading-relaxed">{chapterCourse.content}</p>
+                      <p className="text-blue-50 whitespace-pre-line leading-relaxed">{chapterCourse.content}</p>
                     </div>
                   )}
                 </div>
@@ -517,8 +517,8 @@ const StaffCourse = () => {
                 {chapterLoading ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <div className="relative">
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200"></div>
-                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent absolute top-0 left-0"></div>
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+                      <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent absolute top-0 left-0"></div>
                     </div>
                     <span className="mt-4 text-gray-600 font-medium">Đang tải danh sách chương...</span>
                   </div>
@@ -535,11 +535,11 @@ const StaffCourse = () => {
                 ) : (
                   <div className="space-y-6">
                     {/* Chapter Statistics */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className="bg-green-100 rounded-full p-3 mr-4">
-                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full p-3 mr-4">
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                           </div>
@@ -549,7 +549,7 @@ const StaffCourse = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600">{chapters.length}</div>
+                          <div className="text-2xl font-bold text-blue-600">{chapters.length}</div>
                           <div className="text-sm text-gray-500">Chương</div>
                         </div>
                       </div>
@@ -560,12 +560,12 @@ const StaffCourse = () => {
                       {chapters.map((chapter, idx) => (
                         <div
                           key={chapter.id}
-                          className="group border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50 hover:border-green-300 hover:shadow-lg transition-all duration-300"
+                          className="group border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50 hover:border-blue-300 hover:shadow-lg transition-all duration-300"
                         >
                           <div className="flex items-start gap-4">
                             {/* Chapter Number Badge */}
                             <div className="flex-shrink-0">
-                              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
+                              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 to-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
                                 {idx + 1}
                               </div>
                             </div>
@@ -573,19 +573,19 @@ const StaffCourse = () => {
                             {/* Chapter Content */}
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-3">
-                                <span className="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
+                                <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1 rounded-full">
                                   Chương {idx + 1}
                                 </span>
-                                <div className="flex-1 h-px bg-gradient-to-r from-green-200 to-transparent"></div>
+                                <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-transparent"></div>
                               </div>
 
-                              <h3 className="font-bold text-xl text-gray-900 mb-4 group-hover:text-green-700 transition-colors duration-200">
+                              <h3 className="font-bold text-xl text-gray-900 mb-4 group-hover:text-blue-700 transition-colors duration-200">
                                 {chapter.title}
                               </h3>
 
                               <div className="bg-white rounded-lg p-4 border border-gray-100">
                                 <div className="flex items-center mb-3">
-                                  <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                   </svg>
                                   <span className="font-semibold text-gray-700">Nội dung chương:</span>
