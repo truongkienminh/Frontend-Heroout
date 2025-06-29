@@ -14,13 +14,16 @@ const LearningCoursePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [completing, setCompleting] = useState(false);
-  const [completedChapters, setCompletedChapters] = useState([]);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const fetchChapters = async () => {
     try {
-      const response = await api.get(`/chapters/course/${id}`);
+      const response = await api.get(`/chapters/course/${id}`, {
+        params: {
+          accountId: user?.id,
+        },
+      });
       return response.data || [];
     } catch (error) {
       console.error('Error fetching chapters:', error);
@@ -38,7 +41,28 @@ const LearningCoursePage = () => {
           accountId: user.id,
         },
       });
-      setCompletedChapters(prev => [...prev, chapterId]);
+      
+      // Update the chapter status to COMPLETED in the local state
+      const updatedChapters = chapters.map(chapter => 
+        chapter.id === chapterId 
+          ? { ...chapter, status: 'COMPLETED' }
+          : chapter
+      );
+      setChapters(updatedChapters);
+      
+      // Update selected chapter if it's the one being completed
+      if (selectedChapter?.id === chapterId) {
+        setSelectedChapter(prev => ({ ...prev, status: 'COMPLETED' }));
+      }
+
+      // Check if all chapters are completed
+      const allCompleted = updatedChapters.every(chapter => chapter.status === 'COMPLETED');
+      if (allCompleted) {
+        // Add a small delay to show the completion state before navigating
+        setTimeout(() => {
+          navigate('/courses');
+        }, 1500);
+      }
     } catch (error) {
       console.error('Error completing chapter:', error);
     } finally {
@@ -141,39 +165,36 @@ const LearningCoursePage = () => {
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-3">
               {chapters.map((chapter, index) => (
-                <div 
-                  key={chapter.id} 
-                  className={`group cursor-pointer transition-all duration-200 ${
-                    selectedChapter?.id === chapter.id 
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md' 
+                <div
+                  key={chapter.id}
+                  className={`group cursor-pointer transition-all duration-200 ${selectedChapter?.id === chapter.id
+                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md'
                       : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:border-gray-200'
-                  } rounded-xl p-4`}
+                    } rounded-xl p-4`}
                   onClick={() => setSelectedChapter(chapter)}
                 >
                   <div className="flex items-start space-x-4">
                     {/* Chapter Number */}
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
-                      selectedChapter?.id === chapter.id
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${selectedChapter?.id === chapter.id
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg'
                         : 'bg-gray-200 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
-                    } transition-all duration-200`}>
+                      } transition-all duration-200`}>
                       {index + 1}
                     </div>
 
                     {/* Chapter Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold text-base leading-snug mb-2 ${
-                        selectedChapter?.id === chapter.id 
-                          ? 'text-blue-800' 
+                      <h3 className={`font-semibold text-base leading-snug mb-2 ${selectedChapter?.id === chapter.id
+                          ? 'text-blue-800'
                           : 'text-gray-800 group-hover:text-blue-700'
-                      } transition-colors duration-200`}>
+                        } transition-colors duration-200`}>
                         {chapter.title}
                       </h3>
-                      
+
                       {chapter.content && (
                         <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
-                          {chapter.content.length > 80 
-                            ? `${chapter.content.substring(0, 80)}...` 
+                          {chapter.content.length > 80
+                            ? `${chapter.content.substring(0, 80)}...`
                             : chapter.content
                           }
                         </p>
@@ -181,25 +202,25 @@ const LearningCoursePage = () => {
 
                       {/* Chapter Meta */}
                       <div className="flex items-center mt-3 space-x-4">
-                        {selectedChapter?.id === chapter.id && (
+                        {selectedChapter?.id === chapter.id && chapter.status !== 'COMPLETED' && (
                           <div className="flex items-center text-xs text-blue-500 font-medium">
-                            <Play className="w-3 h-3 mr-1" />
+                            <Clock className="w-3 h-3 mr-1" />
                             <span>Đang học</span>
                           </div>
                         )}
-                        {completedChapters.includes(chapter.id) && (
-                          <div className="flex items-center text-xs text-green-600 font-medium ml-2">
+                        {chapter.status === 'COMPLETED' && (
+                          <div className="flex items-center text-xs text-green-600 font-medium">
                             <Check className="w-3 h-3 mr-1" />
                             <span>Đã hoàn thành</span>
                           </div>
                         )}
+                        
                       </div>
                     </div>
 
                     {/* Expand Icon */}
-                    <div className={`flex-shrink-0 ${
-                      selectedChapter?.id === chapter.id ? 'text-blue-500' : 'text-gray-400'
-                    } transition-colors duration-200`}>
+                    <div className={`flex-shrink-0 ${selectedChapter?.id === chapter.id ? 'text-blue-500' : 'text-gray-400'
+                      } transition-colors duration-200`}>
                       <ChevronRight className="w-5 h-5" />
                     </div>
                   </div>
@@ -251,12 +272,24 @@ const LearningCoursePage = () => {
                 </p>
               </div>
             </div>
-            
+
             {selectedChapter && (
               <div className="flex items-center space-x-3">
-                <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                  Đang học
-                </div>
+                {selectedChapter.status === 'COMPLETED' ? (
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                    <Check className="w-4 h-4 mr-1" />
+                    Đã hoàn thành
+                  </div>
+                ) : selectedChapter.status === 'INPROGRESS' ? (
+                  <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    Đang học
+                  </div>
+                ) : (
+                  <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                    Chưa bắt đầu
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -286,10 +319,10 @@ const LearningCoursePage = () => {
                   </svg>
                   Nội dung bài học
                 </h3>
-                
+
                 {selectedChapter.content ? (
                   <div className="prose prose-lg max-w-none">
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50  p-6  ">
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50 p-6">
                       {selectedChapter.content}
                     </div>
                   </div>
@@ -305,17 +338,37 @@ const LearningCoursePage = () => {
 
               {/* Completion Button */}
               <div className="flex justify-end mt-8">
-                <button
-                  onClick={() => completeChapter(selectedChapter.id)}
-                  className={`flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold
-                    ${completing ? 'opacity-60 cursor-not-allowed' : ''}
-                    ${completedChapters.includes(selectedChapter.id) ? 'bg-green-500 hover:bg-green-600 from-green-500 to-green-600' : ''}
-                  `}
-                  disabled={completing || completedChapters.includes(selectedChapter.id)}
-                >
-                  <Check className="w-5 h-5 mr-2" />
-                  {completedChapters.includes(selectedChapter.id) ? 'Đã hoàn thành' : completing ? 'Đang xác nhận...' : 'Xác nhận hoàn thành'}
-                </button>
+                {selectedChapter.status === 'COMPLETED' ? (
+                  <div className="flex items-center px-6 py-3 bg-green-500 text-white rounded-xl font-semibold cursor-not-allowed opacity-80">
+                    <Check className="w-5 h-5 mr-2" />
+                    Đã hoàn thành
+                  </div>
+                ) : selectedChapter.status === 'INPROGRESS' ? (
+                  <button
+                    onClick={() => completeChapter(selectedChapter.id)}
+                    className={`flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg font-semibold
+                      ${completing ? 'opacity-60 cursor-not-allowed' : ''}
+                    `}
+                    disabled={completing}
+                  >
+                    {completing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Đang xác nhận...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        Xác nhận hoàn thành
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="flex items-center px-6 py-3 bg-gray-400 text-white rounded-xl font-semibold cursor-not-allowed">
+                    <Clock className="w-5 h-5 mr-2" />
+                    Chưa thể hoàn thành
+                  </div>
+                )}
               </div>
             </div>
           ) : (
