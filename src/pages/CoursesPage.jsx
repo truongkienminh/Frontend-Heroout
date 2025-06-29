@@ -247,7 +247,7 @@ const CoursesPage = () => {
                         </div>
                       </div>
                       <button
-                        className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200"
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-200"
                         onClick={() => window.location.href = `/learningcourse/${course.id}`}
                       >
                         Tiếp tục
@@ -257,7 +257,7 @@ const CoursesPage = () => {
                     <div className="mt-4">
                       <div className="w-full h-2 bg-gray-200 rounded-full">
                         <div
-                          className="h-2 bg-green-500 rounded-full"
+                          className="h-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
                           style={{ width: `${percent}%` }}
                         ></div>
                       </div>

@@ -8,6 +8,7 @@ const LearningCoursePage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const [course, setCourse] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,6 +17,18 @@ const LearningCoursePage = () => {
   const [completing, setCompleting] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const res = await api.get(`/courses/${id}`);
+        setCourse(res.data);
+      } catch (error) {
+        setCourse(null);
+      }
+    };
+    fetchCourse();
+  }, [id]);
 
   const fetchChapters = async () => {
     try {
@@ -38,23 +51,17 @@ const LearningCoursePage = () => {
         },
       });
 
-      // Update the chapter status to COMPLETED in the local state
       const updatedChapters = chapters.map(chapter =>
         chapter.id === chapterId
           ? { ...chapter, status: 'COMPLETED' }
           : chapter
       );
       setChapters(updatedChapters);
-
-      // Update selected chapter if it's the one being completed
       if (selectedChapter?.id === chapterId) {
         setSelectedChapter(prev => ({ ...prev, status: 'COMPLETED' }));
       }
-
-      // Check if all chapters are completed
       const allCompleted = updatedChapters.every(chapter => chapter.status === 'COMPLETED');
       if (allCompleted) {
-        // Add a small delay to show the completion state before navigating
         setTimeout(() => {
           navigate('/courses');
         }, 1500);
@@ -187,15 +194,6 @@ const LearningCoursePage = () => {
                         {chapter.title}
                       </h3>
 
-                      {chapter.content && (
-                        <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed">
-                          {chapter.content.length > 80
-                            ? `${chapter.content.substring(0, 80)}...`
-                            : chapter.content
-                          }
-                        </p>
-                      )}
-
                       {/* Chapter Meta */}
                       <div className="flex items-center mt-3 space-x-4">
                         {selectedChapter?.id === chapter.id && chapter.status !== 'COMPLETED' && (
@@ -261,11 +259,8 @@ const LearningCoursePage = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
-                  {selectedChapter ? selectedChapter.title : 'Chọn chương để bắt đầu học'}
-                </h1>
-                <p className="text-gray-500 text-sm">
-                  {selectedChapter ? 'Nội dung chi tiết chương' : 'Vui lòng chọn một chương từ sidebar'}
-                </p>
+                  {course?.title}
+                </h1> 
               </div>
             </div>
 
