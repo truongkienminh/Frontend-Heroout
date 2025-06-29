@@ -9,11 +9,11 @@ import {
   MoreHorizontal,
   CheckCircle,
   Edit,
-  Trash2,
-  // Removed Video, ExternalLink, Copy, Play as they relate to Meet
-} from "lucide-react"; // Updated imports
+  Trash2, // Keeping Trash2 for the "Đã Hủy" stats card icon
+  // Removed Video, ExternalLink, Copy, Play
+} from "lucide-react";
 
-// --- Mock Data and Lookups (Meet fields removed) ---
+// --- Mock Data and Lookups ---
 
 // Lookup data for clients (accounts)
 const accounts = [
@@ -64,7 +64,7 @@ const consultants = [
   { consultantId: "con-5", name: "Dr. Bùi Văn M" },
 ];
 
-// Mock data for online consultation meetings with Meet fields removed
+// Mock data for online consultation meetings with new statuses
 const meetings = [
   {
     id: 1,
@@ -72,9 +72,8 @@ const meetings = [
     consultantId: "con-1",
     DateTime: "2024-12-20T09:00:00",
     SlotId: "slot-1",
-    Status: "confirmed",
+    Status: "booked", // Changed from 'confirmed'
     Description: "Tư vấn về stress và anxiety",
-    // meetLink and meetId removed
   },
   {
     id: 2,
@@ -82,9 +81,8 @@ const meetings = [
     consultantId: "con-2",
     DateTime: "2024-12-20T14:30:00",
     SlotId: "slot-2",
-    Status: "pending",
+    Status: "booked", // Changed from 'pending'
     Description: "Tư vấn về vấn đề gia đình",
-    // meetLink and meetId removed
   },
   {
     id: 3,
@@ -92,9 +90,8 @@ const meetings = [
     consultantId: "con-3",
     DateTime: "2024-12-21T10:15:00",
     SlotId: "slot-3",
-    Status: "ongoing",
+    Status: "booked", // Changed from 'ongoing' - assuming ongoing means it was booked/upcoming
     Description: "Tư vấn về depression",
-    // meetLink and meetId removed
   },
   {
     id: 4,
@@ -102,9 +99,8 @@ const meetings = [
     consultantId: "con-4",
     DateTime: "2024-12-19T16:00:00",
     SlotId: "slot-1",
-    Status: "completed",
+    Status: "consulted", // Changed from 'completed'
     Description: "Tư vấn về burnout syndrome",
-    // meetLink and meetId removed
   },
   {
     id: 5,
@@ -112,9 +108,8 @@ const meetings = [
     consultantId: "con-1",
     DateTime: "2024-12-22T09:30:00",
     SlotId: "slot-2",
-    Status: "pending",
-    Description: "Tư vấn về quan hệ",
-    // meetLink and meetId removed
+    Status: "cancelled", // Changed from 'pending' for example
+    Description: "Khách hàng báo bận đột xuất",
   },
   {
     id: 6,
@@ -122,9 +117,17 @@ const meetings = [
     consultantId: "con-5",
     DateTime: "2024-12-22T11:00:00",
     SlotId: "slot-3",
-    Status: "confirmed",
+    Status: "booked", // Changed from 'confirmed'
     Description: "Tư vấn về sự nghiệp",
-    // meetLink and meetId removed
+  },
+  {
+    id: 7,
+    accountId: "acc-1",
+    consultantId: "con-2",
+    DateTime: "2024-12-18T10:00:00",
+    SlotId: "slot-1",
+    Status: "consulted",
+    Description: "Tái khám",
   },
 ];
 
@@ -142,40 +145,29 @@ const StaffMeeting = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "confirmed":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "ongoing":
-        return "bg-blue-100 text-blue-800";
-      case "completed":
-        return "bg-gray-100 text-gray-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
+      case "booked": // Đã Đặt
+        return "bg-yellow-100 text-yellow-800"; // Using yellow for pending/booked
+      case "consulted": // Đã Tư Vấn
+        return "bg-green-100 text-green-800"; // Using green for completed
+      case "cancelled": // Đã Hủy
+        return "bg-red-100 text-red-800"; // Using red for cancelled
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"; // Fallback
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case "confirmed":
-        return "Đã xác nhận";
-      case "pending":
-        return "Chờ xác nhận";
-      case "ongoing":
-        return "Đang diễn ra";
-      case "completed":
-        return "Hoàn thành";
+      case "booked":
+        return "Đã Đặt";
+      case "consulted":
+        return "Đã Tư Vấn";
       case "cancelled":
-        return "Đã hủy";
+        return "Đã Hủy";
       default:
-        return status;
+        return status; // Show the raw status if unknown
     }
   };
-
-  // Removed copyMeetLink function
-  // Removed generateMeetLink function
 
   const filteredMeetings = meetings.filter((meeting) => {
     const account = getAccountById(meeting.accountId);
@@ -220,55 +212,57 @@ const StaffMeeting = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Quản lý tư vấn trực tuyến
+          Quản lý buổi tư vấn
         </h1>
-        <p className="text-gray-600">Quản lý các buổi tư vấn</p>
+        {/* Adjusted title */}
+        <p className="text-gray-600">Quản lý các buổi tư vấn đã lên lịch</p>
+        {/* Adjusted description */}
       </div>
 
-      {/* Stats Cards (using hardcoded values for now) */}
+      {/* Stats Cards (Adjusted labels and icons for new statuses) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Card 1: Total Today (Placeholder) */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Hôm nay</p>
-              <p className="text-2xl font-bold text-gray-900">8</p>{" "}
-              {/* Hardcoded */}
+              <p className="text-2xl font-bold text-gray-900">3</p>{" "}
+              {/* Hardcoded count for today */}
             </div>
             <Calendar className="w-8 h-8 text-blue-600" />
           </div>
         </div>
+        {/* Card 2: Booked */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Chờ xác nhận</p>
-              <p className="text-2xl font-bold text-yellow-600">3</p>{" "}
-              {/* Hardcoded */}
+              <p className="text-sm font-medium text-gray-600">Đã Đặt</p>
+              <p className="text-2xl font-bold text-yellow-600">4</p>{" "}
+              {/* Hardcoded count for 'booked' */}
             </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
+            <Clock className="w-8 h-8 text-yellow-600" />{" "}
+            {/* Clock icon for scheduled */}
           </div>
         </div>
-        {/* Removed 'Đang diễn ra' card as it often related to ongoing Meet */}
-        {/* Removed 'Hoàn thành' card as it often related to completed Meet */}
+        {/* Card 3: Cancelled */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Đang diễn ra</p>{" "}
-              {/* Retained card, generic status */}
-              <p className="text-2xl font-bold text-blue-600">2</p>{" "}
-              {/* Hardcoded */}
+              <p className="text-sm font-medium text-gray-600">Đã Hủy</p>
+              <p className="text-2xl font-bold text-red-600">1</p>{" "}
+              {/* Hardcoded count for 'cancelled' */}
             </div>
-            {/* <Play className="w-8 h-8 text-blue-600" /> icon removed */}
-            <Clock className="w-8 h-8 text-blue-600" />{" "}
-            {/* Using generic clock icon */}
+            <Trash2 className="w-8 h-8 text-red-600" />{" "}
+            {/* Trash2 icon for cancelled */}
           </div>
         </div>
+        {/* Card 4: Consulted */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Hoàn thành</p>{" "}
-              {/* Retained card, generic status */}
-              <p className="text-2xl font-bold text-green-600">24</p>{" "}
-              {/* Hardcoded */}
+              <p className="text-sm font-medium text-gray-600">Đã Tư Vấn</p>
+              <p className="text-2xl font-bold text-green-600">2</p>{" "}
+              {/* Hardcoded count for 'consulted' */}
             </div>
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
@@ -291,7 +285,7 @@ const StaffMeeting = () => {
               />
             </div>
 
-            {/* Filter */}
+            {/* Filter (Updated options) */}
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
@@ -300,11 +294,9 @@ const StaffMeeting = () => {
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="pending">Chờ xác nhận</option>
-                <option value="confirmed">Đã xác nhận</option>
-                <option value="ongoing">Đang diễn ra</option>
-                <option value="completed">Hoàn thành</option>
-                <option value="cancelled">Đã hủy</option>
+                <option value="booked">Đã Đặt</option>
+                <option value="consulted">Đã Tư Vấn</option>
+                <option value="cancelled">Đã Hủy</option>
               </select>
             </div>
           </div>
@@ -338,7 +330,6 @@ const StaffMeeting = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Trạng thái
                 </th>
-                {/* Removed Google Meet Header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ghi chú
                 </th>
@@ -390,7 +381,6 @@ const StaffMeeting = () => {
                         {getStatusText(meeting.Status)}
                       </span>
                     </td>
-                    {/* Removed Google Meet Data Cell */}
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
                         {meeting.Description}
