@@ -19,11 +19,7 @@ const LearningCoursePage = () => {
 
   const fetchChapters = async () => {
     try {
-      const response = await api.get(`/chapters/course/${id}`, {
-        params: {
-          accountId: user?.id,
-        },
-      });
+      const response = await api.get(`/chapters/course/${id}/account/${user?.id}`);
       return response.data || [];
     } catch (error) {
       console.error('Error fetching chapters:', error);
@@ -41,15 +37,15 @@ const LearningCoursePage = () => {
           accountId: user.id,
         },
       });
-      
+
       // Update the chapter status to COMPLETED in the local state
-      const updatedChapters = chapters.map(chapter => 
-        chapter.id === chapterId 
+      const updatedChapters = chapters.map(chapter =>
+        chapter.id === chapterId
           ? { ...chapter, status: 'COMPLETED' }
           : chapter
       );
       setChapters(updatedChapters);
-      
+
       // Update selected chapter if it's the one being completed
       if (selectedChapter?.id === chapterId) {
         setSelectedChapter(prev => ({ ...prev, status: 'COMPLETED' }));
@@ -168,16 +164,16 @@ const LearningCoursePage = () => {
                 <div
                   key={chapter.id}
                   className={`group cursor-pointer transition-all duration-200 ${selectedChapter?.id === chapter.id
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:border-gray-200'
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-md'
+                    : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:border-gray-200'
                     } rounded-xl p-4`}
                   onClick={() => setSelectedChapter(chapter)}
                 >
                   <div className="flex items-start space-x-4">
                     {/* Chapter Number */}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${selectedChapter?.id === chapter.id
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg'
-                        : 'bg-gray-200 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
+                      ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg'
+                      : 'bg-gray-200 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
                       } transition-all duration-200`}>
                       {index + 1}
                     </div>
@@ -185,8 +181,8 @@ const LearningCoursePage = () => {
                     {/* Chapter Info */}
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-semibold text-base leading-snug mb-2 ${selectedChapter?.id === chapter.id
-                          ? 'text-blue-800'
-                          : 'text-gray-800 group-hover:text-blue-700'
+                        ? 'text-blue-800'
+                        : 'text-gray-800 group-hover:text-blue-700'
                         } transition-colors duration-200`}>
                         {chapter.title}
                       </h3>
@@ -214,7 +210,7 @@ const LearningCoursePage = () => {
                             <span>Đã hoàn thành</span>
                           </div>
                         )}
-                        
+
                       </div>
                     </div>
 

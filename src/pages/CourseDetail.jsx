@@ -8,8 +8,8 @@ const CourseDetail = () => {
     const { id } = useParams();
     const { user } = useAuth();
     const [course, setCourse] = useState(null);
+    const [chapters, setChapters] = useState([]); 
     const [loading, setLoading] = useState(true);
-    const [expandedSection, setExpandedSection] = useState(null);
     const [noti, setNoti] = useState(null);
 
     useEffect(() => {
@@ -26,7 +26,18 @@ const CourseDetail = () => {
         fetchCourse();
     }, [id]);
 
-   
+    useEffect(() => {
+        const fetchChapters = async () => {
+            try {
+                const chaptersRes = await api.get(`/chapters/course/${id}`);
+                setChapters(chaptersRes.data);
+            } catch (error) {
+                setChapters([]);
+            }
+        };
+        fetchChapters();
+    }, [id]);
+
     const handleStartLearning = async () => {
         setNoti(null);
         if (!user || !user.id) {
@@ -40,29 +51,17 @@ const CourseDetail = () => {
                 window.location.href = `/learningcourse/${id}`;
             }, 1000);
         } catch (error) {
-            setNoti({ type: 'error', message: 'Đăng ký thất bại!' });
+            let apiError = 'Bạn đã đăng ký khóa học này!';
+            if (error?.response?.data) {
+                if (typeof error.response.data === 'string') {
+                    apiError = error.response.data;
+                } else if (error.response.data.message) {
+                    apiError = error.response.data.message;
+                }
+            }
+            setNoti({ type: 'error', message: apiError });
         }
     };
-
-    const courseModules = course?.modules?.length
-        ? course.modules
-        : [
-            {
-                id: 1,
-                title: "Giới thiệu về ma túy",
-                lessons: 4,
-                lessons_detail: [
-                    { id: 1, title: "Khái niệm cơ bản về ma túy" },
-                    { id: 2, title: "Phân loại các loại ma túy" }
-                ]
-            },
-            {
-                id: 2,
-                title: "Tác hại của ma túy",
-                lessons: 3,
-                lessons_detail: []
-            }
-        ];
 
     if (loading) {
         return (
@@ -84,11 +83,7 @@ const CourseDetail = () => {
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
-                {/* Background decorative elements */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-                <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
-
+                {/* ...header code giữ nguyên... */}
                 <div className="relative max-w-7xl mx-auto px-4 py-16">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         {/* Left content */}
@@ -100,15 +95,11 @@ const CourseDetail = () => {
                                 </div>
 
                                 <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
-                                    {course.title || "Phòng ngừa"}
-                                    <span className="block bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                                        {course.title ? "" : "ma túy cơ bản"}
-                                    </span>
+                                    {course.title}
                                 </h1>
 
                                 <p className="text-xl text-blue-100 leading-relaxed max-w-lg">
-                                    {course.description ||
-                                        "Khóa học toàn diện giúp bạn hiểu rõ về tác hại của ma túy và trang bị kiến thức phòng ngừa hiệu quả cho bản thân và cộng đồng."}
+                                    {course.description}
                                 </p>
                             </div>
 
@@ -198,8 +189,7 @@ const CourseDetail = () => {
                         <div className="bg-white rounded-lg p-6">
                             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Tổng quan khóa học</h2>
                             <p className="text-gray-600 leading-relaxed">
-                                {course.overview ||
-                                    "Khóa học này sẽ cung cấp cho bạn kiến thức toàn diện về tác hại của ma túy và các biện pháp phòng ngừa hiệu quả. Thông qua các bài học thực tế và tình huống cụ thể, bạn sẽ hiểu rõ hơn về vấn đề này và có thể áp dụng vào cuộc sống hàng ngày."}
+                                {course.overview}
                             </p>
                         </div>
 
@@ -207,8 +197,7 @@ const CourseDetail = () => {
                         <div className="bg-white rounded-lg p-6">
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Mục tiêu học tập</h3>
                             <p className="text-gray-600 leading-relaxed">
-                                {course.objectives ||
-                                    "Khóa học này sẽ cung cấp cho bạn kiến thức toàn diện về tác hại của ma túy và các biện pháp phòng ngừa hiệu quả. Thông qua các bài học thực tế và tình huống cụ thể, bạn sẽ hiểu rõ hơn về vấn đề này và có thể áp dụng vào cuộc sống hàng ngày."}
+                                {course.objectives}
                             </p>
                         </div>
 
@@ -216,39 +205,24 @@ const CourseDetail = () => {
                         <div className="bg-white rounded-lg p-6">
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Nội dung khóa học</h3>
                             <div className="space-y-4">
-                                {courseModules.map((module) => (
-                                    <div key={module.id} className="border border-gray-200 rounded-lg">
-                                        <div
-                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                            onClick={() => setExpandedSection(expandedSection === module.id ? null : module.id)}
-                                        >
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                    <span className="text-blue-600 font-medium">{module.id}</span>
+                                {chapters && chapters.length > 0 ? (
+                                    chapters.map((chapter, idx) => (
+                                        <div key={chapter.id} className="border border-gray-200 rounded-lg">
+                                            <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-blue-600 font-medium">{idx + 1}</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-medium text-gray-800">{chapter.title}</h4>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-medium text-gray-800">{module.title}</h4>
-                                                    <p className="text-sm text-gray-500">{module.lessons} bài học</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-gray-400">
-                                                {expandedSection === module.id ? '−' : '+'}
                                             </div>
                                         </div>
-                                        {expandedSection === module.id && module.lessons_detail.length > 0 && (
-                                            <div className="border-t border-gray-200">
-                                                {module.lessons_detail.map((lesson) => (
-                                                    <div key={lesson.id} className="flex items-center p-4 pl-16 hover:bg-gray-50">
-                                                        <Play className="w-4 h-4 text-gray-400 mr-3" />
-                                                        <div className="flex-1">
-                                                            <p className="text-gray-700">{lesson.title}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <div className="text-gray-500">Chưa có nội dung chương cho khóa học này.</div>
+                                )}
                             </div>
                         </div>
                     </div>
