@@ -7,6 +7,7 @@ import {
   LogOut,
   Calendar,
   Bell,
+  GraduationCap
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import HeroOutLogo from "../assets/heroout.jpg";
@@ -170,6 +171,14 @@ const Header = () => {
                       >
                         <Settings className="w-4 h-4 mr-3" />
                         Cài đặt
+                      </Link>
+                      <Link
+                        to="/myaccomplishments"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <GraduationCap className="w-4 h-4 mr-3" />
+                        Thành tích
                       </Link>
 
                       <hr className="my-2" />
