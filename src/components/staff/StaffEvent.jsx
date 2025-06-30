@@ -149,10 +149,7 @@ const StaffEvent = () => {
     try {
       await api.put(`/participations/participations/${participantId}/checkin`);
       if (selectedEvent) {
-        const res = await api.get(`/participations/${selectedEvent.id}/registered`, {
-          params: { eventId: selectedEvent.id }
-        });
-        setRegisteredParticipants(res.data);
+        await fetchAllParticipants(selectedEvent.id);
       }
     } catch (error) {
       console.error('Lỗi khi check-in:', error);
@@ -163,10 +160,7 @@ const StaffEvent = () => {
     try {
       await api.put(`/participations/participations/${participantId}/checkout`);
       if (selectedEvent) {
-        const res = await api.get(`/participations/${selectedEvent.id}/checked-in`, {
-          params: { eventId: selectedEvent.id }
-        });
-        setCheckedInParticipants(res.data);
+        await fetchAllParticipants(selectedEvent.id);
       }
     } catch (error) {
       console.error('Lỗi khi check-out:', error);
@@ -309,68 +303,83 @@ const StaffEvent = () => {
         </button>
       </div>
 
-      {/* Event Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredEvents.map((event) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            onEdit={handleEditClick}
-            onDelete={() => setEventToDelete(event)}
-            onManageParticipants={handleManageParticipants}
-          />
-        ))}
+      {/* Event Table - Đã sửa */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  #
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tên sự kiện
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thời gian bắt đầu
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thời gian kết thúc
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Địa điểm
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thao tác
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredEvents.map((event, index) => (
+                <tr
+                  key={event.id}
+                  className="hover:bg-blue-50 cursor-pointer"
+                  onClick={() => handleManageParticipants(event)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {String(index + 1).padStart(3, '0')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {event.title}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {event.startTime?.slice(0, 16).replace('T', '  ')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {event.endTime?.slice(0, 16).replace('T', '  ')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {event.location}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex space-x-2">
+                    <button
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Chỉnh sửa"
+                      onClick={e => { e.stopPropagation(); handleEditClick(event); }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      title="Xóa"
+                      onClick={e => { e.stopPropagation(); setEventToDelete(event); }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
-
-// Event Card Component
-function EventCard({ event, onEdit, onDelete, onManageParticipants }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border relative min-h-[260px]">
-      <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-green-400 to-blue-500 rounded-t-2xl" />
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-xl font-bold text-gray-800">{event.title}</h3>
-        <div className="flex gap-3">
-          <Edit2
-            size={18}
-            className="text-blue-500 cursor-pointer"
-            onClick={() => onEdit(event)}
-          />
-          <Trash2
-            size={18}
-            className="text-red-500 cursor-pointer"
-            onClick={onDelete}
-          />
-        </div>
-      </div>
-      <p className="text-gray-500 text-base mb-4">{event.description}</p>
-      <div className="space-y-3 text-base text-gray-600">
-        <div className="flex items-center gap-3">
-          <Calendar size={18} className="text-gray-400" />
-          {event.startTime?.slice(0, 16).replace('T', ' lúc ')}
-          {event.endTime &&
-            <>
-              <span className="mx-1 text-gray-400">-</span>
-              {event.endTime.slice(0, 16).replace('T', ' lúc ')}
-            </>
-          }
-        </div>
-        <div className="flex items-center gap-3">
-          <MapPin size={18} className="text-gray-400" />
-          {event.location}
-        </div>
-      </div>
-      <button
-        onClick={() => onManageParticipants(event)}
-        className="mt-5 w-full bg-blue-600 text-white py-3 rounded-xl text-base font-semibold hover:opacity-90"
-      >
-        Quản lý Người tham gia
-      </button>
-    </div>
-  );
-}
 
 // Modal: Confirm Delete
 function ModalConfirmDelete({ event, onCancel, onConfirm }) {
@@ -636,6 +645,5 @@ function ParticipantItem({ participant, onCheckIn, onCheckOut, activeTab }) {
     </div>
   );
 }
-
 
 export default StaffEvent;

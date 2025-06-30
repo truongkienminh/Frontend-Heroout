@@ -27,6 +27,7 @@ import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
 import MemberProtectedRoute from "../components/MemberProtectedRoute";
+import AccomplishmentsPage from "../pages/AccomplishmentsPage";
 
 export const router = createBrowserRouter([
   {
@@ -102,6 +103,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <RiskSurvey />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/myaccomplishments",
+        element: (
+          <ProtectedRoute>
+            <AccomplishmentsPage />
           </ProtectedRoute>
         ),
       },

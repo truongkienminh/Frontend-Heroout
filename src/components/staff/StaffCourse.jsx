@@ -3,10 +3,11 @@ import { Search, Filter, Star, Eye, Plus, Trash2, Pencil, X, BookOpen, ChevronRi
 import api from '../../services/axios';
 
 const StaffCourse = () => {
-  // ...existing state...
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDelete, setShowDelete] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
 
   // Popup chapter state
   const [showChapter, setShowChapter] = useState(false);
@@ -24,7 +25,6 @@ const StaffCourse = () => {
     ageGroup: '',
     chapters: [{ title: '', content: '' }],
   });
-
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -47,7 +47,7 @@ const StaffCourse = () => {
     },
     {
       title: "Tổng đăng ký",
-      value: courses.reduce((sum, c) => sum + (c.students || 0), 0),
+      value: courses.reduce((sum, c) => sum + (c.totalEnrollment || 0), 0),
       color: "text-blue-600"
     }
   ];
@@ -89,11 +89,16 @@ const StaffCourse = () => {
     }
   };
 
+  // Delete course (show popup)
+  const handleDeleteCourseClick = (course) => {
+    setCourseToDelete(course);
+    setShowDelete(true);
+  };
 
-
-
-  // Delete course
+  // Confirm delete course
   const handleDeleteCourse = async (id) => {
+    setShowDelete(false);
+    setCourseToDelete(null);
     try {
       await api.delete(`/courses/${id}`);
       setCourses((prev) => prev.filter((c) => c.id !== id));
@@ -116,6 +121,33 @@ const StaffCourse = () => {
     }
   };
 
+  // Modal: Confirm Delete Course
+  function ModalConfirmDeleteCourse({ course, onCancel, onConfirm }) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl w-full max-w-md p-6 relative shadow-lg">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Xác nhận xóa khóa học</h2>
+          <p className="mb-6">
+            Bạn có chắc muốn xóa khóa học <span className="font-semibold">{course.title}</span>?
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="text-center py-10 text-gray-600 text-lg">Đang tải...</div>;
@@ -380,6 +412,15 @@ const StaffCourse = () => {
         </div>
       )}
 
+      {/* Delete Course Modal */}
+      {showDelete && courseToDelete && (
+        <ModalConfirmDeleteCourse
+          course={courseToDelete}
+          onCancel={() => { setShowDelete(false); setCourseToDelete(null); }}
+          onConfirm={() => handleDeleteCourse(courseToDelete.id)}
+        />
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-6 mb-8">
         {stats.map((stat, index) => (
@@ -460,7 +501,7 @@ const StaffCourse = () => {
                     <button
                       className="text-red-500 hover:text-red-700"
                       title="Xóa"
-                      onClick={e => { e.stopPropagation(); handleDeleteCourse(course.id); }}
+                      onClick={e => { e.stopPropagation(); handleDeleteCourseClick(course); }}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -619,5 +660,7 @@ const StaffCourse = () => {
     </div>
   );
 };
+
+
 
 export default StaffCourse;
