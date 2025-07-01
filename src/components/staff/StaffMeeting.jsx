@@ -95,8 +95,8 @@ const StaffMeeting = () => {
       // Search now checks IDs, Status, Description
       const matchesSearch =
         String(appointment.id).includes(searchTerm) ||
-        String(appointment.accountId).includes(searchTerm) ||
-        String(appointment.consultantId).includes(searchTerm) ||
+        String(appointment.accountName).includes(searchTerm) ||
+        String(appointment.consultantName).includes(searchTerm) ||
         String(appointment.scheduleId).includes(searchTerm) ||
         appointment.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (appointment.description || "")
@@ -299,11 +299,11 @@ const StaffMeeting = () => {
               <tr>
                 {/* Updated header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID Khách hàng
+                  Tên Khách hàng
                 </th>
                 {/* Updated header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID Tư vấn viên
+                  Tên Tư vấn viên
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Thời gian / Slot
@@ -337,7 +337,7 @@ const StaffMeeting = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            ID: {appointment.accountId}
+                            {appointment.accountName}
                           </div>
                           {/* Phone number removed as it's not available */}
                           {/* <div className="text-sm text-gray-500">N/A</div> */}
@@ -347,7 +347,7 @@ const StaffMeeting = () => {
                     {/* Displaying Consultant ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        ID: {appointment.consultantId}
+                        {appointment.consultantName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
