@@ -280,14 +280,16 @@ const BookingPage = () => {
     try {
       setLoading(true);
 
-      // Tìm slotId từ selectedSchedule
+      // Tìm slotId và scheduleId từ selectedSchedule
       const slotId = selectedSchedule.slotId;
-      if (!slotId) {
-        throw new Error("Không tìm thấy slot ID");
+      const scheduleId = selectedSchedule.id;
+      if (!slotId || !scheduleId) {
+        throw new Error("Không tìm thấy slot ID hoặc schedule ID");
       }
 
       const appointmentData = {
         slotId: slotId,
+        scheduleId: scheduleId,
         consultantId: selectedConsultant.consultant_id,
         description: formData.notes || "",
         appointmentDate: selectedSchedule.date,
