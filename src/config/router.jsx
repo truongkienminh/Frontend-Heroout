@@ -28,6 +28,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
 import MemberProtectedRoute from "../components/MemberProtectedRoute";
 import AccomplishmentsPage from "../pages/AccomplishmentsPage";
+import MyAppointmentsPage from "../pages/MyAppointmentsPage";
 
 export const router = createBrowserRouter([
   {
@@ -111,6 +112,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <AccomplishmentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/my-appointments",
+        element: (
+          <ProtectedRoute>
+            <MyAppointmentsPage />
           </ProtectedRoute>
         ),
       },
