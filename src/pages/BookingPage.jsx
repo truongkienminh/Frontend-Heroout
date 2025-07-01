@@ -310,11 +310,9 @@ const BookingPage = () => {
     }
   };
 
-  // Helper function to format time from API response
+  // Format time helper
   const formatTime = (timeString) => {
-    if (!timeString) return "";
-    // Lấy "HH:MM" từ chuỗi "HH:MM:SS"
-    return timeString.substring(0, 5);
+    return ApiService.formatTimeFromObject(timeString);
   };
 
   // Check authentication
