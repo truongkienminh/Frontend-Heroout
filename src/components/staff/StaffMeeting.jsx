@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import api from "../api"; // Import the configured axios instance
+import api from "../../services/axios";
 import {
   Calendar,
   Clock,
@@ -13,11 +13,9 @@ import {
   Trash2,
 } from "lucide-react";
 
-// --- NO MORE MOCK DATA ACCOUNTS AND CONSULTANTS ---
-
 const StaffMeeting = () => {
   const [appointments, setAppointments] = useState([]);
-  const [schedules, setSchedules] = useState([]); // State to store schedules
+  const [schedules, setSchedules] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,7 +27,7 @@ const StaffMeeting = () => {
   useEffect(() => {
     const fetchAppointmentsAndSchedules = async () => {
       setIsLoading(true);
-      setError(null); // Clear previous errors
+      setError(null);
       try {
         const [appointmentsResponse, schedulesResponse] = await Promise.all([
           api.get("/appointment"),
@@ -40,21 +38,18 @@ const StaffMeeting = () => {
         setSchedules(schedulesResponse.data);
       } catch (err) {
         console.error("Error fetching data:", err);
-        // Check for 401 error which is handled by the interceptor
+
         if (err.response?.status !== 401) {
           setError("Không thể tải dữ liệu. Vui lòng thử lại.");
         }
-        // The 401 error is handled by the axios interceptor for redirection
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAppointmentsAndSchedules();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
-  // --- Helper to map scheduleId to slot times ---
-  // Using useMemo to create the slot lookup map efficiently
   const slotLookup = useMemo(() => {
     const lookup = {};
     schedules.forEach((schedule) => {
@@ -66,18 +61,17 @@ const StaffMeeting = () => {
       }
     });
     return lookup;
-  }, [schedules]); // Recreate if schedules data changes
+  }, [schedules]);
 
-  // --- Status Helper Functions (Updated for API uppercase status) ---
   const getStatusColor = (status) => {
     switch (status) {
-      case "BOOKED": // API Status
+      case "BOOKED":
         return "bg-yellow-100 text-yellow-800";
-      case "CONSULTED": // API Status
+      case "CONSULTED":
         return "bg-green-100 text-green-800";
-      case "CANCELLED": // API Status
+      case "CANCELLED":
         return "bg-red-100 text-red-800";
-      // Add other potential API statuses if needed
+
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -92,37 +86,33 @@ const StaffMeeting = () => {
       case "CANCELLED":
         return "Đã Hủy";
       default:
-        return status; // Show the raw status if unknown
+        return status;
     }
   };
 
-  // --- Filtering Logic (Adjusted search since names are not available) ---
-  // Search will now only work on Appointment ID, Schedule ID, Status, Description
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
       // Search now checks IDs, Status, Description
       const matchesSearch =
         String(appointment.id).includes(searchTerm) ||
-        String(appointment.accountId).includes(searchTerm) || // Search Account ID
-        String(appointment.consultantId).includes(searchTerm) || // Search Consultant ID
-        String(appointment.scheduleId).includes(searchTerm) || // Search Schedule ID
-        appointment.status.toLowerCase().includes(searchTerm.toLowerCase()) || // Search Status text
+        String(appointment.accountId).includes(searchTerm) ||
+        String(appointment.consultantId).includes(searchTerm) ||
+        String(appointment.scheduleId).includes(searchTerm) ||
+        appointment.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (appointment.description || "")
           .toLowerCase()
-          .includes(searchTerm.toLowerCase()); // Search Description
+          .includes(searchTerm.toLowerCase());
 
       const matchesFilter =
         filterStatus === "all" ||
-        appointment.status === filterStatus.toUpperCase(); // Compare with uppercase API status
+        appointment.status === filterStatus.toUpperCase();
 
       return matchesSearch && matchesFilter;
     });
-  }, [appointments, searchTerm, filterStatus]); // Re-filter when appointments, search, or filter changes
+  }, [appointments, searchTerm, filterStatus]);
 
-  // --- Stats Calculation ---
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-    // Assuming appointmentDate is used for "Today" count
+    const today = new Date().toISOString().split("T")[0];
     const totalToday = appointments.filter(
       (appt) => appt.appointmentDate === today
     ).length;
@@ -137,22 +127,15 @@ const StaffMeeting = () => {
     ).length;
 
     return { totalToday, bookedCount, cancelledCount, consultedCount };
-  }, [appointments]); // Recalculate stats when appointments data changes
-
-  // --- Helper to format Date and Time from appointment date and schedule slot ---
+  }, [appointments]);
   const formatDateAndTime = (appointmentDate, scheduleId) => {
     if (!appointmentDate || !scheduleId)
       return { date: "N/A", time: "N/A", slotId: "N/A" };
 
     const slot = slotLookup[scheduleId];
-    if (!slot) return { date: "N/A", time: "N/A", slotId: scheduleId }; // Schedule not found
+    if (!slot) return { date: "N/A", time: "N/A", slotId: scheduleId };
 
     try {
-      // Combine date string and time string
-      // Note: Combining date and time like this assumes they are in the same timezone or UTC.
-      // For reliable date/time handling, especially across timezones,
-      // consider using a library like `date-fns` or `moment.js`.
-      // Assuming YYYY-MM-DD and HH:MM:SS format which works with new Date() if using T separator
       const dateTimeString = `${appointmentDate}T${slot.slotStart}`;
       const dateObj = new Date(dateTimeString);
 
@@ -266,23 +249,20 @@ const StaffMeeting = () => {
         </div>
       </div>
 
-      {/* Controls */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search (Updated placeholder) */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Tìm kiếm..." // Generic search placeholder
+                placeholder="Tìm kiếm..."
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            {/* Filter (Updated options for API status values) */}
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
