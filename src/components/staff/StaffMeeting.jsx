@@ -337,7 +337,7 @@ const StaffMeeting = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            ID: {appointment.accountName}
+                            {appointment.accountName}
                           </div>
                           {/* Phone number removed as it's not available */}
                           {/* <div className="text-sm text-gray-500">N/A</div> */}
