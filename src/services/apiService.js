@@ -265,6 +265,7 @@ class ApiService {
     try {
       const payload = {
         slotId: appointmentData.slotId,
+        scheduleId: appointmentData.scheduleId,
         consultantId: appointmentData.consultantId,
         description: appointmentData.description || "",
         appointmentDate: appointmentData.appointmentDate,
@@ -323,6 +324,142 @@ class ApiService {
       }));
     } catch (error) {
       console.error("Error fetching appointments:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  // Helper function to format time
+  static formatTimeFromObject(timeData) {
+    if (!timeData || typeof timeData !== "string") return null;
+    return timeData.substring(0, 5); // Lấy "HH:MM" từ "HH:MM:SS"
+  }
+
+  // Get appointments for a specific member
+  static async getMemberAppointments(memberId) {
+    try {
+      // Get appointments for the member
+      const response = await api.get(`appointment/account/${memberId}`);
+      const appointments = response.data || [];
+
+      // Kiểm tra scheduleId trước khi enrich
+      if (appointments.some((apt) => !apt.scheduleId)) {
+        if (this.DEBUG) {
+          console.warn(
+            "Some raw appointments are missing scheduleId:",
+            appointments.filter((apt) => !apt.scheduleId)
+          );
+        }
+      }
+
+      // Get all schedules to match with appointments
+      const schedulesResponse = await api.get("schedules");
+      const allSchedules = schedulesResponse.data || [];
+
+      // Get all consultants to match with appointments
+      const consultantsResponse = await api.get("consultants");
+      const allConsultants = consultantsResponse.data || [];
+
+      // Transform and enrich the appointment data
+      const enrichedAppointments = await Promise.all(
+        appointments.map(async (appointment) => {
+          // Find the schedule for this appointment
+          const schedule = allSchedules.find(
+            (s) => s.id === appointment.scheduleId
+          );
+          if (this.DEBUG && !schedule) {
+            console.warn(
+              `No schedule found for appointment ${appointment.id} with scheduleId: ${appointment.scheduleId}`
+            );
+          }
+
+          // Find the consultant for this appointment
+          const consultant = allConsultants.find(
+            (c) => c.id === appointment.consultantId
+          );
+
+          return {
+            id: appointment.id,
+            create_at: appointment.createAt,
+            description: appointment.description || "",
+            status: appointment.status || "BOOKED",
+            checked_in: appointment.checkedIn || false,
+            meeting_link: appointment.meetingLink || null,
+            account_id: appointment.accountId,
+            schedule_id: appointment.scheduleId,
+            consultant_id: appointment.consultantId,
+            appointment_date: appointment.appointmentDate,
+            schedule: schedule
+              ? {
+                  id: schedule.id,
+                  date: schedule.date,
+                  is_booked: schedule.bookedStatus === 1,
+                  recurrence: schedule.recurrence,
+                  slot_id: schedule.slotId,
+                  slot: schedule.slot
+                    ? {
+                        id: schedule.slotId,
+                        label:
+                          schedule.slot.label ||
+                          `${this.formatTimeFromObject(
+                            schedule.slot.slotStart
+                          )} - ${this.formatTimeFromObject(
+                            schedule.slot.slotEnd
+                          )}`,
+                        slot_start: this.formatTimeFromObject(
+                          schedule.slot.slotStart
+                        ),
+                        slot_end: this.formatTimeFromObject(
+                          schedule.slot.slotEnd
+                        ),
+                      }
+                    : null,
+                }
+              : null,
+            consultant: consultant
+              ? {
+                  id: consultant.id,
+                  name: consultant.account?.name || "Chuyên gia",
+                  email: consultant.account?.email || "",
+                  phone: consultant.account?.phone || "",
+                  avatar: consultant.account?.avatar || "",
+                  field_of_study: consultant.fieldOfStudy || "",
+                  degree_level: consultant.degreeLevel || "",
+                  experience: consultant.experience || "",
+                  organization: consultant.organization || "",
+                  rating: consultant.rating || 5.0,
+                  bio: consultant.bio || "",
+                  specialties: consultant.specialities
+                    ? consultant.specialities.split(",").map((s) => s.trim())
+                    : [],
+                }
+              : null,
+          };
+        })
+      );
+
+      return enrichedAppointments;
+    } catch (error) {
+      console.error("Error fetching member appointments:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  // Check-in to an appointment
+  static async checkInAppointment(appointmentId) {
+    try {
+      const response = await api.post(`appointment/${appointmentId}/check-in`);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking in appointment:", error);
+      if (error.response?.status === 400) {
+        throw new Error(
+          "Không thể check-in vào thời điểm này. Vui lòng kiểm tra lại thời gian."
+        );
+      } else if (error.response?.status === 404) {
+        throw new Error("Không tìm thấy lịch hẹn.");
+      } else if (error.response?.status === 409) {
+        throw new Error("Lịch hẹn đã được check-in trước đó.");
+      }
       throw this.handleError(error);
     }
   }
