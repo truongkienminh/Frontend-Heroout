@@ -299,11 +299,11 @@ const StaffMeeting = () => {
               <tr>
                 {/* Updated header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID Khách hàng
+                  Tên Khách hàng
                 </th>
                 {/* Updated header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID Tư vấn viên
+                  Tên Tư vấn viên
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Thời gian / Slot
