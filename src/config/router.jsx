@@ -29,6 +29,7 @@ import EventDetail from "../components/Event/EventDetail";
 import MemberProtectedRoute from "../components/MemberProtectedRoute";
 import AccomplishmentsPage from "../pages/AccomplishmentsPage";
 import MyAppointmentsPage from "../pages/MyAppointmentsPage";
+import StaffViewMeetings from "../components/staff/StaffViewMeetings";
 
 export const router = createBrowserRouter([
   {
@@ -194,6 +195,10 @@ export const router = createBrowserRouter([
       {
         path: "managemeetings",
         element: <StaffMeeting />,
+      },
+      {
+        path: "viewconsultantmeeting",
+        element: <StaffViewMeetings />,
       },
     ],
   },
