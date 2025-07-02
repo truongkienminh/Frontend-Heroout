@@ -774,7 +774,7 @@ const BookingPage = () => {
                                 key={schedule.id}
                                 onClick={() => handleScheduleSelect(schedule)}
                                 disabled={isBooked}
-                                className={`p-3 border rounded-lg text-center transition-colors relative ${
+                                className={`p-3 border rounded-lg text-center transition-colors ${
                                   isBooked
                                     ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60"
                                     : isSelected
@@ -791,15 +791,13 @@ const BookingPage = () => {
                                   <span className="font-medium">
                                     {formatTime(schedule.slot.slotStart)} -{" "}
                                     {formatTime(schedule.slot.slotEnd)}
+                                    {isBooked && (
+                                      <span className="text-xs text-gray-600 ml-1">
+                                        (Đã đặt)
+                                      </span>
+                                    )}
                                   </span>
                                 </div>
-                                {isBooked && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-90 rounded-lg">
-                                    <span className="text-xs text-gray-600 font-medium">
-                                      Đã đặt
-                                    </span>
-                                  </div>
-                                )}
                               </button>
                             );
                           })}
