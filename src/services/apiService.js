@@ -52,7 +52,7 @@ class ApiService {
   static async getAllAccounts() {
     try {
       const response = await api.get("accounts");
-      return response.data;
+      return response.data || [];
     } catch (error) {
       throw this.handleError(error);
     }
@@ -138,6 +138,7 @@ class ApiService {
                   .filter((s) => s.length > 0)
               : ["Tư vấn tâm lý"],
             consultant_id: consultant.id || null,
+            consultantName: consultant.consultantName || "Chưa cập nhật",
           };
         })
       );
@@ -199,6 +200,7 @@ class ApiService {
               .filter((s) => s.length > 0)
           : ["Tư vấn tâm lý"],
         consultant_id: consultantInfo.id,
+        consultantName: consultantInfo.consultantName || "Chưa cập nhật",
       };
     } catch (error) {
       console.error("Error in getConsultant:", error);
@@ -210,8 +212,51 @@ class ApiService {
   static async getSchedules() {
     try {
       const response = await api.get("schedules");
-      return response.data;
+      const schedules = response.data || [];
+
+      // Hàm xử lý thời gian dưới dạng chuỗi hoặc object
+      const formatTimeString = (timeData) => {
+        if (!timeData) {
+          return null;
+        }
+        if (typeof timeData === "string") {
+          // Xử lý chuỗi thời gian "HH:MM:SS"
+          return timeData.substring(0, 5); // Lấy "HH:MM"
+        }
+        if (typeof timeData === "object" && timeData.hour && timeData.minute) {
+          // Xử lý object thời gian { hour, minute, second, nano }
+          return `${String(timeData.hour).padStart(2, "0")}:${String(
+            timeData.minute
+          ).padStart(2, "0")}`;
+        }
+        console.warn("Invalid time data:", timeData);
+        return null;
+      };
+
+      return schedules.map((schedule) => {
+        console.log(
+          `Schedule ID ${schedule.id} bookedStatus:`,
+          schedule.bookedStatus,
+          `-> Interpreted as: ${schedule.bookedStatus === 0 ? true : false}`
+        );
+        return {
+          id: schedule.id,
+          date: schedule.date,
+          recurrence: schedule.recurrence,
+          // API trả về bookedStatus: 0 cho slot đã đặt, 1 cho slot chưa đặt
+          bookedStatus: schedule.bookedStatus === 0 ? true : false,
+          slotId: schedule.slotId,
+          consultantId: schedule.consultantId,
+          slot: schedule.slot
+            ? {
+                slotStart: formatTimeString(schedule.slot.slotStart),
+                slotEnd: formatTimeString(schedule.slot.slotEnd),
+              }
+            : { slotStart: null, slotEnd: null },
+        };
+      });
     } catch (error) {
+      console.error("Error fetching schedules:", error);
       throw this.handleError(error);
     }
   }
@@ -219,34 +264,103 @@ class ApiService {
   static async getSchedule(id) {
     try {
       const response = await api.get(`schedules/${id}`);
-      return response.data;
+      const schedule = response.data;
+
+      // Hàm xử lý thời gian dưới dạng chuỗi hoặc object
+      const formatTimeString = (timeData) => {
+        if (!timeData) {
+          return null;
+        }
+        if (typeof timeData === "string") {
+          // Xử lý chuỗi thời gian "HH:MM:SS"
+          return timeData.substring(0, 5); // Lấy "HH:MM"
+        }
+        if (typeof timeData === "object" && timeData.hour && timeData.minute) {
+          // Xử lý object thời gian { hour, minute, second, nano }
+          return `${String(timeData.hour).padStart(2, "0")}:${String(
+            timeData.minute
+          ).padStart(2, "0")}`;
+        }
+        console.warn("Invalid time data:", timeData);
+        return null;
+      };
+
+      return {
+        id: schedule.id,
+        date: schedule.date,
+        recurrence: schedule.recurrence,
+        // API trả về bookedStatus: 0 cho slot đã đặt, 1 cho slot chưa đặt
+        bookedStatus: schedule.bookedStatus === 0 ? true : false,
+        slotId: schedule.slotId,
+        consultantId: schedule.consultantId,
+        slot: schedule.slot
+          ? {
+              slotStart: formatTimeString(schedule.slot.slotStart),
+              slotEnd: formatTimeString(schedule.slot.slotEnd),
+            }
+          : { slotStart: null, slotEnd: null },
+      };
     } catch (error) {
+      console.error("Error fetching schedule:", error);
       throw this.handleError(error);
     }
   }
 
   static async getConsultantSchedules(consultantId) {
     try {
+      if (
+        !Number.isInteger(Number(consultantId)) ||
+        Number(consultantId) <= 0
+      ) {
+        throw new Error("ID tư vấn viên không hợp lệ");
+      }
       const response = await api.get(`schedules/consultant/${consultantId}`);
       const schedules = response.data || [];
-
-      // Chuyển đổi dữ liệu để phù hợp với frontend
       return schedules.map((schedule) => {
+        if (!schedule.slot) {
+          console.warn(`Lịch ID ${schedule.id} không có thông tin slot`);
+          return {
+            id: schedule.id,
+            date: schedule.date,
+            recurrence: schedule.recurrence,
+            // API trả về bookedStatus: 0 cho slot đã đặt, 1 cho slot chưa đặt
+            bookedStatus: schedule.bookedStatus === 0 ? true : false,
+            slotId: schedule.slotId,
+            consultantId: schedule.consultantId,
+            slot: { slotStart: null, slotEnd: null },
+          };
+        }
+
+        // Xử lý slot.slotStart và slot.slotEnd dưới dạng chuỗi
+        const formatTimeString = (timeStr) => {
+          if (!timeStr || typeof timeStr !== "string") {
+            console.warn(
+              `Invalid time string for schedule ID ${schedule.id}:`,
+              timeStr
+            );
+            return null;
+          }
+          // Lấy "HH:MM" từ "HH:MM:SS"
+          return timeStr.substring(0, 5);
+        };
+
         return {
           id: schedule.id,
           date: schedule.date,
           recurrence: schedule.recurrence,
-          bookedStatus: schedule.bookedStatus === 0, // Giả định 0 = true (đã đặt), 1 = false (chưa đặt)
+          // API trả về bookedStatus: 0 cho slot đã đặt, 1 cho slot chưa đặt
+          bookedStatus: schedule.bookedStatus === 0 ? true : false,
           slotId: schedule.slotId,
+          consultantId: schedule.consultantId,
           slot: {
-            slotStart: schedule.slot.slotStart,
-            slotEnd: schedule.slot.slotEnd,
+            slotStart: formatTimeString(schedule.slot.slotStart),
+            slotEnd: formatTimeString(schedule.slot.slotEnd),
           },
         };
       });
     } catch (error) {
-      console.error("Error fetching consultant schedules:", error);
-      return [];
+      console.error("Lỗi khi lấy lịch tư vấn viên:", error);
+      throw this.handleError(error);
     }
   }
 
@@ -282,6 +396,35 @@ class ApiService {
   // Appointment APIs
   static async createAppointment(appointmentData) {
     try {
+      const requiredFields = [
+        "slotId",
+        "scheduleId",
+        "consultantId",
+        "appointmentDate",
+      ];
+      for (const field of requiredFields) {
+        if (!appointmentData[field]) {
+          throw new Error(`Thiếu trường bắt buộc: ${field}`);
+        }
+      }
+      if (
+        !Number.isInteger(Number(appointmentData.slotId)) ||
+        Number(appointmentData.slotId) <= 0
+      ) {
+        throw new Error("ID slot không hợp lệ");
+      }
+      if (
+        !Number.isInteger(Number(appointmentData.scheduleId)) ||
+        Number(appointmentData.scheduleId) <= 0
+      ) {
+        throw new Error("ID lịch không hợp lệ");
+      }
+      if (
+        !Number.isInteger(Number(appointmentData.consultantId)) ||
+        Number(appointmentData.consultantId) <= 0
+      ) {
+        throw new Error("ID tư vấn viên không hợp lệ");
+      }
       const payload = {
         slotId: appointmentData.slotId,
         scheduleId: appointmentData.scheduleId,
@@ -289,22 +432,10 @@ class ApiService {
         description: appointmentData.description || "",
         appointmentDate: appointmentData.appointmentDate,
       };
-
       const response = await api.post("appointment", payload);
       return response.data;
     } catch (error) {
-      console.error("Error creating appointment:", error);
-      if (error.response?.status === 500) {
-        throw new Error(
-          "Lỗi server: Không thể tạo lịch hẹn. Vui lòng liên hệ admin"
-        );
-      } else if (error.response?.status === 400) {
-        throw new Error(
-          "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin."
-        );
-      } else if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
+      console.error("Lỗi khi tạo lịch hẹn:", error);
       throw this.handleError(error);
     }
   }
@@ -327,18 +458,45 @@ class ApiService {
     }
   }
 
+  static async updateAppointmentStatus(appointmentId, status) {
+    try {
+      if (
+        !Number.isInteger(Number(appointmentId)) ||
+        Number(appointmentId) <= 0
+      ) {
+        throw new Error("ID lịch hẹn không hợp lệ");
+      }
+      const validStatuses = ["BOOKED", "CONSULTED", "CANCELLED"];
+      if (!validStatuses.includes(status)) {
+        throw new Error("Trạng thái không hợp lệ");
+      }
+      const response = await api.put(
+        `/appointment/${appointmentId}/status?status=${status}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái:", error);
+      throw this.handleError(error);
+    }
+  }
+
   static async getAppointments() {
     try {
       const response = await api.get("appointment");
       const appointments = response.data || [];
-
       return appointments.map((appointment) => ({
         id: appointment.id,
         createAt: appointment.createAt,
         description: appointment.description || "",
         status: appointment.status || "BOOKED",
         accountId: appointment.accountId,
+        accountName: appointment.accountName || "Chưa cập nhật",
         consultantId: appointment.consultantId,
+        consultantName: appointment.consultantName || "Chưa cập nhật",
+        meetingLink: appointment.meetingLink || null,
+        checkedIn: appointment.checkedIn || false,
+        appointmentDate: appointment.appointmentDate,
+        scheduleId: appointment.scheduleId,
       }));
     } catch (error) {
       console.error("Error fetching appointments:", error);
@@ -346,51 +504,55 @@ class ApiService {
     }
   }
 
-  // Helper function to format time
-  static formatTimeFromObject(timeData) {
-    if (!timeData || typeof timeData !== "string") return null;
-    return timeData.substring(0, 5); // Lấy "HH:MM" từ "HH:MM:SS"
-  }
-
   // Get appointments for a specific member
   static async getMemberAppointments(memberId) {
     try {
-      // Get appointments for the member
       const response = await api.get(`appointment/account/${memberId}`);
       const appointments = response.data || [];
 
-      // Kiểm tra scheduleId trước khi enrich
       if (appointments.some((apt) => !apt.scheduleId)) {
-        if (this.DEBUG) {
-          console.warn(
-            "Some raw appointments are missing scheduleId:",
-            appointments.filter((apt) => !apt.scheduleId)
-          );
-        }
+        console.warn(
+          "Some raw appointments are missing scheduleId:",
+          appointments.filter((apt) => !apt.scheduleId)
+        );
       }
 
-      // Get all schedules to match with appointments
       const schedulesResponse = await api.get("schedules");
       const allSchedules = schedulesResponse.data || [];
 
-      // Get all consultants to match with appointments
       const consultantsResponse = await api.get("consultants");
       const allConsultants = consultantsResponse.data || [];
 
-      // Transform and enrich the appointment data
+      // Hàm xử lý thời gian dưới dạng chuỗi hoặc object
+      const formatTimeString = (timeData) => {
+        if (!timeData) {
+          return null;
+        }
+        if (typeof timeData === "string") {
+          // Xử lý chuỗi thời gian "HH:MM:SS"
+          return timeData.substring(0, 5); // Lấy "HH:MM"
+        }
+        if (typeof timeData === "object" && timeData.hour && timeData.minute) {
+          // Xử lý object thời gian { hour, minute, second, nano }
+          return `${String(timeData.hour).padStart(2, "0")}:${String(
+            timeData.minute
+          ).padStart(2, "0")}`;
+        }
+        console.warn("Invalid time data:", timeData);
+        return null;
+      };
+
       const enrichedAppointments = await Promise.all(
         appointments.map(async (appointment) => {
-          // Find the schedule for this appointment
           const schedule = allSchedules.find(
             (s) => s.id === appointment.scheduleId
           );
-          if (this.DEBUG && !schedule) {
+          if (!schedule) {
             console.warn(
               `No schedule found for appointment ${appointment.id} with scheduleId: ${appointment.scheduleId}`
             );
           }
 
-          // Find the consultant for this appointment
           const consultant = allConsultants.find(
             (c) => c.id === appointment.consultantId
           );
@@ -403,32 +565,30 @@ class ApiService {
             checked_in: appointment.checkedIn || false,
             meeting_link: appointment.meetingLink || null,
             account_id: appointment.accountId,
+            accountName: appointment.accountName || "Chưa cập nhật",
             schedule_id: appointment.scheduleId,
             consultant_id: appointment.consultantId,
+            consultantName: appointment.consultantName || "Chưa cập nhật",
             appointment_date: appointment.appointmentDate,
             schedule: schedule
               ? {
                   id: schedule.id,
                   date: schedule.date,
-                  is_booked: schedule.bookedStatus === 1,
+                  // API trả về bookedStatus: 0 cho slot đã đặt, 1 cho slot chưa đặt
+                  is_booked: schedule.bookedStatus === 0,
                   recurrence: schedule.recurrence,
                   slot_id: schedule.slotId,
+                  consultantId: schedule.consultantId,
                   slot: schedule.slot
                     ? {
                         id: schedule.slotId,
                         label:
                           schedule.slot.label ||
-                          `${this.formatTimeFromObject(
+                          `${formatTimeString(
                             schedule.slot.slotStart
-                          )} - ${this.formatTimeFromObject(
-                            schedule.slot.slotEnd
-                          )}`,
-                        slot_start: this.formatTimeFromObject(
-                          schedule.slot.slotStart
-                        ),
-                        slot_end: this.formatTimeFromObject(
-                          schedule.slot.slotEnd
-                        ),
+                          )} - ${formatTimeString(schedule.slot.slotEnd)}`,
+                        slot_start: formatTimeString(schedule.slot.slotStart),
+                        slot_end: formatTimeString(schedule.slot.slotEnd),
                       }
                     : null,
                 }
@@ -436,7 +596,7 @@ class ApiService {
             consultant: consultant
               ? {
                   id: consultant.id,
-                  name: consultant.account?.name || "Chuyên gia",
+                  name: consultant.consultantName || "Chuyên gia",
                   email: consultant.account?.email || "",
                   phone: consultant.account?.phone || "",
                   avatar: consultant.account?.avatar || "",
@@ -449,6 +609,7 @@ class ApiService {
                   specialties: consultant.specialities
                     ? consultant.specialities.split(",").map((s) => s.trim())
                     : [],
+                  consultantName: consultant.consultantName || "Chưa cập nhật",
                 }
               : null,
           };
@@ -507,7 +668,7 @@ class ApiService {
     }
   }
 
-  // handle API errors
+  // Handle API errors
   static handleError(error) {
     console.error("API Error:", error);
     if (error.response) {
