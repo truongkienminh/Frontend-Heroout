@@ -86,43 +86,61 @@ class ApiService {
         return [];
       }
 
-      const consultantsWithAccountInfo = allConsultants.map((consultant) => {
-        const account = consultant.account;
-        if (!account) {
-          console.warn(
-            `No account info found for consultant ID: ${consultant.id}`
-          );
-          return null;
-        }
+      const consultantsWithAccountInfo = await Promise.all(
+        allConsultants.map(async (consultant) => {
+          let account = null;
+          try {
+            const accountResponse = await api.get(
+              `account/${consultant.accountId}`
+            );
+            account = accountResponse.data;
+          } catch (error) {
+            console.warn(
+              `No account info found for consultant ID: ${consultant.id}`
+            );
+            account = {
+              id: consultant.accountId,
+              name: consultant.consultantName || "Chưa cập nhật",
+              email: "",
+              phone: "",
+              avatar: consultant.consultantName?.charAt(0) || "C",
+              address: "",
+              gender: "",
+              dateOfBirth: null,
+              status: "ACTIVE",
+            };
+          }
 
-        return {
-          id: account.id,
-          name: account.name || "Chưa cập nhật",
-          email: account.email || "",
-          phone: account.phone || "",
-          avatar: account.avatar || account.name?.charAt(0) || "C",
-          address: account.address || "",
-          gender: account.gender || "",
-          date_of_birth: account.dateOfBirth || null,
-          status: account.status || "ACTIVE",
-          bio: consultant.bio || "Chưa có thông tin",
-          consultations: consultant.consultations || 0,
-          degree_level: consultant.degreeLevel || "Chưa cập nhật",
-          experience: consultant.experience || "Chưa cập nhật",
-          expiry_date: consultant.expiryDate || null,
-          field_of_study: consultant.fieldOfStudy || "Chưa cập nhật",
-          issued_date: consultant.issuedDate || null,
-          organization: consultant.organization || "Chưa cập nhật",
-          rating: consultant.rating || 5.0,
-          specialties: consultant.specialities
-            ? consultant.specialities
-                .split(",")
-                .map((s) => s.trim())
-                .filter((s) => s.length > 0)
-            : ["Tư vấn tâm lý"],
-          consultant_id: consultant.id || null,
-        };
-      });
+          return {
+            id: account.id,
+            name: account.name || consultant.consultantName || "Chưa cập nhật",
+            email: account.email || "",
+            phone: account.phone || "",
+            avatar:
+              account.avatar || consultant.consultantName?.charAt(0) || "C",
+            address: account.address || "",
+            gender: account.gender || "",
+            date_of_birth: account.dateOfBirth || null,
+            status: account.status || "ACTIVE",
+            bio: consultant.bio || "Chưa có thông tin",
+            consultations: consultant.consultations || 0,
+            degree_level: consultant.degreeLevel || "Chưa cập nhật",
+            experience: consultant.experience || "Chưa cập nhật",
+            expiry_date: consultant.expiryDate || null,
+            field_of_study: consultant.fieldOfStudy || "Chưa cập nhật",
+            issued_date: consultant.issuedDate || null,
+            organization: consultant.organization || "Chưa cập nhật",
+            rating: consultant.rating || 5.0,
+            specialties: consultant.specialities
+              ? consultant.specialities
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter((s) => s.length > 0)
+              : ["Tư vấn tâm lý"],
+            consultant_id: consultant.id || null,
+          };
+        })
+      );
 
       const finalConsultants = consultantsWithAccountInfo.filter(
         (consultant) => consultant !== null
@@ -271,7 +289,6 @@ class ApiService {
         appointmentDate: appointmentData.appointmentDate,
       };
 
-      console.log("Final payload:", payload);
       const response = await api.post("appointment", payload);
       return response.data;
     } catch (error) {
