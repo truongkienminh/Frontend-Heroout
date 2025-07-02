@@ -14,54 +14,63 @@ import {
   Alert,
   message,
 } from "antd";
+import dayjs from "dayjs";
 
+// Import instance axios đã cấu hình
 import api from "../../services/axios";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const StaffViewMeetings = () => {
+  // State để kiểm soát việc hiển thị Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // State lưu trữ dữ liệu lấy từ API
   const [consultants, setConsultants] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]); // Danh sách các slot thời gian có ID và label
 
+  // State cho việc chọn trong Modal
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedConsultantId, setSelectedConsultantId] = useState(null);
 
-  const [selectedSlotId, setSelectedSlotId] = useState(null);
+  // State ĐÃ SỬA ĐỔI: Lưu trữ MẢNG các ID của slot thời gian được chọn trong Modal
+  const [selectedSlotIds, setSelectedSlotIds] = useState([]);
 
-  const [bookedSlots, setBookedSlots] = useState([]);
+  // State: Lưu danh sách lịch đã đăng ký lấy từ API /api/schedules
+  const [schedules, setSchedules] = useState([]);
 
-  // State cho trạng thái tải dữ liệu ban đầu
+  // State cho trạng thái tải dữ liệu ban đầu (consultants, availableSlots)
   const [loadingInitialData, setLoadingInitialData] = useState(true);
-  // State cho trạng thái đăng ký
+  // State cho trạng thái tải lịch đã đăng ký (schedules)
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  // State cho trạng thái đăng ký slot mới
   const [registering, setRegistering] = useState(false);
-  // State cho lỗi
-  const [error, setError] = useState(null);
+  // State cho lỗi khi tải dữ liệu ban đầu
+  const [initialDataError, setInitialDataError] = useState(null);
+  // State cho lỗi khi tải lịch đã đăng ký
+  const [schedulesError, setSchedulesError] = useState(null);
+  // State cho lỗi khi đăng ký slot mới
   const [registrationError, setRegistrationError] = useState(null);
 
-  // Effect để tải dữ liệu ban đầu (consultants và slots)
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoadingInitialData(true);
-      setError(null);
+      setInitialDataError(null); // Reset lỗi trước khi fetch
       try {
-        // 1. Tải danh sách chuyên viên từ /api/consultants
+        // Tải danh sách chuyên viên từ /api/consultants
         const consultantsResponse = await api.get("/consultants");
-        // API /api/consultants trả về mảng các đối tượng consultant
         setConsultants(consultantsResponse.data);
 
-        // 2. Tải danh sách các slot định nghĩa từ /api/slot
+        // Tải danh sách các slot định nghĩa từ /api/slot
         const slotsResponse = await api.get("/slot");
-        // API /api/slot trả về mảng các đối tượng slot với id, label, ...
         setAvailableSlots(slotsResponse.data);
       } catch (err) {
         console.error("Error fetching initial data:", err);
-        setError(
+        setInitialDataError(
           "Không thể tải dữ liệu ban đầu (danh sách chuyên viên hoặc slot)."
         );
-        // Interceptor sẽ xử lý lỗi 401 (hết hạn token)
+        // Interceptor đã xử lý lỗi 401 (hết hạn token)
       } finally {
         setLoadingInitialData(false);
       }
@@ -70,26 +79,47 @@ const StaffViewMeetings = () => {
     fetchInitialData();
   }, []); // Mảng dependency rỗng: chỉ chạy một lần khi component mount
 
-  // Hàm xử lý khi click nút "Đăng kí lịch làm việc"
+  // --- Effect để tải danh sách lịch đã đăng ký từ /api/schedules ---
+  const fetchSchedules = async () => {
+    setLoadingSchedules(true);
+    setSchedulesError(null); // Reset lỗi trước khi fetch
+    try {
+      const schedulesResponse = await api.get("/schedules");
+      // API /api/schedules trả về mảng các đối tượng schedule
+      setSchedules(schedulesResponse.data);
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
+      setSchedulesError("Không thể tải danh sách lịch đã đăng ký.");
+      // Interceptor đã xử lý lỗi 401
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []); // Fetch khi component mount
+
+  //  Hàm xử lý khi click nút "Đăng kí lịch làm việc"
   const showModal = () => {
     setIsModalVisible(true);
     // Reset các state khi mở modal để form trống
     setSelectedDate(null);
     setSelectedConsultantId(null);
-    setSelectedSlotId(null); // Reset slot ID đã chọn
+    setSelectedSlotIds([]); // Reset MẢNG selectedSlotIds về rỗng
     setRegistrationError(null); // Xóa lỗi đăng ký cũ
   };
 
-  // Hàm xử lý khi click nút "OK" trong Modal
+  //  Hàm xử lý khi click nút "OK" trong Modal (Đăng ký slot mới)
   const handleOk = async () => {
     // Kiểm tra thông tin đã đủ chưa
     if (
       !selectedDate ||
       selectedConsultantId === null ||
-      selectedSlotId === null // Kiểm tra selectedSlotId
+      selectedSlotIds.length === 0 // Kiểm tra nếu MẢNG selectedSlotIds rỗng
     ) {
       message.warning(
-        "Vui lòng chọn đầy đủ Chuyên viên, Ngày và Slot thời gian."
+        "Vui lòng chọn đầy đủ Chuyên viên, Ngày và ít nhất một Slot thời gian."
       );
       return;
     }
@@ -102,7 +132,7 @@ const StaffViewMeetings = () => {
       const registrationData = {
         date: selectedDate.format("YYYY-MM-DD"), // Format ngày
         consultantId: selectedConsultantId,
-        slotIds: [selectedSlotId], // Gửi ID slot đã chọn dưới dạng mảng 1 phần tử
+        slotIds: selectedSlotIds, // Gửi MẢNG selectedSlotIds
       };
 
       console.log("Đang gửi đăng ký:", registrationData);
@@ -112,36 +142,16 @@ const StaffViewMeetings = () => {
 
       console.log("Đăng ký thành công:", response.data);
 
-      // Tìm thông tin chi tiết của consultant và slot vừa đăng ký để hiển thị trong bảng
-      const registeredConsultant = consultants.find(
-        (c) => c.id === selectedConsultantId
-      );
-      const registeredSlot = availableSlots.find(
-        (slot) => slot.id === selectedSlotId
-      );
+      message.success(`Đã đăng ký thành công ${selectedSlotIds.length} slot!`);
 
-      // Thêm lịch vừa đăng ký vào state bookedSlots (chỉ hiển thị tạm thời)
-      const newBooking = {
-        // Tạo ID tạm dựa trên dữ liệu đăng ký để đảm bảo tính duy nhất
-        id: `${selectedConsultantId}-${selectedDate.format(
-          "YYYY-MM-DD"
-        )}-${selectedSlotId}`,
-        consultantId: selectedConsultantId,
-        consultantName: registeredConsultant
-          ? registeredConsultant.consultantName
-          : "Không rõ", // Lấy tên từ danh sách consultants đã fetch
-        date: selectedDate.format("YYYY-MM-DD"),
-        timeSlot: registeredSlot ? registeredSlot.label : "Không rõ", // Lấy label từ danh sách slots đã fetch
-      };
-      setBookedSlots([...bookedSlots, newBooking]);
-
-      message.success("Đăng ký lịch làm việc thành công!");
+      // Sau khi đăng ký thành công, gọi lại hàm fetchSchedules để cập nhật bảng
+      fetchSchedules();
 
       // Đóng Modal và reset form
       setIsModalVisible(false);
       setSelectedDate(null);
       setSelectedConsultantId(null);
-      setSelectedSlotId(null);
+      setSelectedSlotIds([]); // Reset MẢNG selectedSlotIds
     } catch (err) {
       console.error("Lỗi khi đăng ký:", err);
       // Interceptor đã xử lý lỗi 401. Xử lý các lỗi khác tại đây.
@@ -155,52 +165,54 @@ const StaffViewMeetings = () => {
     }
   };
 
-  // Hàm xử lý khi click nút "Cancel" hoặc đóng Modal bằng cách khác
   const handleCancel = () => {
     console.log("Hủy bỏ đăng ký");
     setIsModalVisible(false);
     // Reset các state khi hủy
     setSelectedDate(null);
     setSelectedConsultantId(null);
-    setSelectedSlotId(null);
-    setRegistrationError(null); // Xóa lỗi đăng ký
+    setSelectedSlotIds([]); // Reset MẢNG selectedSlotIds
+    setRegistrationError(null);
   };
 
-  // Hàm xử lý khi chọn ngày
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    setSelectedSlotId(null); // Reset slot đã chọn khi đổi ngày
+    setSelectedSlotIds([]); // Reset slots đã chọn khi đổi ngày
   };
 
-  // Hàm xử lý khi chọn chuyên viên
   const handleConsultantChange = (value) => {
     setSelectedConsultantId(value);
-    setSelectedSlotId(null); // Reset slot đã chọn khi đổi chuyên viên
+    setSelectedSlotIds([]); // Reset slots đã chọn khi đổi chuyên viên
   };
 
-  // Hàm xử lý khi chọn slot thời gian (lưu ID slot)
   const handleSlotSelect = (slotId) => {
-    setSelectedSlotId(slotId);
+    if (selectedSlotIds.includes(slotId)) {
+      setSelectedSlotIds((prevIds) => prevIds.filter((id) => id !== slotId));
+    } else {
+      setSelectedSlotIds((prevIds) => [...prevIds, slotId]);
+    }
   };
 
-  // Kiểm tra điều kiện để bật/tắt nút OK
   const isOkButtonDisabled =
     !selectedDate ||
     selectedConsultantId === null ||
-    selectedSlotId === null ||
+    selectedSlotIds.length === 0 ||
     registering;
 
-  // Tìm slot được chọn để hiển thị label trong UI
-  const selectedSlotObject = useMemo(() => {
-    return availableSlots.find((slot) => slot.id === selectedSlotId);
-  }, [selectedSlotId, availableSlots]);
+  const selectedSlotObjects = useMemo(() => {
+    return availableSlots.filter((slot) => selectedSlotIds.includes(slot.id));
+  }, [selectedSlotIds, availableSlots]);
 
-  // Cấu hình cột cho bảng hiển thị lịch đã đăng ký (tạm thời)
   const columns = [
     {
       title: "Chuyên viên",
-      dataIndex: "consultantName",
+
+      dataIndex: "consultantId",
       key: "consultantName",
+      render: (consultantId) => {
+        const consultant = consultants.find((c) => c.id === consultantId);
+        return consultant ? consultant.consultantName : "Không rõ";
+      },
     },
     {
       title: "Ngày",
@@ -209,9 +221,19 @@ const StaffViewMeetings = () => {
     },
     {
       title: "Slot",
-      dataIndex: "timeSlot",
-      key: "timeSlot",
-      render: (text) => <Tag color="blue">{text}</Tag>,
+
+      dataIndex: "slot",
+      key: "slot",
+      render: (slot) => {
+        if (!slot) return <Tag color="default">N/A</Tag>;
+
+        return (
+          <Tag color="blue">{`${slot.slotStart.substring(
+            0,
+            5
+          )} - ${slot.slotEnd.substring(0, 5)}`}</Tag>
+        );
+      },
     },
   ];
 
@@ -223,18 +245,18 @@ const StaffViewMeetings = () => {
           style={{ width: "100%", textAlign: "center" }}
         >
           <Spin size="large" />
-          <Text>Đang tải dữ liệu...</Text>
+          <Text>Đang tải dữ liệu ban đầu...</Text>
         </Space>
       </Card>
     );
   }
 
-  if (error) {
+  if (initialDataError) {
     return (
       <Card>
         <Alert
-          message="Lỗi tải dữ liệu"
-          description={error}
+          message="Lỗi tải dữ liệu ban đầu"
+          description={initialDataError}
           type="error"
           showIcon
         />
@@ -263,10 +285,27 @@ const StaffViewMeetings = () => {
         </Button>
 
         <Title level={4} style={{ marginTop: "30px", marginBottom: "10px" }}>
-          Lịch làm việc đã đăng ký (Trong phiên hiện tại)
+          Lịch làm việc đã đăng ký
         </Title>
 
-        <Table dataSource={bookedSlots} columns={columns} rowKey="id" />
+        {schedulesError && (
+          <Alert
+            message="Lỗi tải lịch đã đăng ký"
+            description={schedulesError}
+            type="error"
+            showIcon
+            style={{ marginBottom: "10px" }}
+          />
+        )}
+
+        <Spin spinning={loadingSchedules}>
+          <Table
+            dataSource={schedules}
+            columns={columns}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </Spin>
       </Space>
 
       <Modal
@@ -274,9 +313,21 @@ const StaffViewMeetings = () => {
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        okButtonProps={{ disabled: isOkButtonDisabled, loading: registering }} // Hiển thị loading trên nút OK
+        okButtonProps={{
+          disabled: isOkButtonDisabled,
+          loading: registering,
+          type: "primary",
+          style: {
+            backgroundColor: "#52c41a",
+            borderColor: "#52c41a",
+          },
+        }}
+        cancelButtonProps={{
+          type: "primary",
+          danger: true,
+        }}
         width={400}
-        destroyOnClose={true} // Tự động hủy modal khi đóng để reset state bên trong
+        destroyOnClose={true}
       >
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           {/* Hiển thị lỗi đăng ký nếu có */}
@@ -301,11 +352,12 @@ const StaffViewMeetings = () => {
               allowClear
               loading={loadingInitialData}
             >
-              {consultants.map((consultant) => (
-                <Option key={consultant.id} value={consultant.id}>
-                  {consultant.consultantName}{" "}
-                </Option>
-              ))}
+              {Array.isArray(consultants) &&
+                consultants.map((consultant) => (
+                  <Option key={consultant.id} value={consultant.id}>
+                    {consultant.consultantName}{" "}
+                  </Option>
+                ))}
             </Select>
           </div>
 
@@ -324,7 +376,7 @@ const StaffViewMeetings = () => {
             <Title level={5} style={{ marginTop: "10px", marginBottom: "5px" }}>
               Chọn Slot thời gian:
             </Title>
-            {/* Sử dụng danh sách slot lấy từ API */}
+
             <List
               size="small"
               bordered
@@ -334,26 +386,30 @@ const StaffViewMeetings = () => {
                   key={item.id} // Dùng ID làm key
                   style={{
                     cursor: "pointer",
-                    backgroundColor:
-                      selectedSlotId === item.id ? "#e6f7ff" : "transparent", // So sánh ID
-                    borderColor:
-                      selectedSlotId === item.id ? "#91d5ff" : undefined, // So sánh ID
+                    // Sử dụng .includes() để kiểm tra ID có trong mảng đã chọn không
+                    backgroundColor: selectedSlotIds.includes(item.id)
+                      ? "#e6f7ff"
+                      : "transparent",
+                    borderColor: selectedSlotIds.includes(item.id)
+                      ? "#91d5ff"
+                      : undefined,
                   }}
                   onClick={() => handleSlotSelect(item.id)} // Truyền ID khi click
                 >
-                  {item.label} {/* Hiển thị label */}
+                  {item.label}
                 </List.Item>
               )}
               style={{ maxHeight: "200px", overflowY: "auto", width: "200px" }}
             />
 
-            {selectedSlotId &&
-              selectedSlotObject && ( // Chỉ hiển thị khi đã chọn slot và tìm được object
-                <Text strong style={{ marginTop: "10px", display: "block" }}>
-                  Slot đã chọn: {selectedSlotObject.label}{" "}
-                  {/* Hiển thị label */}
-                </Text>
-              )}
+            {/* Hiển thị các slot đã chọn */}
+            {selectedSlotIds.length > 0 && (
+              <Text strong style={{ marginTop: "10px", display: "block" }}>
+                Slot đã chọn:{" "}
+                {/* Map mảng các object slot đã chọn để lấy label và join lại */}
+                {selectedSlotObjects.map((slot) => slot.label).join(", ")}
+              </Text>
+            )}
           </div>
         </Space>
       </Modal>
