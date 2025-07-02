@@ -25,12 +25,27 @@ const ConsultantDetailPage = () => {
   const [schedules, setSchedules] = useState([]);
 
   useEffect(() => {
-    const fetchConsultant = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
+
+        // Lấy thông tin chuyên gia
         const consultantData = await ApiService.getConsultant(id);
+        console.log("Consultant Data:", consultantData);
         setConsultant(consultantData);
         setError(null);
+
+        // Lấy lịch hẹn của chuyên gia
+        try {
+          const consultantSchedules = await ApiService.getConsultantSchedules(
+            consultantData.consultant_id
+          );
+          console.log("Consultant Schedules:", consultantSchedules);
+          setSchedules(consultantSchedules || []);
+        } catch (error) {
+          console.error("Error fetching schedule data:", error);
+          setSchedules([]);
+        }
       } catch (err) {
         setError(err.message);
         console.error("Error fetching consultant:", err);
@@ -40,25 +55,8 @@ const ConsultantDetailPage = () => {
       }
     };
 
-    const fetchScheduleData = async () => {
-      try {
-        // Lấy consultant data để có consultant_id
-        const consultantData = await ApiService.getConsultant(id);
-
-        // Lấy schedules của consultant từ API đúng
-        const consultantSchedules = await ApiService.getConsultantSchedules(
-          consultantData.consultant_id
-        );
-        setSchedules(consultantSchedules || []);
-      } catch (error) {
-        console.error("Error fetching schedule data:", error);
-        setSchedules([]);
-      }
-    };
-
     if (id) {
-      fetchConsultant();
-      fetchScheduleData();
+      fetchData();
     }
   }, [id]);
 

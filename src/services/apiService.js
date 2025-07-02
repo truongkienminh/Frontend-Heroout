@@ -165,7 +165,7 @@ class ApiService {
       const consultantsResponse = await api.get("consultants");
       const allConsultants = consultantsResponse.data;
       const consultantInfo = allConsultants.find(
-        (consultant) => Number.parseInt(consultant.account?.id) === account.id
+        (consultant) => consultant.accountId === account.id
       );
 
       if (!consultantInfo) {
@@ -174,10 +174,11 @@ class ApiService {
 
       return {
         id: account.id,
-        name: account.name || "Chưa cập nhật",
+        name: account.name || consultantInfo.consultantName || "Chưa cập nhật",
         email: account.email || "",
         phone: account.phone || "",
-        avatar: account.avatar || account.name?.charAt(0) || "C",
+        avatar:
+          account.avatar || consultantInfo.consultantName?.charAt(0) || "C",
         address: account.address || "",
         gender: account.gender || "",
         dateOfBirth: account.dateOfBirth || null,
