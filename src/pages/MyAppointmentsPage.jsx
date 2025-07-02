@@ -11,16 +11,19 @@ import {
   ExternalLink,
   RefreshCw,
   Mail,
+  XCircle,
 } from "lucide-react";
 import ApiService from "../services/apiService";
 import { alertSuccess, alertFail } from "../hooks/useNotification";
 import Breadcrumb from "../components/Breadcrumb";
+import Swal from "sweetalert2";
 
 const MyAppointmentsPage = () => {
   const { user, isAuthenticated } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState({});
+  const [cancelling, setCancelling] = useState({});
   const [error, setError] = useState(null);
 
   // Fetch user's appointments
@@ -82,9 +85,57 @@ const MyAppointmentsPage = () => {
     }
   };
 
+  // Handle cancel appointment
+  const handleCancelAppointment = async (appointmentId) => {
+    const result = await Swal.fire({
+      title: "Bạn chắc chắn muốn hủy?",
+      text: "Hành động này không thể hoàn tác.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Hủy lịch",
+      cancelButtonText: "Giữ lại",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setCancelling((prev) => ({ ...prev, [appointmentId]: true }));
+
+      const response = await ApiService.updateAppointmentStatus(
+        appointmentId,
+        "CANCELLED"
+      );
+
+      setAppointments((prev) =>
+        prev.map((apt) =>
+          apt.id === appointmentId ? { ...apt, status: "CANCELLED" } : apt
+        )
+      );
+
+      alertSuccess("Hủy lịch hẹn thành công!");
+    } catch (err) {
+      alertFail(err.message || "Có lỗi xảy ra khi hủy lịch hẹn");
+      console.error("Cancel appointment error:", err);
+    } finally {
+      setCancelling((prev) => ({ ...prev, [appointmentId]: false }));
+    }
+  };
+
   // Format time helper
   const formatTime = (timeString) => {
-    return ApiService.formatTimeFromObject(timeString);
+    try {
+      const parts = timeString.split(":");
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`; // Trả về "HH:mm"
+      }
+      console.warn("Định dạng thời gian không hợp lệ:", timeString);
+      return timeString || "Chưa có thông tin"; // Trả về chuỗi gốc hoặc thông báo mặc định
+    } catch (error) {
+      console.error("Lỗi định dạng thời gian:", error);
+      return timeString || "Chưa có thông tin"; // Trả về chuỗi gốc hoặc thông báo mặc định
+    }
   };
 
   // Format date helper
@@ -416,6 +467,35 @@ const MyAppointmentsPage = () => {
                                   <>
                                     <Video className="w-4 h-4" />
                                     Check-in
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                          {/* Cancel Button */}
+                          {appointment.status === "BOOKED" &&
+                            !appointment.checked_in && (
+                              <button
+                                onClick={() =>
+                                  handleCancelAppointment(appointment.id)
+                                }
+                                disabled={cancelling[appointment.id]}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                                  cancelling[appointment.id]
+                                    ? "bg-gray-400 text-white cursor-not-allowed"
+                                    : "bg-red-600 hover:bg-red-700 text-white"
+                                }`}
+                                title="Hủy lịch hẹn này"
+                              >
+                                {cancelling[appointment.id] ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Đang xử lý...
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="w-4 h-4" />
+                                    Hủy lịch
                                   </>
                                 )}
                               </button>
