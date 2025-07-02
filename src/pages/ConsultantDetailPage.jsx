@@ -41,7 +41,23 @@ const ConsultantDetailPage = () => {
             consultantData.consultant_id
           );
           console.log("Consultant Schedules:", consultantSchedules);
-          setSchedules(consultantSchedules || []);
+          // Lọc bỏ các lịch có slot không hợp lệ
+          const validSchedules = consultantSchedules.filter((schedule) => {
+            const isValid =
+              schedule.slot &&
+              schedule.slot.slotStart &&
+              schedule.slot.slotEnd &&
+              typeof schedule.slot.slotStart === "string" &&
+              typeof schedule.slot.slotEnd === "string";
+            if (!isValid) {
+              console.warn(
+                `Invalid schedule ID ${schedule.id} with slot:`,
+                schedule.slot
+              );
+            }
+            return isValid;
+          });
+          setSchedules(validSchedules || []);
         } catch (error) {
           console.error("Error fetching schedule data:", error);
           setSchedules([]);
@@ -60,10 +76,12 @@ const ConsultantDetailPage = () => {
     }
   }, [id]);
 
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-    // Lấy "HH:MM" từ chuỗi "HH:MM:SS"
-    return timeString.substring(0, 5);
+  const formatTime = (timeStr) => {
+    if (!timeStr || typeof timeStr !== "string") {
+      console.warn("Invalid time string:", timeStr);
+      return "N/A";
+    }
+    return timeStr; // Đã được định dạng thành "HH:MM" trong ApiService
   };
 
   const isScheduleBooked = (schedule) => {
@@ -101,6 +119,7 @@ const ConsultantDetailPage = () => {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 strokeLinecap="round"
@@ -375,9 +394,8 @@ const ConsultantDetailPage = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                               {schedules.map((schedule) => {
                                 const isBooked = isScheduleBooked(schedule);
-                                const slotStart =
-                                  schedule.slot?.slotStart || "";
-                                const slotEnd = schedule.slot?.slotEnd || "";
+                                const slotStart = schedule.slot?.slotStart;
+                                const slotEnd = schedule.slot?.slotEnd;
                                 return (
                                   <div
                                     key={schedule.id}
