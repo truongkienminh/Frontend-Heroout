@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import api from "../../services/axios";
 import {
   Calendar,
   Clock,
@@ -7,61 +6,160 @@ import {
   Plus,
   Search,
   Filter,
-  MoreHorizontal,
   CheckCircle,
   Edit,
-  Trash2,
+  Eye,
+  Video,
+  X,
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { alertSuccess, alertFail } from "../../hooks/useNotification";
+import ApiService from "../../services/apiService";
 
 const StaffMeeting = () => {
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [consultants, setConsultants] = useState([]);
+  const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [showAddModal, setShowAddModal] = useState(false); // State for add modal
+
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Form data for adding new appointment
+  const [newAppointment, setNewAppointment] = useState({
+    consultantId: "",
+    memberId: "",
+    scheduleId: "",
+    slotId: "",
+    appointmentDate: "",
+    description: "",
+  });
+
+  // Available schedules for selected consultant
+  const [availableSchedules, setAvailableSchedules] = useState([]);
 
   // --- Data Fetching ---
   useEffect(() => {
-    const fetchAppointmentsAndSchedules = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [appointmentsResponse, schedulesResponse] = await Promise.all([
-          api.get("/appointment"),
-          api.get("/schedules"),
-        ]);
-
-        setAppointments(appointmentsResponse.data);
-        setSchedules(schedulesResponse.data);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-
-        if (err.response?.status !== 401) {
-          setError("Không thể tải dữ liệu. Vui lòng thử lại.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchAppointmentsAndSchedules();
+    fetchAllData();
   }, []);
 
-  const slotLookup = useMemo(() => {
-    const lookup = {};
-    schedules.forEach((schedule) => {
-      if (schedule.slot) {
-        lookup[schedule.id] = {
-          slotStart: schedule.slot.slotStart,
-          slotEnd: schedule.slot.slotEnd,
-        };
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [appointments, schedules, consultants, accounts] =
+        await Promise.all([
+          ApiService.getAppointments(),
+          ApiService.getSchedules(),
+          ApiService.getConsultants(),
+          ApiService.getAllAccounts(),
+        ]);
+
+      setAppointments(appointments || []);
+      setSchedules(schedules || []);
+      setConsultants(consultants || []);
+      // Lọc chỉ lấy members (role = MEMBER)
+      const membersOnly = (accounts || []).filter(
+        (account) => account.role === "MEMBER"
+      );
+      setMembers(membersOnly);
+    } catch (err) {
+      console.error("Lỗi khi tải dữ liệu:", err);
+      if (err.message !== "Unauthorized") {
+        setError("Không thể tải dữ liệu. Vui lòng thử lại.");
+        alertFail("Không thể tải dữ liệu. Vui lòng thử lại.");
       }
-    });
-    return lookup;
-  }, [schedules]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch available schedules when consultant is selected
+  useEffect(() => {
+    if (newAppointment.consultantId) {
+      fetchConsultantSchedules(newAppointment.consultantId);
+    } else {
+      setAvailableSchedules([]);
+    }
+  }, [newAppointment.consultantId]);
+
+  const fetchConsultantSchedules = async (consultantId) => {
+    try {
+      const schedules = await ApiService.getConsultantSchedules(consultantId);
+      setAvailableSchedules(schedules);
+    } catch (error) {
+      console.error("Lỗi khi tải lịch tư vấn viên:", error);
+      setAvailableSchedules([]);
+    }
+  };
+
+  // Helper functions
+  const getConsultantName = (consultantId, appointment = null) => {
+    const consultant = consultants.find((c) => c.id === consultantId);
+    if (!consultant) {
+      console.warn(`Không tìm thấy tư vấn viên với ID: ${consultantId}`);
+      console.log("Danh sách tư vấn viên:", consultants);
+      return appointment?.consultantName || `Tư vấn viên ${consultantId}`;
+    }
+    return (
+      consultant.name ||
+      appointment?.consultantName ||
+      `Tư vấn viên ${consultantId}`
+    );
+  };
+
+  const getMemberName = (memberId) => {
+    const member = members.find((m) => m.id === memberId);
+    return member?.name || `Thành viên ${memberId}`;
+  };
+
+  // Format time helper
+  const formatTime = (timeString) => {
+    try {
+      const parts = timeString.split(":");
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`; // Trả về "HH:mm"
+      }
+      console.warn("Định dạng thời gian không hợp lệ:", timeString);
+      return timeString || "N/A"; // Trả về chuỗi gốc hoặc "N/A"
+    } catch (error) {
+      console.error("Lỗi định dạng thời gian:", error);
+      return timeString || "N/A"; // Trả về chuỗi gốc hoặc "N/A"
+    }
+  };
+
+  const getScheduleInfo = (scheduleId) => {
+    const schedule = schedules.find((s) => s.id === scheduleId);
+    if (!schedule) {
+      console.warn(`Không tìm thấy lịch với ID: ${scheduleId}`);
+      return { date: "N/A", time: "N/A" };
+    }
+
+    const slot = schedule.slot;
+    if (!slot || !slot.slotStart || !slot.slotEnd) {
+      console.warn(`Lịch ID ${scheduleId} thiếu thông tin slot:`, slot);
+      return { date: schedule.date || "N/A", time: "N/A" };
+    }
+
+    const startTime = formatTime(slot.slotStart);
+    const endTime = formatTime(slot.slotEnd);
+
+    return {
+      date: schedule.date || "N/A",
+      time: `${startTime} - ${endTime}`,
+    };
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -71,7 +169,6 @@ const StaffMeeting = () => {
         return "bg-green-100 text-green-800";
       case "CANCELLED":
         return "bg-red-100 text-red-800";
-
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -90,27 +187,33 @@ const StaffMeeting = () => {
     }
   };
 
+  // Filter appointments
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
-      // Search now checks IDs, Status, Description
       const matchesSearch =
         String(appointment.id).includes(searchTerm) ||
-        String(appointment.accountName).includes(searchTerm) ||
-        String(appointment.consultantName).includes(searchTerm) ||
-        String(appointment.scheduleId).includes(searchTerm) ||
+        (appointment.accountName || getMemberName(appointment.accountId))
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (
+          appointment.consultantName ||
+          getConsultantName(appointment.consultantId, appointment)
+        )
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         appointment.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (appointment.description || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
       const matchesFilter =
-        filterStatus === "all" ||
-        appointment.status === filterStatus.toUpperCase();
+        filterStatus === "all" || appointment.status === filterStatus;
 
       return matchesSearch && matchesFilter;
     });
   }, [appointments, searchTerm, filterStatus]);
 
+  // Statistics
   const stats = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const totalToday = appointments.filter(
@@ -128,47 +231,119 @@ const StaffMeeting = () => {
 
     return { totalToday, bookedCount, cancelledCount, consultedCount };
   }, [appointments]);
-  const formatDateAndTime = (appointmentDate, scheduleId) => {
-    if (!appointmentDate || !scheduleId)
-      return { date: "N/A", time: "N/A", slotId: "N/A" };
 
-    const slot = slotLookup[scheduleId];
-    if (!slot) return { date: "N/A", time: "N/A", slotId: scheduleId };
+  // Group schedules by date
+  const groupSchedulesByDate = (schedules) => {
+    const grouped = {};
+    schedules.forEach((schedule) => {
+      if (!grouped[schedule.date]) {
+        grouped[schedule.date] = [];
+      }
+      grouped[schedule.date].push(schedule);
+    });
+    return grouped;
+  };
+
+  const groupedSchedules = groupSchedulesByDate(availableSchedules);
+
+  // Handle add appointment
+  const handleAddAppointment = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      const dateTimeString = `${appointmentDate}T${slot.slotStart}`;
-      const dateObj = new Date(dateTimeString);
-
-      // Check if dateObj is valid
-      if (isNaN(dateObj.getTime())) {
-        console.error("Invalid date/time combination:", dateTimeString);
-        return {
-          date: "Invalid Date",
-          time: "Invalid Time",
-          slotId: scheduleId,
-        };
+      if (!newAppointment.memberId) {
+        alertFail("Vui lòng chọn thành viên để tư vấn");
+        return;
       }
 
-      const date = dateObj.toLocaleDateString("vi-VN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-      const time = dateObj.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
+      const payload = {
+        consultantId: Number.parseInt(newAppointment.consultantId),
+        accountId: Number.parseInt(newAppointment.memberId),
+        appointmentDate: newAppointment.appointmentDate,
+        slotId: Number.parseInt(newAppointment.slotId),
+        scheduleId: Number.parseInt(newAppointment.scheduleId),
+        description: newAppointment.description,
+      };
+
+      console.log("Tạo lịch hẹn cho thành viên:", {
+        selectedMember: members.find(
+          (m) => m.id === Number.parseInt(newAppointment.memberId)
+        ),
+        payload,
       });
 
-      return { date, time, slotId: scheduleId }; // Using scheduleId as slot identifier
+      await ApiService.createAppointment(payload);
+
+      // Làm mới dữ liệu
+      await fetchAllData();
+
+      // Đặt lại form và đóng modal
+      setNewAppointment({
+        consultantId: "",
+        memberId: "",
+        scheduleId: "",
+        slotId: "",
+        appointmentDate: "",
+        description: "",
+      });
+      setShowAddModal(false);
+
+      alertSuccess("Thêm lịch hẹn thành công!");
     } catch (error) {
-      console.error(
-        "Error formatting date/time:",
-        appointmentDate,
-        scheduleId,
-        error
-      );
-      return { date: "Error", time: "Error", slotId: scheduleId };
+      console.error("Lỗi khi thêm lịch hẹn:", error);
+      alertFail(`Có lỗi xảy ra khi thêm lịch hẹn: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Handle update status
+  const handleUpdateStatus = async (appointmentId, newStatus) => {
+    // Thêm xác nhận khi hủy
+    if (newStatus === "CANCELLED") {
+      if (!window.confirm("Bạn có chắc chắn muốn hủy lịch hẹn này không?")) {
+        return;
+      }
+    }
+
+    try {
+      setIsUpdating(true); // Bật trạng thái đang xử lý
+      await ApiService.updateAppointmentStatus(appointmentId, newStatus);
+      setAppointments((prev) =>
+        prev.map((apt) =>
+          apt.id === appointmentId ? { ...apt, status: newStatus } : apt
+        )
+      );
+      setShowEditModal(false);
+      alertSuccess("Cập nhật trạng thái thành công!");
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái:", error);
+      alertFail(`Có lỗi xảy ra khi cập nhật trạng thái: ${error.message}`);
+    } finally {
+      setIsUpdating(false); // Tắt trạng thái đang xử lý
+    }
+  };
+
+  // Handle consultant selection
+  const handleConsultantChange = (consultantId) => {
+    setNewAppointment((prev) => ({
+      ...prev,
+      consultantId,
+      appointmentDate: "",
+      scheduleId: "",
+      slotId: "",
+    }));
+  };
+
+  // Handle schedule selection
+  const handleScheduleSelect = (schedule) => {
+    setNewAppointment((prev) => ({
+      ...prev,
+      scheduleId: schedule.id,
+      slotId: schedule.slotId,
+      appointmentDate: schedule.date,
+    }));
   };
 
   if (isLoading) {
@@ -197,9 +372,8 @@ const StaffMeeting = () => {
         <p className="text-gray-600">Quản lý các buổi tư vấn đã lên lịch</p>
       </div>
 
-      {/* Stats Cards (Using calculated stats) */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* Card 1: Total Today */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -211,7 +385,6 @@ const StaffMeeting = () => {
             <Calendar className="w-8 h-8 text-blue-600" />
           </div>
         </div>
-        {/* Card 2: Booked */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -223,7 +396,6 @@ const StaffMeeting = () => {
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        {/* Card 3: Cancelled */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -232,10 +404,9 @@ const StaffMeeting = () => {
                 {stats.cancelledCount}
               </p>
             </div>
-            <Trash2 className="w-8 h-8 text-red-600" />
+            <X className="w-8 h-8 text-red-600" />
           </div>
         </div>
-        {/* Card 4: Consulted */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -249,6 +420,7 @@ const StaffMeeting = () => {
         </div>
       </div>
 
+      {/* Search and Filter */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-col md:flex-row gap-4">
@@ -271,16 +443,13 @@ const StaffMeeting = () => {
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="BOOKED">Đã Đặt</option> {/* Match API value */}
-                <option value="CONSULTED">Đã Tư Vấn</option>{" "}
-                {/* Match API value */}
-                <option value="CANCELLED">Đã Hủy</option>{" "}
-                {/* Match API value */}
+                <option value="BOOKED">Đã Đặt</option>
+                <option value="CONSULTED">Đã Tư Vấn</option>
+                <option value="CANCELLED">Đã Hủy</option>
               </select>
             </div>
           </div>
 
-          {/* Add Button (Modal not implemented, but button/state kept) */}
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -291,28 +460,26 @@ const StaffMeeting = () => {
         </div>
       </div>
 
-      {/* Meetings Table */}
+      {/* Appointments Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {/* Updated header */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tên Khách hàng
-                </th>
-                {/* Updated header */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tên Tư vấn viên
+                  Khách hàng
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thời gian / Slot
+                  Tư vấn viên
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Thời gian
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Trạng thái
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ghi chú
+                  Link Meeting
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Thao tác
@@ -321,15 +488,13 @@ const StaffMeeting = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredAppointments.map((appointment) => {
-                // NO MORE getAccountById or getConsultantById calls here
-                const { date, time, slotId } = formatDateAndTime(
-                  appointment.appointmentDate,
-                  appointment.scheduleId
-                );
+                const scheduleInfo = getScheduleInfo(appointment.scheduleId);
+                const isToday =
+                  scheduleInfo.date === new Date().toISOString().split("T")[0];
+                const hasMeetingLink = appointment.meetingLink;
 
                 return (
                   <tr key={appointment.id} className="hover:bg-gray-50">
-                    {/* Displaying Account ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -337,23 +502,27 @@ const StaffMeeting = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {appointment.accountName}
+                            {appointment.accountName ||
+                              getMemberName(appointment.accountId)}
                           </div>
-                          {/* Phone number removed as it's not available */}
-                          {/* <div className="text-sm text-gray-500">N/A</div> */}
                         </div>
                       </div>
                     </td>
-                    {/* Displaying Consultant ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {appointment.consultantName}
+                        {appointment.consultantName ||
+                          getConsultantName(
+                            appointment.consultantId,
+                            appointment
+                          )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{date}</div>
+                      <div className="text-sm text-gray-900">
+                        {scheduleInfo.date}
+                      </div>
                       <div className="text-sm text-gray-500">
-                        {time} (Slot {slotId})
+                        {scheduleInfo.time}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -365,41 +534,55 @@ const StaffMeeting = () => {
                         {getStatusText(appointment.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {appointment.description || "Không có ghi chú"}{" "}
-                        {/* Display placeholder if null */}
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {hasMeetingLink ? (
+                        <a
+                          href={appointment.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          <Video className="w-4 h-4 mr-1" />
+                          <span className="text-sm">Tham gia</span>
+                        </a>
+                      ) : isToday && appointment.status === "BOOKED" ? (
+                        <span className="text-sm text-orange-600">
+                          Chờ check-in
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          Chưa có link
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setShowDetailModal(true);
+                          }}
                           className="text-blue-600 hover:text-blue-900"
-                          title="Chỉnh sửa"
-                          // Add onClick handler here
+                          title="Xem chi tiết"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedAppointment(appointment);
+                            setShowEditModal(true);
+                          }}
+                          className="text-green-600 hover:text-green-900"
+                          title="Cập nhật trạng thái"
                         >
                           <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          title="Xóa"
-                          // Add onClick handler here
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-gray-400 hover:text-gray-600"
-                          title="Thêm tùy chọn"
-                          // Add onClick handler here
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
-              {filteredAppointments.length === 0 && !isLoading && !error && (
+              {filteredAppointments.length === 0 && (
                 <tr>
                   <td
                     colSpan="6"
@@ -414,61 +597,469 @@ const StaffMeeting = () => {
         </div>
       </div>
 
-      {/* Pagination (Still hardcoded) */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg">
-        <div className="flex-1 flex justify-between sm:hidden">
-          <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Trước
-          </button>
-          <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Sau
-          </button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Hiển thị <span className="font-medium">1</span> đến{" "}
-              <span className="font-medium">{filteredAppointments.length}</span>{" "}
-              của <span className="font-medium">{appointments.length}</span> kết
-              quả
-            </p>
-          </div>
-          <div>
-            <nav
-              className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-              aria-label="Pagination"
-            >
-              <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                Trước
-              </button>
-              {/* Example pagination numbers - would be dynamic in a real app */}
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                1
-              </button>
-              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                2
-              </button>
-              <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                Sau
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Modal Placeholder */}
+      {/* Add Appointment Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="p-8 bg-white rounded-lg shadow-xl max-w-md mx-auto">
-            <h2 className="text-xl font-bold mb-4">Thêm buổi tư vấn mới</h2>
-            {/* Add your form elements here */}
-            <p>Form thêm buổi tư vấn sẽ ở đây.</p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Đóng
-            </button>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Thêm buổi tư vấn mới
+                </h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddAppointment} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tư vấn viên *
+                    </label>
+                    <select
+                      value={newAppointment.consultantId}
+                      onChange={(e) => handleConsultantChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Chọn tư vấn viên</option>
+                      {consultants.map((consultant) => (
+                        <option key={consultant.id} value={consultant.id}>
+                          {consultant.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Thành viên *
+                    </label>
+                    <select
+                      value={newAppointment.memberId}
+                      onChange={(e) =>
+                        setNewAppointment((prev) => ({
+                          ...prev,
+                          memberId: e.target.value,
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Chọn thành viên</option>
+                      {members.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name} - {member.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Hiển thị thông tin đã chọn */}
+                {(newAppointment.consultantId || newAppointment.memberId) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <h4 className="text-sm font-medium text-blue-800 mb-2">
+                      Thông tin đã chọn:
+                    </h4>
+                    {newAppointment.consultantId && (
+                      <p className="text-sm text-blue-700">
+                        <strong>Tư vấn viên:</strong>{" "}
+                        {
+                          consultants.find(
+                            (c) =>
+                              c.id ===
+                              Number.parseInt(newAppointment.consultantId)
+                          )?.name
+                        }
+                      </p>
+                    )}
+                    {newAppointment.memberId && (
+                      <p className="text-sm text-blue-700">
+                        <strong>Khách hàng:</strong>{" "}
+                        {
+                          members.find(
+                            (m) =>
+                              m.id === Number.parseInt(newAppointment.memberId)
+                          )?.name
+                        }{" "}
+                        -{" "}
+                        {
+                          members.find(
+                            (m) =>
+                              m.id === Number.parseInt(newAppointment.memberId)
+                          )?.email
+                        }
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {newAppointment.consultantId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chọn khung giờ *
+                    </label>
+                    {Object.keys(groupedSchedules).length === 0 ? (
+                      <div className="text-center py-8 border border-gray-200 rounded-lg">
+                        <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                        <p className="text-gray-500">
+                          Chưa có lịch cho tư vấn viên này
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="border border-gray-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                        <div className="space-y-4">
+                          {Object.entries(groupedSchedules)
+                            .sort(([a], [b]) => new Date(a) - new Date(b))
+                            .map(([date, schedules]) => (
+                              <div key={date}>
+                                <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                                  {new Date(date).toLocaleDateString("vi-VN", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })}
+                                </h4>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                  {schedules.map((schedule) => {
+                                    const isSelected =
+                                      newAppointment.scheduleId === schedule.id;
+                                    const isBooked = schedule.bookedStatus;
+
+                                    return (
+                                      <button
+                                        key={schedule.id}
+                                        type="button"
+                                        onClick={() =>
+                                          !isBooked &&
+                                          handleScheduleSelect(schedule)
+                                        }
+                                        disabled={isBooked}
+                                        className={`p-2 border rounded-lg text-center transition-colors text-sm relative ${
+                                          isBooked
+                                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                            : isSelected
+                                            ? "bg-blue-600 text-white border-blue-600"
+                                            : "bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:bg-blue-50"
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-center">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          <span>
+                                            {formatTime(
+                                              schedule.slot?.slotStart
+                                            )}{" "}
+                                            -{" "}
+                                            {formatTime(schedule.slot?.slotEnd)}
+                                          </span>
+                                        </div>
+                                        {isBooked && (
+                                          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 rounded-lg">
+                                            <span className="text-xs font-medium text-red-600">
+                                              Đã đặt
+                                            </span>
+                                          </div>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {newAppointment.consultantId &&
+                  Object.keys(groupedSchedules).length > 0 && (
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 bg-white border border-gray-300 rounded mr-2"></div>
+                        <span>Có thể đặt</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 bg-blue-600 rounded mr-2"></div>
+                        <span>Đã chọn</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded mr-2"></div>
+                        <span>Đã đặt</span>
+                      </div>
+                    </div>
+                  )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={newAppointment.description}
+                    onChange={(e) =>
+                      setNewAppointment((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    placeholder="Nhập ghi chú..."
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={
+                      isSubmitting ||
+                      !newAppointment.scheduleId ||
+                      !newAppointment.memberId
+                    }
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Đang xử lý..." : "Thêm"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Chi tiết buổi tư vấn
+                </h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    ID
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    #{selectedAppointment.id}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Khách hàng
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAppointment.accountName ||
+                      getMemberName(selectedAppointment.accountId)}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Tư vấn viên
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAppointment.consultantName ||
+                      getConsultantName(
+                        selectedAppointment.consultantId,
+                        selectedAppointment
+                      )}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Thời gian
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {(() => {
+                      const scheduleInfo = getScheduleInfo(
+                        selectedAppointment.scheduleId
+                      );
+                      return `${scheduleInfo.date} - ${scheduleInfo.time}`;
+                    })()}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Trạng thái
+                  </label>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                      selectedAppointment.status
+                    )}`}
+                  >
+                    {getStatusText(selectedAppointment.status)}
+                  </span>
+                </div>
+
+                {selectedAppointment.meetingLink && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Link Meeting
+                    </label>
+                    <a
+                      href={selectedAppointment.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm break-all"
+                    >
+                      {selectedAppointment.meetingLink}
+                    </a>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Ghi chú
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {selectedAppointment.description || "Không có ghi chú"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Ngày tạo
+                  </label>
+                  <p className="text-sm text-gray-900">
+                    {new Date(selectedAppointment.createAt).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Status Modal */}
+      {showEditModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Cập nhật trạng thái
+                </h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Buổi tư vấn #{selectedAppointment.id}
+                  </label>
+                  <p className="text-sm text-gray-600">
+                    {selectedAppointment.accountName ||
+                      getMemberName(selectedAppointment.accountId)}{" "}
+                    -{" "}
+                    {selectedAppointment.consultantName ||
+                      getConsultantName(
+                        selectedAppointment.consultantId,
+                        selectedAppointment
+                      )}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trạng thái hiện tại
+                  </label>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                      selectedAppointment.status
+                    )}`}
+                  >
+                    {getStatusText(selectedAppointment.status)}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cập nhật trạng thái
+                  </label>
+                  <div className="space-y-2">
+                    {["BOOKED", "CONSULTED", "CANCELLED"].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() =>
+                          handleUpdateStatus(selectedAppointment.id, status)
+                        }
+                        disabled={
+                          selectedAppointment.status === status || isUpdating
+                        }
+                        className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
+                          selectedAppointment.status === status || isUpdating
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white hover:bg-gray-50 border-gray-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mr-2 ${getStatusColor(
+                            status
+                          )}`}
+                        >
+                          {getStatusText(status)}
+                        </span>
+                        {status === "BOOKED" && "Đặt lịch"}
+                        {status === "CONSULTED" && "Hoàn thành tư vấn"}
+                        {status === "CANCELLED" && "Hủy lịch hẹn"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                  disabled={isUpdating}
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
