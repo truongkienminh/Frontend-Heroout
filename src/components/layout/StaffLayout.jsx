@@ -6,7 +6,7 @@ import {
   FileText,
   FileBarChart2,
   CalendarDays,
-  Calendar,
+  Calendar, // Keep Calendar for the new item and existing ones
   ChevronDown,
   LogOut,
 } from "lucide-react";
@@ -28,12 +28,23 @@ const StaffLayout = () => {
     { icon: CalendarDays, label: "Quản lý sự kiện", path: "/manageevents" },
     { icon: FileText, label: "Quản lý khảo sát", path: "/managesurveys" },
     { icon: Calendar, label: "Quản lý lịch hẹn", path: "/managemeetings" },
+    {
+      icon: Calendar,
+      label: "Xem Lịch Làm việc",
+      path: "/viewconsultantmeeting",
+    },
   ];
 
   const getConsultantMenuItems = () => [
     { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
     { icon: FileBarChart2, label: "Quản lý blogs", path: "/manageblogs" },
     { icon: Calendar, label: "Quản lý lịch hẹn", path: "/managemeetings" },
+
+    {
+      icon: Calendar,
+      label: "Xem Lịch Làm việc",
+      path: "/viewconsultantmeeting",
+    },
   ];
 
   const getMenuItems = () => {
@@ -52,21 +63,39 @@ const StaffLayout = () => {
 
   // Kiểm tra quyền truy cập dashboard
   const hasAccessToDashboard = () => {
-    if (!user || !user.role) return false;
+    // Also check if user is authenticated before checking role
+    if (!isAuthenticated || !user || !user.role) return false;
     const allowedRoles = ["admin", "staff", "consultant"];
     return allowedRoles.includes(user.role.toLowerCase());
   };
 
-  // Nếu không có quyền truy cập, redirect về trang chủ
+  // Nếu không có quyền truy cập hoặc chưa authenticate, redirect về trang chủ
   if (!hasAccessToDashboard()) {
-    return <Navigate to="/" replace />;
+    // Redirect to login or home if not authenticated or not authorized role
+    // Using location.pathname check prevents infinite loop if already on "/"
+    if (location.pathname !== "/") {
+      return <Navigate to="/" replace />;
+    } else {
+      // If already on home page, just render nothing or a loading state
+      return null; // Or a simple loading indicator
+    }
   }
 
   const handleLogout = () => {
     logout();
     setIsDropdownOpen(false);
-    window.location.href = "/";
+    // history.push("/"); // Using history is common with react-router v5,
+    // With v6, redirecting after logout is often done by changing state
+    // or relying on route protection. window.location.href works but
+    // is generally not the React Router way. Let's stick to the Navigate approach
+    // if logout changes isAuthenticated state. The AuthContext should handle
+    // the redirect implicitly via the protected route setup.
   };
+
+  // Redirect after logout if isAuthenticated becomes false
+  if (!isAuthenticated && location.pathname !== "/") {
+    return <Navigate to="/" replace />;
+  }
 
   // Đóng dropdown khi click ngoài vùng
   useEffect(() => {
