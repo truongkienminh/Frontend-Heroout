@@ -68,7 +68,7 @@ const BookingPage = () => {
         notes: "",
       });
     } catch (error) {
-      console.error("Error fetching member info:", error);
+      console.error("Lỗi khi lấy thông tin thành viên:", error);
       setFormData({
         name: "",
         email: "",
@@ -83,12 +83,13 @@ const BookingPage = () => {
     }
   };
 
-  // Kiểm tra schedule đã được đặt dựa vào is_booked
+  // Kiểm tra lịch đã được đặt dựa vào bookedStatus
   const isScheduleBooked = (schedule) => {
     if (schedule.hasOwnProperty("bookedStatus")) {
-      return schedule.bookedStatus; // True nếu đã đặt, false nếu chưa đặt
+      return schedule.bookedStatus; // True nếu đã đặt, false nếu chưa
     }
-    return false;
+    console.warn(`Lịch ID ${schedule.id} thiếu bookedStatus`);
+    return false; // Mặc định chưa đặt nếu thiếu bookedStatus
   };
 
   // Fetch member info when user is available
@@ -104,22 +105,22 @@ const BookingPage = () => {
       try {
         setLoading(true);
 
-        // Fetch all consultants
+        // Lấy danh sách chuyên gia
         const data = await ApiService.getConsultants();
         setConsultants(data);
         setFilteredConsultants(data);
 
-        // If consultantId is provided, set the selected consultant and fetch schedules
+        // Nếu có consultantId, chọn chuyên gia và lấy lịch
         if (consultantId) {
           const foundConsultant = data.find(
             (c) => c.id === Number.parseInt(consultantId)
           );
           if (!foundConsultant) {
-            throw new Error("Consultant not found");
+            throw new Error("Không tìm thấy chuyên gia");
           }
           setSelectedConsultant(foundConsultant);
 
-          // Fetch available schedules for the selected consultant
+          // Lấy lịch trống của chuyên gia
           const schedules = await ApiService.getConsultantSchedules(
             foundConsultant.consultant_id
           );
@@ -129,7 +130,7 @@ const BookingPage = () => {
         setError(null);
       } catch (err) {
         setError(err.message);
-        console.error("Error fetching data:", err);
+        console.error("Lỗi khi lấy dữ liệu:", err);
       } finally {
         setLoading(false);
       }
@@ -144,7 +145,7 @@ const BookingPage = () => {
 
     let results = consultants;
 
-    // Filter by search query
+    // Lọc theo từ khóa tìm kiếm
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       results = results.filter(
@@ -157,7 +158,7 @@ const BookingPage = () => {
       );
     }
 
-    // Filter by specialty
+    // Lọc theo chuyên môn
     if (selectedSpecialty !== "all") {
       results = results.filter(
         (consultant) =>
@@ -173,7 +174,7 @@ const BookingPage = () => {
     setFilteredConsultants(results);
   }, [searchQuery, selectedSpecialty, consultants]);
 
-  // Get all unique specialties
+  // Lấy danh sách các chuyên môn duy nhất
   const getAllSpecialties = () => {
     const specialties = new Set();
     specialties.add("all");
@@ -193,30 +194,35 @@ const BookingPage = () => {
     setLoading(true);
 
     try {
-      // Fetch schedules for the consultant
+      // Lấy lịch của chuyên gia
       const schedules = await ApiService.getConsultantSchedules(
         consultant.consultant_id
       );
       setAvailableSchedules(schedules);
     } catch (error) {
-      console.error("Error loading schedules:", error);
+      console.error("Lỗi khi tải lịch:", error);
       setAvailableSchedules([]);
-      // Không hiển thị alert error nếu chỉ là không có data
     } finally {
       setLoading(false);
     }
 
-    // Update URL to include consultantId without reloading the page
+    // Cập nhật URL mà không tải lại trang
     navigate(`/booking/${consultant.id}`, { replace: true });
 
-    // Move to the next step
+    // Chuyển sang bước tiếp theo
     setCurrentStep(2);
   };
 
   const handleScheduleSelect = (schedule) => {
-    // Don't allow selection of booked schedules
+    // Không cho phép chọn lịch đã đặt
     if (isScheduleBooked(schedule)) {
-      alertFail("Khung giờ này đã được đặt. Vui lòng chọn khung giờ khác.");
+      alertFail(
+        `Khung giờ ${formatTime(schedule.slot.slotStart)} - ${formatTime(
+          schedule.slot.slotEnd
+        )} ngày ${new Date(schedule.date).toLocaleDateString(
+          "vi-VN"
+        )} đã được đặt. Vui lòng chọn khung giờ khác.`
+      );
       return;
     }
     setSelectedSchedule(schedule);
@@ -264,7 +270,7 @@ const BookingPage = () => {
       return false;
     }
 
-    // Validate email format
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       alertFail("Vui lòng nhập email hợp lệ");
@@ -304,18 +310,29 @@ const BookingPage = () => {
       setCurrentStep(5);
     } catch (err) {
       alertFail(err.message || "Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại.");
-      console.error("Booking error:", err);
+      console.error("Lỗi khi đặt lịch:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Format time helper
+  // Hàm định dạng thời gian
   const formatTime = (timeString) => {
-    return ApiService.formatTimeFromObject(timeString);
+    try {
+      // Giả định timeString là dạng "HH:mm:ss" hoặc "HH:mm"
+      const parts = timeString.split(":");
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`; // Trả về "HH:mm"
+      }
+      console.warn("Định dạng thời gian không hợp lệ:", timeString);
+      return timeString; // Trả về chuỗi gốc nếu không đúng định dạng
+    } catch (error) {
+      console.error("Lỗi định dạng thời gian:", error);
+      return timeString; // Trả về chuỗi gốc nếu có lỗi
+    }
   };
 
-  // Check authentication
+  // Kiểm tra xác thực
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-white">
@@ -340,7 +357,7 @@ const BookingPage = () => {
     );
   }
 
-  // Loading state
+  // Trạng thái đang tải
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -354,7 +371,7 @@ const BookingPage = () => {
     );
   }
 
-  // Error state
+  // Trạng thái lỗi
   if (error) {
     return (
       <div className="min-h-screen bg-white">
@@ -374,7 +391,7 @@ const BookingPage = () => {
     );
   }
 
-  // Success state
+  // Trạng thái thành công
   if (bookingSuccess) {
     return (
       <div className="min-h-screen bg-white">
@@ -446,7 +463,7 @@ const BookingPage = () => {
     );
   }
 
-  // Group schedules by date
+  // Nhóm lịch theo ngày
   const groupSchedulesByDate = (schedules) => {
     const grouped = {};
     schedules.forEach((schedule) => {
@@ -481,7 +498,7 @@ const BookingPage = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Progress Steps */}
+        {/* Thanh tiến trình */}
         <div className="max-w-4xl mx-auto mb-8">
           <div className="flex items-center justify-center">
             {[
@@ -521,7 +538,7 @@ const BookingPage = () => {
           </div>
         </div>
 
-        {/* Step 1: Choose Consultant */}
+        {/* Bước 1: Chọn chuyên gia */}
         {currentStep === 1 && (
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-8">
@@ -534,15 +551,15 @@ const BookingPage = () => {
               </p>
             </div>
 
-            {/* Google Meet Info */}
+            {/* Thông tin Google Meet */}
             <div className="mb-8">
               <GoogleMeetInfo />
             </div>
 
-            {/* Search and Filter */}
+            {/* Tìm kiếm và lọc */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Search */}
+                {/* Tìm kiếm */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tìm kiếm chuyên gia
@@ -559,7 +576,7 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                {/* Filter by specialty */}
+                {/* Lọc theo chuyên môn */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Lọc theo chuyên môn
@@ -582,7 +599,7 @@ const BookingPage = () => {
               </div>
             </div>
 
-            {/* Consultants List */}
+            {/* Danh sách chuyên gia */}
             {filteredConsultants.length === 0 ? (
               <div className="bg-white rounded-lg shadow-lg p-8 text-center">
                 <div className="text-gray-500 mb-4">
@@ -697,7 +714,7 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Step 2: Choose Time Schedule */}
+        {/* Bước 2: Chọn thời gian tư vấn */}
         {currentStep === 2 && selectedConsultant && (
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
@@ -709,7 +726,7 @@ const BookingPage = () => {
               </p>
             </div>
 
-            {/* Selected Consultant Info */}
+            {/* Thông tin chuyên gia được chọn */}
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <div className="flex items-center">
                 <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4">
@@ -731,7 +748,7 @@ const BookingPage = () => {
               </div>
             </div>
 
-            {/* Available Time Schedules */}
+            {/* Khung giờ có sẵn */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-6">
                 Khung giờ có sẵn
@@ -808,7 +825,7 @@ const BookingPage = () => {
               )}
             </div>
 
-            {/* Navigation Buttons */}
+            {/* Nút điều hướng */}
             <div className="flex justify-between mt-8">
               <button
                 onClick={handlePrevStep}
@@ -831,7 +848,7 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Step 3: Confirm Information */}
+        {/* Bước 3: Xác nhận thông tin */}
         {currentStep === 3 && selectedConsultant && selectedSchedule && (
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-8">
@@ -844,7 +861,7 @@ const BookingPage = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Appointment Details */}
+              {/* Thông tin lịch hẹn */}
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Thông tin lịch hẹn
@@ -897,7 +914,7 @@ const BookingPage = () => {
                 </div>
               </div>
 
-              {/* Personal Information */}
+              {/* Thông tin cá nhân */}
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">
                   Thông tin cá nhân
@@ -917,9 +934,10 @@ const BookingPage = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                       placeholder="Nhập họ và tên"
                       required
+                      disabled
                     />
                   </div>
                   <div>
@@ -931,9 +949,10 @@ const BookingPage = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                       placeholder="Nhập email"
                       required
+                      disabled
                     />
                   </div>
                   <div>
@@ -945,9 +964,10 @@ const BookingPage = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                       placeholder="Nhập số điện thoại"
                       required
+                      disabled
                     />
                   </div>
                   <div>
@@ -958,7 +978,8 @@ const BookingPage = () => {
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      disabled
                     >
                       <option value="">Chọn giới tính</option>
                       <option value="MALE">Nam</option>
@@ -974,7 +995,8 @@ const BookingPage = () => {
                       name="date_of_birth"
                       value={formData.date_of_birth}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                      disabled
                     />
                   </div>
                   <div>
@@ -986,8 +1008,9 @@ const BookingPage = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                       placeholder="Nhập địa chỉ"
+                      disabled
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -1007,7 +1030,7 @@ const BookingPage = () => {
                 </div>
               </div>
 
-              {/* Google Meet Information */}
+              {/* Thông tin Google Meet */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
@@ -1038,7 +1061,7 @@ const BookingPage = () => {
               </div>
             </div>
 
-            {/* Navigation Buttons */}
+            {/* Nút điều hướng */}
             <div className="flex justify-between mt-8">
               <button
                 onClick={handlePrevStep}
@@ -1056,7 +1079,7 @@ const BookingPage = () => {
           </div>
         )}
 
-        {/* Step 4: Final Confirmation */}
+        {/* Bước 4: Hoàn tất đặt lịch */}
         {currentStep === 4 && selectedConsultant && selectedSchedule && (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
