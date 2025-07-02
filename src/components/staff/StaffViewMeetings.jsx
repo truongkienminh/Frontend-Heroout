@@ -8,7 +8,9 @@ import {
   List,
   Card,
   Select,
-} from "antd";
+  Table,
+  Tag,
+} from "antd"; // Import Table và Tag
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
@@ -44,84 +46,116 @@ const generateTimeSlots = () => {
 };
 
 const StaffViewMeetings = () => {
-  // State để kiểm soát việc hiển thị Modal (Giữ nguyên)
+  // State để kiểm soát việc hiển thị Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
-  // State lưu trữ ngày được chọn trong Modal (Giữ nguyên)
+  // State lưu trữ ngày được chọn trong Modal
   const [selectedDate, setSelectedDate] = useState(null);
-  // State lưu trữ ID của chuyên viên được chọn trong Modal (Giữ nguyên)
+  // State lưu trữ ID của chuyên viên được chọn trong Modal
   const [selectedConsultantId, setSelectedConsultantId] = useState(null);
-  // State lưu trữ slot thời gian được chọn (Tùy chọn: cần state nếu muốn cho chọn 1 slot cụ thể)
-  // const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  // State MỚI: State lưu trữ slot thời gian được chọn trong Modal
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  // State MỚI: State lưu trữ danh sách các lịch đã đăng ký để hiển thị trong bảng
+  const [bookedSlots, setBookedSlots] = useState([]);
 
   // Danh sách các slot thời gian (Giữ nguyên)
   const allTimeSlots = useMemo(() => generateTimeSlots(), []);
 
-  // Hàm xử lý khi click nút "Đăng kí lịch làm việc" (Giữ nguyên)
+  // Hàm xử lý khi click nút "Đăng kí lịch làm việc"
   const showModal = () => {
     setIsModalVisible(true);
-    // Có thể reset các state tại đây nếu muốn mỗi lần mở modal là trạng thái ban đầu
-    // setSelectedDate(null);
-    // setSelectedConsultantId(null);
-    // setSelectedTimeSlot(null);
+    // Optional: Reset các state khi mở modal để form trống
+    setSelectedDate(null);
+    setSelectedConsultantId(null);
+    setSelectedTimeSlot(null); // Reset slot đã chọn
   };
 
-  // Hàm xử lý khi click nút "OK" trong Modal (Giữ nguyên logic check/log)
+  // Hàm xử lý khi click nút "OK" trong Modal
   const handleOk = () => {
-    // Lấy tên chuyên viên được chọn từ ID
+    // Kiểm tra lại xem đã chọn đủ thông tin chưa (button đã disabled rồi nhưng cẩn thận vẫn tốt)
+    if (
+      !selectedDate ||
+      selectedConsultantId === null ||
+      selectedTimeSlot === null
+    ) {
+      console.warn("Thiếu thông tin để đăng ký!");
+      return;
+    }
+
+    // Lấy thông tin chi tiết của chuyên viên được chọn
     const selectedConsultant = fakeConsultants.find(
       (c) => c.id === selectedConsultantId
     );
 
-    // Tại đây, bạn sẽ xử lý logic đăng ký lịch với selectedDate, selectedConsultant
-    console.log("Đăng ký lịch với:", {
-      date: selectedDate ? selectedDate.format("YYYY-MM-DD") : null,
-      consultant: selectedConsultant
-        ? selectedConsultant.name
-        : "Chưa chọn chuyên viên",
-      // timeSlot: selectedTimeSlot, // Bao gồm slot nếu bạn thêm chức năng chọn slot cụ thể
-    });
+    // Tạo đối tượng lịch hẹn mới
+    const newBooking = {
+      // Sử dụng timestamp làm ID tạm thời (trong thực tế sẽ là ID từ API)
+      id: Date.now() + Math.random(),
+      consultantId: selectedConsultantId,
+      consultantName: selectedConsultant ? selectedConsultant.name : "Không rõ",
+      date: selectedDate.format("YYYY-MM-DD"), // Format ngày thành chuỗi
+      timeSlot: selectedTimeSlot,
+    };
 
-    // Sau khi xử lý, đóng Modal
+    // Cập nhật state danh sách lịch đã đăng ký (thêm lịch mới vào cuối mảng)
+    setBookedSlots([...bookedSlots, newBooking]);
+
+    console.log("Đã đăng ký thành công:", newBooking);
+
+    // Đóng Modal
     setIsModalVisible(false);
-    // Tùy chọn: Xóa các state sau khi submit thành công để reset form
+    // Reset các state sau khi submit thành công để form trống cho lần đăng ký tiếp theo
     setSelectedDate(null);
     setSelectedConsultantId(null);
-    // setSelectedTimeSlot(null);
+    setSelectedTimeSlot(null);
   };
 
-  // Hàm xử lý khi click nút "Cancel" hoặc đóng Modal bằng cách khác (Giữ nguyên logic reset)
+  // Hàm xử lý khi click nút "Cancel" hoặc đóng Modal bằng cách khác
   const handleCancel = () => {
     console.log("Hủy bỏ đăng ký");
     setIsModalVisible(false);
     // Xóa các state khi hủy
     setSelectedDate(null);
     setSelectedConsultantId(null);
-    // setSelectedTimeSlot(null);
+    setSelectedTimeSlot(null);
   };
 
-  // Hàm xử lý khi ngày trên DatePicker trong Modal thay đổi (Giữ nguyên)
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    // Khi chọn ngày mới, có thể reset slot được chọn nếu có
-    // setSelectedTimeSlot(null);
+
+    setSelectedTimeSlot(null);
   };
 
-  // Hàm xử lý khi chuyên viên trên Select trong Modal thay đổi (Giữ nguyên)
   const handleConsultantChange = (value) => {
-    setSelectedConsultantId(value); // value ở đây là ID của chuyên viên
-    // console.log('Chuyên viên đã chọn:', fakeConsultants.find(c => c.id === value)?.name);
+    setSelectedConsultantId(value);
   };
 
-  // Hàm xử lý khi chọn một slot thời gian cụ thể (Tùy chọn - Giữ nguyên comment)
-  // const handleSlotSelect = (slot) => {
-  //   setSelectedTimeSlot(slot);
-  //   console.log('Slot đã chọn:', slot);
-  // }
+  const handleSlotSelect = (slot) => {
+    setSelectedTimeSlot(slot);
+    console.log("Slot đã chọn:", slot);
+  };
 
-  // Điều kiện để nút OK được kích hoạt (Giữ nguyên - Vẫn cần cả ngày và chuyên viên để đăng ký)
-  const isOkButtonDisabled = !selectedDate || selectedConsultantId === null;
-  // Nếu bạn thêm chọn slot cụ thể, điều kiện sẽ là:
-  // const isOkButtonDisabled = !selectedDate || selectedConsultantId === null || selectedTimeSlot === null;
+  const isOkButtonDisabled =
+    !selectedDate || selectedConsultantId === null || selectedTimeSlot === null;
+
+  const columns = [
+    {
+      title: "Chuyên viên",
+      dataIndex: "consultantName",
+      key: "consultantName",
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+    },
+    {
+      title: "Slot",
+      dataIndex: "timeSlot",
+      key: "timeSlot",
+
+      render: (text) => <Tag color="blue">{text}</Tag>,
+    },
+  ];
 
   return (
     <Card
@@ -131,32 +165,33 @@ const StaffViewMeetings = () => {
         </Title>
       }
     >
-      {/* Nút để mở Modal (Giữ nguyên style xanh lá) */}
-      <Button
-        type="primary"
-        onClick={showModal}
-        style={{
-          backgroundColor: "#52c41a",
-          borderColor: "#52c41a",
-        }}
-      >
-        Đăng kí lịch làm việc
-      </Button>
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <Button
+          type="primary"
+          onClick={showModal}
+          style={{
+            backgroundColor: "#52c41a",
+            borderColor: "#52c41a",
+          }}
+        >
+          Đăng kí lịch làm việc
+        </Button>
 
-      {/* Component Modal */}
+        <Title level={4} style={{ marginTop: "30px", marginBottom: "10px" }}>
+          Lịch làm việc đã đăng ký
+        </Title>
+        <Table dataSource={bookedSlots} columns={columns} rowKey="id" />
+      </Space>
+
       <Modal
         title="Đăng ký Lịch làm việc"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        // Nút OK bị disabled nếu chưa chọn ngày HOẶC chưa chọn chuyên viên
         okButtonProps={{ disabled: isOkButtonDisabled }}
-        // Tùy chọn: Đặt chiều rộng Modal cho dễ nhìn
         width={400}
       >
-        {/* Nội dung bên trong Modal */}
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          {/* Khu vực chọn chuyên viên (Giữ nguyên) */}
           <div>
             <Text strong>Chọn chuyên viên:</Text>
             <br />
@@ -175,7 +210,6 @@ const StaffViewMeetings = () => {
             </Select>
           </div>
 
-          {/* Khu vực chọn ngày (Giữ nguyên) */}
           <div>
             <Text strong>Chọn ngày:</Text>
             <br />
@@ -187,29 +221,38 @@ const StaffViewMeetings = () => {
             />
           </div>
 
-          {/* Khu vực hiển thị các slot thời gian - ĐÃ BỎ ĐIỀU KIỆN HIỂN THỊ DỰA TRÊN selectedDate */}
           <div>
-            {/* Cập nhật Title để không phụ thuộc vào ngày đã chọn */}
             <Title level={5} style={{ marginTop: "10px", marginBottom: "5px" }}>
-              Danh sách các Slot thời gian (7:00 - 17:00):
+              Chọn Slot thời gian (7:00 - 17:00):
             </Title>
             <List
               size="small"
               bordered
-              dataSource={allTimeSlots} // Data source là danh sách các slot đã tạo
+              dataSource={allTimeSlots}
               renderItem={(item) => (
-                // Bạn có thể thêm class hoặc style ở đây để đánh dấu slot đã chọn nếu cần chức năng chọn slot
-                // style={{ backgroundColor: selectedTimeSlot === item ? '#e6f7ff' : 'transparent', cursor: 'pointer' }}
-                // onClick={() => handleSlotSelect(item)} // Uncomment nếu thêm chức năng chọn slot
-                <List.Item>{item}</List.Item>
+                <List.Item
+                  key={item}
+                  style={{
+                    cursor: "pointer",
+                    backgroundColor:
+                      selectedTimeSlot === item ? "#e6f7ff" : "transparent",
+                    borderColor:
+                      selectedTimeSlot === item ? "#91d5ff" : undefined,
+                  }}
+                  onClick={() => handleSlotSelect(item)}
+                >
+                  {item}
+                </List.Item>
               )}
-              style={{ maxHeight: "200px", overflowY: "auto", width: "200px" }} // Giới hạn chiều cao và thêm scroll
+              style={{ maxHeight: "200px", overflowY: "auto", width: "200px" }}
             />
-            {/* Tùy chọn: Hiển thị slot đã chọn nếu có state selectedTimeSlot */}
-            {/* {selectedTimeSlot && <Text strong style={{ marginTop: '10px' }}>Slot đã chọn: {selectedTimeSlot}</Text>} */}
-          </div>
 
-          {/* Đã xóa phần hiển thị thông báo "Vui lòng chọn ngày..." */}
+            {selectedTimeSlot && (
+              <Text strong style={{ marginTop: "10px", display: "block" }}>
+                Slot đã chọn: {selectedTimeSlot}
+              </Text>
+            )}
+          </div>
         </Space>
       </Modal>
     </Card>
