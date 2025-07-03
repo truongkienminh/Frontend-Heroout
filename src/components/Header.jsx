@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
   ChevronDown,
@@ -15,6 +15,7 @@ import HeroOutLogo from "../assets/heroout.jpg";
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -32,6 +33,20 @@ const Header = () => {
       .slice(0, 2);
   };
 
+  const isActiveRoute = (path) => {
+    return location.pathname === path;
+  };
+
+  const getNavLinkClass = (path) => {
+    const baseClass = "relative px-3 py-2 rounded-lg font-medium transition-all duration-200";
+
+    if (isActiveRoute(path)) {
+      return `${baseClass} text-emerald-600 bg-emerald-50 shadow-sm`;
+    }
+
+    return `${baseClass} text-gray-600 hover:text-emerald-600 hover:bg-emerald-50`;
+  };
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -46,36 +61,55 @@ const Header = () => {
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-2">
             <Link
               to="/blogs"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={getNavLinkClass("/blogs")}
             >
               Blogs
+              {isActiveRoute("/blogs") && (
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
+              )}
             </Link>
+
             <Link
               to="/courses"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={getNavLinkClass("/courses")}
             >
               Khóa học
+              {isActiveRoute("/courses") && (
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
+              )}
             </Link>
+
             <Link
               to="/event"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={getNavLinkClass("/event")}
             >
               Sự kiện
+              {isActiveRoute("/event") && (
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
+              )}
             </Link>
+
             <Link
               to="/consultation"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={getNavLinkClass("/consultation")}
             >
               Tư vấn
+              {isActiveRoute("/consultation") && (
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
+              )}
             </Link>
+
             <Link
               to="/risksurvey"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className={getNavLinkClass("/risksurvey")}
             >
               Khảo sát Eassist
+              {isActiveRoute("/risksurvey") && (
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
+              )}
             </Link>
           </nav>
 
@@ -135,11 +169,14 @@ const Header = () => {
                       </div>
                     </div>
 
-                    {/* Menu Items */}
+                    {/* Menu Items - Cũng có thể highlight active ở đây */}
                     <div className="py-2">
                       <Link
                         to="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/profile")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <User className="w-4 h-4 mr-3" />
@@ -148,7 +185,10 @@ const Header = () => {
 
                       <Link
                         to="/my-appointments"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/my-appointments")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Calendar className="w-4 h-4 mr-3" />
@@ -157,7 +197,10 @@ const Header = () => {
 
                       <Link
                         to="/notifications"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/notifications")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Bell className="w-4 h-4 mr-3" />
@@ -166,15 +209,22 @@ const Header = () => {
 
                       <Link
                         to="/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/settings")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Settings className="w-4 h-4 mr-3" />
                         Cài đặt
                       </Link>
+
                       <Link
                         to="/myaccomplishments"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/myaccomplishments")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <GraduationCap className="w-4 h-4 mr-3" />
@@ -199,7 +249,10 @@ const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="px-4 py-2 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-md font-medium transition-colors"
+                  className={`px-4 py-2 border-2 border-emerald-500 rounded-md font-medium transition-colors ${isActiveRoute("/login")
+                      ? "bg-emerald-500 text-white"
+                      : "text-emerald-600 hover:bg-emerald-50"
+                    }`}
                   data-aos="fade-up"
                   data-aos-delay="100"
                 >
@@ -207,7 +260,10 @@ const Header = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition-colors"
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${isActiveRoute("/register")
+                      ? "bg-emerald-800 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    }`}
                   data-aos="fade-up"
                   data-aos-delay="200"
                 >
