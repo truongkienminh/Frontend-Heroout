@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Input, Select, DatePicker } from "antd";
+import { Button, Form, Input, Select, DatePicker, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -75,124 +75,144 @@ function Register() {
             autoComplete="off"
             layout="vertical"
           >
-            <Form.Item
-              label="Họ và tên"
-              name="name"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập họ và tên!",
-                },
-              ]}
-            >
-              <Input placeholder="Nhập họ và tên" disabled={loading} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Họ và tên"
+                  name="name"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập họ và tên!",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Nhập họ và tên" disabled={loading} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Email"
+                  name="email"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập email!",
+                    },
+                    {
+                      type: "email",
+                      message: "Vui lòng nhập địa chỉ email hợp lệ!",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Nhập email" disabled={loading} />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập email!",
-                },
-                {
-                  type: "email",
-                  message: "Vui lòng nhập địa chỉ email hợp lệ!",
-                },
-              ]}
-            >
-              <Input placeholder="Nhập email" disabled={loading} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Số điện thoại"
+                  name="phone"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập số điện thoại!",
+                    },
+                    {
+                      pattern: /^[0-9]{10,11}$/,
+                      message: "Số điện thoại không hợp lệ!",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Nhập số điện thoại" disabled={loading} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Giới tính"
+                  name="gender"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng chọn giới tính!",
+                    },
+                  ]}
+                >
+                  <Select placeholder="Chọn giới tính" disabled={loading}>
+                    <Option value="MALE">Nam</Option>
+                    <Option value="FEMALE">Nữ</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Form.Item
-              label="Số điện thoại"
-              name="phone"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập số điện thoại!",
-                },
-                {
-                  pattern: /^[0-9]{10,11}$/,
-                  message: "Số điện thoại không hợp lệ!",
-                },
-              ]}
-            >
-              <Input placeholder="Nhập số điện thoại" disabled={loading} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Mật khẩu"
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập mật khẩu!",
+                    },
+                    {
+                      min: 6,
+                      message: "Mật khẩu phải có ít nhất 6 ký tự!",
+                    },
+                  ]}
+                >
+                  <Input.Password placeholder="Nhập mật khẩu" disabled={loading} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Xác nhận mật khẩu"
+                  name="confirmPassword"
+                  dependencies={["password"]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng xác nhận mật khẩu!",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Mật khẩu xác nhận không khớp!")
+                        );
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password
+                    placeholder="Xác nhận mật khẩu"
+                    disabled={loading}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-            <Form.Item
-              label="Mật khẩu"
-              name="password"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập mật khẩu!",
-                },
-                {
-                  min: 6,
-                  message: "Mật khẩu phải có ít nhất 6 ký tự!",
-                },
-              ]}
-            >
-              <Input.Password placeholder="Nhập mật khẩu" disabled={loading} />
-            </Form.Item>
-
-            <Form.Item
-              label="Xác nhận mật khẩu"
-              name="confirmPassword"
-              dependencies={["password"]}
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng xác nhận mật khẩu!",
-                },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue("password") === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(
-                      new Error("Mật khẩu xác nhận không khớp!")
-                    );
-                  },
-                }),
-              ]}
-            >
-              <Input.Password
-                placeholder="Xác nhận mật khẩu"
-                disabled={loading}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Giới tính"
-              name="gender"
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng chọn giới tính!",
-                },
-              ]}
-            >
-              <Select placeholder="Chọn giới tính" disabled={loading}>
-                <Option value="MALE">Nam</Option>
-                <Option value="FEMALE">Nữ</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item label="Ngày sinh" name="dateOfBirth">
-              <DatePicker
-                placeholder="Chọn ngày sinh"
-                style={{ width: "100%" }}
-                disabled={loading}
-              />
-            </Form.Item>
-
-            <Form.Item label="Địa chỉ" name="address">
-              <Input placeholder="Nhập địa chỉ" disabled={loading} />
-            </Form.Item>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Ngày sinh" name="dateOfBirth">
+                  <DatePicker
+                    placeholder="Chọn ngày sinh"
+                    style={{ width: "100%" }}
+                    disabled={loading}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Địa chỉ" name="address">
+                  <Input placeholder="Nhập địa chỉ" disabled={loading} />
+                </Form.Item>
+              </Col>
+            </Row>
 
             <Form.Item className="submit-button-item">
               <Button
