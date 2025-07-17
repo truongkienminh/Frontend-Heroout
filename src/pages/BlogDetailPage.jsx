@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getBlogImage } from "../utils/blogImages";
 import Breadcrumb from "../components/Breadcrumb";
+import ApiService from "../services/apiService";
 
 const BlogDetailPage = () => {
   const { id } = useParams();
@@ -15,30 +16,19 @@ const BlogDetailPage = () => {
       try {
         setLoading(true);
 
-        // Fetch all blog posts (vì endpoint single post không hoạt động)
-        const response = await fetch(
-          "https://684482e971eb5d1be0337d19.mockapi.io/blogs"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch blog posts");
-        }
-
-        const allPosts = await response.json();
-
-        // Tìm blog post theo ID
-        const foundPost = allPosts.find((p) => p.id === Number.parseInt(id));
-
-        if (!foundPost) {
-          throw new Error("Blog post not found");
-        }
-
+        // Fetch the specific blog post
+        const foundPost = await ApiService.getBlog(id);
         setPost(foundPost);
 
-        // Tìm các bài viết liên quan (cùng category, khác ID)
+        // Fetch all blog posts to find related ones
+        const allPosts = await ApiService.getBlogs();
+
+        // Find related posts (same category, different ID)
         const related = allPosts
           .filter(
             (p) =>
-              p.id !== Number.parseInt(id) && p.category === foundPost.category
+              p.id !== Number.parseInt(id) &&
+              p.category.toLowerCase() === foundPost.category.toLowerCase()
           )
           .slice(0, 3);
         setRelatedPosts(related);
