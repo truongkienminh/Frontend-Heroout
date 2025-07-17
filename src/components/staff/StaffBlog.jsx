@@ -9,6 +9,7 @@ import {
   AlertCircle,
   X,
   Clock,
+  Trash2,
 } from "lucide-react";
 import ApiService from "../../services/apiService";
 
@@ -21,7 +22,20 @@ const StaffBlog = () => {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingBlog, setEditingBlog] = useState(null);
+  const [deletingBlog, setDeletingBlog] = useState(null);
+  const [createBlogData, setCreateBlogData] = useState({
+    title: "",
+    description: "",
+    content: "",
+    category: "",
+    author: "",
+    readTime: "5 phút đọc",
+    views: "0 lượt xem",
+    tags: [],
+  });
   const blogsPerPage = 10;
 
   // Fetch blogs from API
@@ -63,12 +77,33 @@ const StaffBlog = () => {
   // Save edited blog
   const handleSaveEdit = async () => {
     try {
-      // API to update the blog
-      // await ApiService.updateBlog(editingBlog.id, editingBlog)
+      // Prepare the data for API
+      const blogData = {
+        title: editingBlog.title,
+        description: editingBlog.description,
+        content: editingBlog.content,
+        category: editingBlog.category,
+        author: editingBlog.author.name,
+        readTime: editingBlog.readTime || "5 phút đọc",
+        views: editingBlog.views || "0 lượt xem",
+        date: editingBlog.date || new Date().toISOString().split("T")[0],
+        tags: editingBlog.tags || [],
+      };
+
+      // Call API to update the blog
+      await ApiService.updateBlog(editingBlog.id, blogData);
 
       // Update local state
+      const updatedBlog = {
+        ...editingBlog,
+        author: {
+          ...editingBlog.author,
+          name: blogData.author,
+        },
+      };
+
       setBlogs(
-        blogs.map((blog) => (blog.id === editingBlog.id ? editingBlog : blog))
+        blogs.map((blog) => (blog.id === editingBlog.id ? updatedBlog : blog))
       );
 
       setShowEditModal(false);
@@ -76,6 +111,95 @@ const StaffBlog = () => {
       alert("Cập nhật bài viết thành công!");
     } catch (err) {
       alert("Có lỗi xảy ra khi cập nhật bài viết: " + err.message);
+    }
+  };
+
+  // Create new blog
+  const handleCreateBlog = async () => {
+    try {
+      // Validate required fields
+      if (!createBlogData.title.trim()) {
+        alert("Vui lòng nhập tiêu đề bài viết");
+        return;
+      }
+      if (!createBlogData.description.trim()) {
+        alert("Vui lòng nhập mô tả bài viết");
+        return;
+      }
+      if (!createBlogData.content.trim()) {
+        alert("Vui lòng nhập nội dung bài viết");
+        return;
+      }
+      if (!createBlogData.category.trim()) {
+        alert("Vui lòng nhập danh mục bài viết");
+        return;
+      }
+      if (!createBlogData.author.trim()) {
+        alert("Vui lòng nhập tên tác giả");
+        return;
+      }
+
+      const newBlog = await ApiService.createBlog(createBlogData);
+
+      // Transform the response to match the expected format
+      const transformedBlog = {
+        id: newBlog.id,
+        title: newBlog.title,
+        description: newBlog.description,
+        content: newBlog.content,
+        category: newBlog.category,
+        author: {
+          name: newBlog.author,
+          role: "Chuyên gia",
+          avatar: newBlog.author ? newBlog.author.charAt(0).toUpperCase() : "A",
+        },
+        readTime: newBlog.readTime || "5 phút đọc",
+        views: newBlog.views || "0 lượt xem",
+        date: newBlog.date || new Date().toLocaleDateString("vi-VN"),
+        tags: newBlog.tags
+          ? newBlog.tags.split(",").map((tag) => tag.trim())
+          : [],
+      };
+
+      setBlogs([transformedBlog, ...blogs]);
+      setShowCreateModal(false);
+
+      // Reset form
+      setCreateBlogData({
+        title: "",
+        description: "",
+        content: "",
+        category: "",
+        author: "",
+        readTime: "5 phút đọc",
+        views: "0 lượt xem",
+        tags: [],
+      });
+
+      alert("Tạo bài viết mới thành công!");
+    } catch (err) {
+      alert("Có lỗi xảy ra khi tạo bài viết: " + err.message);
+    }
+  };
+
+  // Delete blog
+  const handleDeleteBlog = (blog) => {
+    setDeletingBlog(blog);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteBlog = async () => {
+    try {
+      await ApiService.deleteBlog(deletingBlog.id);
+
+      // Update local state
+      setBlogs(blogs.filter((blog) => blog.id !== deletingBlog.id));
+
+      setShowDeleteModal(false);
+      setDeletingBlog(null);
+      alert("Xóa bài viết thành công!");
+    } catch (err) {
+      alert("Có lỗi xảy ra khi xóa bài viết: " + err.message);
     }
   };
 
@@ -143,7 +267,10 @@ const StaffBlog = () => {
             Quản lý các bài viết và nội dung blog
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+        >
           <Plus className="w-4 h-4" />
           Tạo bài viết mới
         </button>
@@ -279,6 +406,13 @@ const StaffBlog = () => {
                       >
                         <Edit className="w-4 h-4" />
                       </button>
+                      <button
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Xóa"
+                        onClick={() => handleDeleteBlog(blog)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -344,6 +478,185 @@ const StaffBlog = () => {
             >
               Sau »
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Blog Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Tạo bài viết mới
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <div className="space-y-6">
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tiêu đề *
+                  </label>
+                  <input
+                    type="text"
+                    value={createBlogData.title}
+                    onChange={(e) =>
+                      setCreateBlogData({
+                        ...createBlogData,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập tiêu đề bài viết"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Danh mục *
+                  </label>
+                  <input
+                    type="text"
+                    value={createBlogData.category}
+                    onChange={(e) =>
+                      setCreateBlogData({
+                        ...createBlogData,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập danh mục bài viết"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mô tả *
+                  </label>
+                  <textarea
+                    value={createBlogData.description}
+                    onChange={(e) =>
+                      setCreateBlogData({
+                        ...createBlogData,
+                        description: e.target.value,
+                      })
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập mô tả ngắn gọn về bài viết"
+                  />
+                </div>
+
+                {/* Content */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nội dung *
+                  </label>
+                  <textarea
+                    value={createBlogData.content}
+                    onChange={(e) =>
+                      setCreateBlogData({
+                        ...createBlogData,
+                        content: e.target.value,
+                      })
+                    }
+                    rows={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập nội dung chi tiết của bài viết"
+                  />
+                </div>
+
+                {/* Author and Read Time */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tác giả *
+                    </label>
+                    <input
+                      type="text"
+                      value={createBlogData.author}
+                      onChange={(e) =>
+                        setCreateBlogData({
+                          ...createBlogData,
+                          author: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Nhập tên tác giả"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Thời gian đọc
+                    </label>
+                    <input
+                      type="text"
+                      value={createBlogData.readTime}
+                      onChange={(e) =>
+                        setCreateBlogData({
+                          ...createBlogData,
+                          readTime: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="VD: 5 phút đọc"
+                    />
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags (phân cách bằng dấu phẩy)
+                  </label>
+                  <input
+                    type="text"
+                    value={
+                      createBlogData.tags ? createBlogData.tags.join(", ") : ""
+                    }
+                    onChange={(e) =>
+                      setCreateBlogData({
+                        ...createBlogData,
+                        tags: e.target.value
+                          .split(",")
+                          .map((tag) => tag.trim())
+                          .filter((tag) => tag),
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="VD: tâm lý, sức khỏe, giáo dục"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleCreateBlog}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              >
+                Tạo bài viết
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -612,6 +925,70 @@ const StaffBlog = () => {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
               >
                 Lưu thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingBlog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Xác nhận xóa
+              </h2>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Xóa bài viết
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Hành động này không thể hoàn tác
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-gray-700 mb-4">
+                Bạn có chắc chắn muốn xóa bài viết "{deletingBlog.title}"?
+              </p>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Cảnh báo:</strong> Bài viết sẽ bị xóa vĩnh viễn và
+                  không thể khôi phục.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteBlog}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              >
+                Xóa bài viết
               </button>
             </div>
           </div>
