@@ -646,25 +646,125 @@ class ApiService {
   // Blog APIs
   static async getBlogs() {
     try {
-      const response = await fetch(
-        "https://684482e971eb5d1be0337d19.mockapi.io/blogs"
-      );
-      if (!response.ok) throw new Error("Failed to fetch blogs");
-      return await response.json();
+      const response = await api.get("blogs");
+      const blogs = response.data || [];
+
+      // Transform the API response to match the expected format
+      return blogs.map((blog) => ({
+        id: blog.id,
+        title: blog.title,
+        description: blog.description,
+        content: blog.content,
+        category: blog.category,
+        author: {
+          name: blog.author,
+          role: "Chuyên gia",
+          avatar: blog.author ? blog.author.charAt(0).toUpperCase() : "A",
+          bio: `Chuyên gia trong lĩnh vực ${
+            blog.category?.toLowerCase() || "tư vấn"
+          }`,
+        },
+        readTime: blog.readTime || "5 phút đọc",
+        views: blog.views || "0 lượt xem",
+        date: blog.date || new Date().toLocaleDateString("vi-VN"),
+        tags: blog.tags ? blog.tags.split(",").map((tag) => tag.trim()) : [],
+      }));
     } catch (error) {
-      throw new Error(`Error fetching blogs: ${error.message}`);
+      console.error("Error fetching blogs:", error);
+      throw this.handleError(error);
     }
   }
 
   static async getBlog(id) {
     try {
-      const response = await fetch(
-        `https://684482e971eb5d1be0337d19.mockapi.io/blogs/${id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch blog");
-      return await response.json();
+      const response = await api.get(`blogs/${id}`);
+      const blog = response.data;
+
+      if (!blog) {
+        throw new Error("Blog not found");
+      }
+
+      // Transform the API response to match the expected format
+      return {
+        id: blog.id,
+        title: blog.title,
+        description: blog.description,
+        content: blog.content,
+        category: blog.category,
+        author: {
+          name: blog.author,
+          role: "Chuyên gia",
+          avatar: blog.author ? blog.author.charAt(0).toUpperCase() : "A",
+          bio: `Chuyên gia trong lĩnh vực ${
+            blog.category?.toLowerCase() || "tư vấn"
+          }`,
+        },
+        readTime: blog.readTime || "5 phút đọc",
+        views: blog.views || "0 lượt xem",
+        date: blog.date || new Date().toLocaleDateString("vi-VN"),
+        tags: blog.tags ? blog.tags.split(",").map((tag) => tag.trim()) : [],
+      };
     } catch (error) {
-      throw new Error(`Error fetching blog: ${error.message}`);
+      console.error("Error fetching blog:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  static async createBlog(blogData) {
+    try {
+      const payload = {
+        title: blogData.title,
+        description: blogData.description,
+        content: blogData.content,
+        category: blogData.category,
+        author: blogData.author,
+        readTime: blogData.readTime || "5 phút đọc",
+        views: blogData.views || "0 lượt xem",
+        date: blogData.date || new Date().toISOString().split("T")[0],
+        tags: Array.isArray(blogData.tags)
+          ? blogData.tags.join(", ")
+          : blogData.tags || "",
+      };
+
+      const response = await api.post("blogs", payload);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating blog:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  static async updateBlog(id, blogData) {
+    try {
+      const payload = {
+        title: blogData.title,
+        description: blogData.description,
+        content: blogData.content,
+        category: blogData.category,
+        author: blogData.author,
+        readTime: blogData.readTime || "5 phút đọc",
+        views: blogData.views || "0 lượt xem",
+        date: blogData.date || new Date().toISOString().split("T")[0],
+        tags: Array.isArray(blogData.tags)
+          ? blogData.tags.join(", ")
+          : blogData.tags || "",
+      };
+
+      const response = await api.put(`blogs/${id}`, payload);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating blog:", error);
+      throw this.handleError(error);
+    }
+  }
+
+  static async deleteBlog(id) {
+    try {
+      const response = await api.delete(`blogs/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+      throw this.handleError(error);
     }
   }
 
