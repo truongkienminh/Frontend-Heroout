@@ -7,7 +7,8 @@ import {
   LogOut,
   Calendar,
   Bell,
-  GraduationCap
+  GraduationCap,
+  AlertTriangle, // Import icon mới
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import HeroOutLogo from "../assets/heroout.jpg";
@@ -38,7 +39,8 @@ const Header = () => {
   };
 
   const getNavLinkClass = (path) => {
-    const baseClass = "relative px-3 py-2 rounded-lg font-medium transition-all duration-200";
+    const baseClass =
+      "relative px-3 py-2 rounded-lg font-medium transition-all duration-200";
 
     if (isActiveRoute(path)) {
       return `${baseClass} text-emerald-600 bg-emerald-50 shadow-sm`;
@@ -62,30 +64,21 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-2">
-            <Link
-              to="/blogs"
-              className={getNavLinkClass("/blogs")}
-            >
+            <Link to="/blogs" className={getNavLinkClass("/blogs")}>
               Blogs
               {isActiveRoute("/blogs") && (
                 <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
               )}
             </Link>
 
-            <Link
-              to="/courses"
-              className={getNavLinkClass("/courses")}
-            >
+            <Link to="/courses" className={getNavLinkClass("/courses")}>
               Khóa học
               {isActiveRoute("/courses") && (
                 <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
               )}
             </Link>
 
-            <Link
-              to="/event"
-              className={getNavLinkClass("/event")}
-            >
+            <Link to="/event" className={getNavLinkClass("/event")}>
               Sự kiện
               {isActiveRoute("/event") && (
                 <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
@@ -102,10 +95,7 @@ const Header = () => {
               )}
             </Link>
 
-            <Link
-              to="/risksurvey"
-              className={getNavLinkClass("/risksurvey")}
-            >
+            <Link to="/risksurvey" className={getNavLinkClass("/risksurvey")}>
               Khảo sát Eassist
               {isActiveRoute("/risksurvey") && (
                 <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-emerald-600 rounded-full animate-pulse"></div>
@@ -169,14 +159,15 @@ const Header = () => {
                       </div>
                     </div>
 
-                    {/* Menu Items - Cũng có thể highlight active ở đây */}
+                    {/* Menu Items */}
                     <div className="py-2">
                       <Link
                         to="/profile"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/profile")
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/profile")
                             ? "text-emerald-600 bg-emerald-50"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <User className="w-4 h-4 mr-3" />
@@ -185,22 +176,51 @@ const Header = () => {
 
                       <Link
                         to="/my-appointments"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/my-appointments")
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/my-appointments")
                             ? "text-emerald-600 bg-emerald-50"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Calendar className="w-4 h-4 mr-3" />
                         Lịch hẹn của tôi
                       </Link>
 
+                      {/* NÚT MỚI ĐƯỢC THÊM VÀO */}
                       <Link
-                        to="/notifications"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/notifications")
+                        to="/risklevel" // Sử dụng đường dẫn /risksurvey
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/risklevel")
                             ? "text-emerald-600 bg-emerald-50"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <AlertTriangle className="w-4 h-4 mr-3" />
+                        Đánh giá nguy cơ
+                      </Link>
+
+                      <Link
+                        to="/myaccomplishments"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/myaccomplishments")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <GraduationCap className="w-4 h-4 mr-3" />
+                        Thành tích
+                      </Link>
+
+                      <Link
+                        to="/notifications"
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/notifications")
+                            ? "text-emerald-600 bg-emerald-50"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Bell className="w-4 h-4 mr-3" />
@@ -209,26 +229,15 @@ const Header = () => {
 
                       <Link
                         to="/settings"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/settings")
+                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
+                          isActiveRoute("/settings")
                             ? "text-emerald-600 bg-emerald-50"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Settings className="w-4 h-4 mr-3" />
                         Cài đặt
-                      </Link>
-
-                      <Link
-                        to="/myaccomplishments"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${isActiveRoute("/myaccomplishments")
-                            ? "text-emerald-600 bg-emerald-50"
-                            : "text-gray-700 hover:bg-gray-50"
-                          }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <GraduationCap className="w-4 h-4 mr-3" />
-                        Thành tích
                       </Link>
 
                       <hr className="my-2" />
@@ -249,10 +258,11 @@ const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className={`px-4 py-2 border-2 border-emerald-500 rounded-md font-medium transition-colors ${isActiveRoute("/login")
+                  className={`px-4 py-2 border-2 border-emerald-500 rounded-md font-medium transition-colors ${
+                    isActiveRoute("/login")
                       ? "bg-emerald-500 text-white"
                       : "text-emerald-600 hover:bg-emerald-50"
-                    }`}
+                  }`}
                   data-aos="fade-up"
                   data-aos-delay="100"
                 >
@@ -260,10 +270,11 @@ const Header = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${isActiveRoute("/register")
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    isActiveRoute("/register")
                       ? "bg-emerald-800 text-white"
                       : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    }`}
+                  }`}
                   data-aos="fade-up"
                   data-aos-delay="200"
                 >

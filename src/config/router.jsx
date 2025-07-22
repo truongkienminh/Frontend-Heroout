@@ -30,6 +30,7 @@ import MemberProtectedRoute from "../components/MemberProtectedRoute";
 import AccomplishmentsPage from "../pages/AccomplishmentsPage";
 import MyAppointmentsPage from "../pages/MyAppointmentsPage";
 import StaffViewMeetings from "../components/staff/StaffViewMeetings";
+import RiskLevel from "../pages/RiskLevel";
 
 export const router = createBrowserRouter([
   {
@@ -97,6 +98,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/risklevel",
+        element: (
+          <ProtectedRoute>
+            <RiskLevel />
           </ProtectedRoute>
         ),
       },
