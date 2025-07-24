@@ -1,14 +1,15 @@
 import React from "react";
 import { Form, Input, Button, Typography, Card, notification } from "antd";
 import { MailOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // <-- 1. Import useNavigate
 import HeroOutLogo from "../../assets/heroout.jpg";
-import api from "../../services/axios"; // <-- 1. Nhập cấu hình api
+import api from "../../services/axios";
 
 const { Title, Text } = Typography;
 
 function ForgotPassword() {
-  // 3. Tạo hàm xử lý gọi API
+  const navigate = useNavigate(); // <-- 2. Khởi tạo navigate
+
   const handleForgotPassword = async (values) => {
     try {
       await api.post("/forgot-password", values);
@@ -18,6 +19,7 @@ function ForgotPassword() {
           "Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email của bạn!",
         placement: "topRight",
       });
+      navigate("/reset-password"); // <-- 3. Điều hướng khi thành công
     } catch (error) {
       notification.error({
         message: "Gửi yêu cầu thất bại",
@@ -32,13 +34,12 @@ function ForgotPassword() {
   return (
     <>
       <style>{`
-                *, *::before, *::after {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
-            `}</style>
-
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    `}</style>
       <div
         style={{
           minHeight: "100vh",
@@ -68,10 +69,7 @@ function ForgotPassword() {
             <Text type="secondary">Nhập email để khôi phục mật khẩu</Text>
           </div>
 
-          <Form
-            layout="vertical"
-            onFinish={handleForgotPassword} // <-- 4. Cập nhật hàm onFinish
-          >
+          <Form layout="vertical" onFinish={handleForgotPassword}>
             <Form.Item
               label="Email"
               name="email"
