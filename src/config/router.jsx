@@ -31,6 +31,7 @@ import AccomplishmentsPage from "../pages/AccomplishmentsPage";
 import MyAppointmentsPage from "../pages/MyAppointmentsPage";
 import StaffViewMeetings from "../components/staff/StaffViewMeetings";
 import RiskLevel from "../pages/RiskLevel";
+import ResetPassword from "../components/authentication/ResetPassword";
 
 export const router = createBrowserRouter([
   {
@@ -169,6 +170,15 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  {
+    path: "/reset-password",
+    element: (
+      <ProtectedRoute requireAuth={false}>
+        <ResetPassword />
+      </ProtectedRoute>
+    ),
+  },
+
   {
     path: "",
     element: (
