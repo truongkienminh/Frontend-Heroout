@@ -11,11 +11,12 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   const handleResetPassword = async (values) => {
-    // Không cần gửi confirm_password đến backend
-    const { password, token } = values;
+    // Lấy token và password từ giá trị của form
+    const { token, password } = values;
 
     try {
-      await api.post("/reset-password", { token, password });
+      // Gửi request với payload chính xác theo yêu cầu của API
+      await api.post("/reset-password", { token, newPassword: password }); // <-- ĐÃ SỬA
       notification.success({
         message: "Thành công",
         description: "Mật khẩu của bạn đã được đặt lại thành công!",
