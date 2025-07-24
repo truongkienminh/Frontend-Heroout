@@ -1,12 +1,34 @@
 import React from "react";
-import { Form, Input, Button, Typography, Card } from "antd";
+import { Form, Input, Button, Typography, Card, notification } from "antd";
 import { MailOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-import HeroOutLogo from "../../assets/heroout.jpg"; 
+import HeroOutLogo from "../../assets/heroout.jpg";
+import api from "../../services/axios"; // <-- 1. Nhập cấu hình api
 
 const { Title, Text } = Typography;
 
 function ForgotPassword() {
+  // 3. Tạo hàm xử lý gọi API
+  const handleForgotPassword = async (values) => {
+    try {
+      await api.post("/forgot-password", values);
+      notification.success({
+        message: "Thành công",
+        description:
+          "Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra email của bạn!",
+        placement: "topRight",
+      });
+    } catch (error) {
+      notification.error({
+        message: "Gửi yêu cầu thất bại",
+        description:
+          error.response?.data?.message ||
+          "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        placement: "topRight",
+      });
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -48,9 +70,7 @@ function ForgotPassword() {
 
           <Form
             layout="vertical"
-            onFinish={(values) =>
-              console.log("Forgot Password Submit:", values)
-            }
+            onFinish={handleForgotPassword} // <-- 4. Cập nhật hàm onFinish
           >
             <Form.Item
               label="Email"
