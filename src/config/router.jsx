@@ -26,6 +26,8 @@ import StaffMeeting from "../components/staff/StaffMeeting";
 import RiskSurvey from "../components/RiskSurvey";
 import ProtectedRoute from "../components/ProtectedRoute";
 import EventDetail from "../components/Event/EventDetail";
+
+import SurveyEvent from "../components/Event/SurveyEvent";
 import MemberProtectedRoute from "../components/MemberProtectedRoute";
 import AccomplishmentsPage from "../pages/AccomplishmentsPage";
 import MyAppointmentsPage from "../pages/MyAppointmentsPage";
@@ -69,6 +71,15 @@ export const router = createBrowserRouter([
       {
         path: "/events/:id",
         element: <EventDetail />,
+      },
+
+      {
+        path: "/survey-event/:id",
+        element: (
+          <ProtectedRoute>
+            <SurveyEvent />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/consultation",
