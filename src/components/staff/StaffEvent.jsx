@@ -511,7 +511,7 @@ const StaffEvent = () => {
                       className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       onClick={e => {
                         e.stopPropagation();
-                        onEditSurvey(survey);
+                        setEventToEdit(event);
                       }}
                     >
                       <Edit2 size={16} />
@@ -565,55 +565,105 @@ function ModalConfirmDelete({ event, onCancel, onConfirm }) {
 // Modal: Create/Edit Event
 function ModalEventForm({ title, eventData, setEventData, onCancel, onSubmit, submitLabel }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-xl p-6 relative shadow-lg">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">{title}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Tiêu đề"
-            className="p-3 border rounded-lg"
-            value={eventData.title}
-            onChange={e => setEventData({ ...eventData, title: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Địa điểm"
-            className="p-3 border rounded-lg"
-            value={eventData.location}
-            onChange={e => setEventData({ ...eventData, location: e.target.value })}
-          />
-          <input
-            type="datetime-local"
-            className="p-3 border rounded-lg"
-            value={eventData.startTime}
-            onChange={e => setEventData({ ...eventData, startTime: e.target.value })}
-          />
-          <input
-            type="datetime-local"
-            className="p-3 border rounded-lg"
-            value={eventData.endTime}
-            onChange={e => setEventData({ ...eventData, endTime: e.target.value })}
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 ">
+      <div className="bg-white rounded-2xl w-full max-w-2xl p-8 relative shadow-2xl border border-gray-100 transform transition-all duration-300 scale-100">
+        {/* Header với gradient accent */}
+        <div className="relative mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 relative z-10">{title}</h2>
+        </div>
+
+        {/* Tiêu đề và Địa điểm */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="space-y-2">
+            <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+              <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mr-2"></span>
+              Tiêu đề sự kiện
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập tiêu đề sự kiện"
+              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+              value={eventData.title}
+              onChange={e => setEventData({ ...eventData, title: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+              <span className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mr-2"></span>
+              Địa điểm
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập địa điểm"
+              className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+              value={eventData.location}
+              onChange={e => setEventData({ ...eventData, location: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {/* Thời gian bắt đầu và kết thúc */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <span className="text-2xl mr-2">⏰</span>
+            Thời gian diễn ra
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                <span className="text-lg mr-2">🟢</span>
+                Thời gian bắt đầu
+              </label>
+              <input
+                type="datetime-local"
+                className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                value={eventData.startTime}
+                onChange={e => setEventData({ ...eventData, startTime: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+                <span className="text-lg mr-2">🔴</span>
+                Thời gian kết thúc
+              </label>
+              <input
+                type="datetime-local"
+                className="w-full p-4 bg-white border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                value={eventData.endTime}
+                onChange={e => setEventData({ ...eventData, endTime: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mô tả */}
+        <div className="mb-8 space-y-2">
+          <label className="flex items-center text-sm font-semibold text-gray-700 mb-3">
+            <span className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-2"></span>
+            Mô tả sự kiện
+          </label>
+          <textarea
+            placeholder="Nhập mô tả chi tiết về sự kiện..."
+            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 resize-none"
+            rows={4}
+            value={eventData.description}
+            onChange={e => setEventData({ ...eventData, description: e.target.value })}
           />
         </div>
-        <textarea
-          placeholder="Mô tả sự kiện"
-          className="w-full p-3 border rounded-lg mb-4"
-          rows={3}
-          value={eventData.description}
-          onChange={e => setEventData({ ...eventData, description: e.target.value })}
-        />
-        <div className="flex justify-end gap-3">
+
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-100">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
+            className="px-8 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             onClick={onSubmit}
-            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-8 py-3 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 text-white rounded-xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 font-semibold flex items-center justify-center gap-2 min-w-[140px]"
           >
+
             {submitLabel}
           </button>
         </div>
