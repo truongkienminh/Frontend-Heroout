@@ -1,3 +1,5 @@
+// file: services/apiService.js
+
 import api from "./axios";
 
 class ApiService {
@@ -32,6 +34,22 @@ class ApiService {
     try {
       const response = await api.put(`/accounts/update`, userData, {
         params: { id: userId },
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+  
+ static async updateAvatar(id, avatarUrl) {
+    try {
+      // Gửi request tới đúng endpoint /accounts/{id}/avatar
+      // Body của request là chuỗi URL trần (raw string)
+      // THAY ĐỔI QUAN TRỌNG: Thêm config để chỉ định Content-Type là 'text/plain'
+      const response = await api.put(`/accounts/${id}/avatar`, avatarUrl, {
+        headers: {
+          'Content-Type': 'text/plain'
+        }
       });
       return response.data;
     } catch (error) {
