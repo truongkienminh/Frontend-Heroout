@@ -56,6 +56,8 @@ const StaffEvent = () => {
     title: '',
     questions: []
   });
+  const [surveyToDelete, setSurveyToDelete] = useState(null);
+
 
 
   // Fetch events
@@ -235,12 +237,28 @@ const StaffEvent = () => {
   };
 
   const handleUpdateSurvey = async () => {
-    if (!surveyToEdit) return;
+    if (!surveyEventId) return;
+
     try {
-      const response = await api.put(`/surveys/event/${surveyToEdit.id}`, {
-        ...surveyToEdit,
-        ...editSurveyData
-      });
+      const cleanQuestions = editSurveyData.questions.map(q => ({
+        id: q.id,
+        questionText: q.questionText,
+        options: q.options.map(opt => ({
+          id: opt.id,
+          content: opt.content,
+          score: opt.score,
+          questionId: opt.questionId
+        }))
+      }));
+
+      const payload = {
+        eventId: surveyEventId,
+        title: editSurveyData.title,
+        questions: cleanQuestions
+      };
+
+      const response = await api.put(`/surveys/event/${surveyEventId}`, payload);
+
       setSurveyList(prev =>
         prev.map(sv => (sv.id === surveyToEdit.id ? response.data : sv))
       );
@@ -250,6 +268,7 @@ const StaffEvent = () => {
     }
   };
 
+
   const handleEditSurveyClick = (survey) => {
     setShowSurveyModal(false);
     setSurveyToEdit(survey);
@@ -257,9 +276,27 @@ const StaffEvent = () => {
       title: survey.title || '',
       questions: survey.questions ? JSON.parse(JSON.stringify(survey.questions)) : []
     });
+    setSurveyEventId(survey.eventId);
   };
 
+  const handleDeleteSurvey = async () => {
+    if (!surveyToDelete || !surveyToDelete.eventId) return;
+    try {
+      await api.delete(`/surveys/event/${surveyToDelete.eventId}`);
 
+      setSurveyList(prev =>
+        prev.filter(sv => sv.eventId !== surveyToDelete.eventId)
+      );
+
+      setSurveyToDelete(null);
+
+      if (surveyEventId) {
+        await handleShowSurveys({ id: surveyEventId });
+      }
+    } catch (error) {
+      console.error('Lỗi khi xoá khảo sát:', error);
+    }
+  };
 
   // Filter participants based on search and tab
   const getFilteredParticipants = () => {
@@ -330,6 +367,10 @@ const StaffEvent = () => {
           onClose={() => setShowSurveyModal(false)}
           onCreateSurvey={() => setShowCreateSurveyModal(true)}
           onEditSurvey={handleEditSurveyClick}
+          onDeleteSurvey={(survey) => {
+            setSurveyToDelete(survey);
+            setShowSurveyModal(false); // Ẩn ModalSurveyList khi modal xác nhận hiện ra
+          }}
         />
       )}
       {showCreateSurveyModal && (
@@ -399,6 +440,18 @@ const StaffEvent = () => {
           submitLabel="Lưu thay đổi"
         />
       )}
+      {surveyToDelete && (
+        <ModalConfirmDeleteSurvey
+          survey={surveyToDelete}
+          onCancel={() => {
+            setSurveyToDelete(null);
+            setShowSurveyModal(true); 
+          }}
+          onConfirm={handleDeleteSurvey}
+        />
+      )}
+
+
 
 
       {/* Dashboard */}
@@ -850,7 +903,7 @@ function ParticipantItem({ participant, onCheckIn, onCheckOut, activeTab }) {
 }
 
 
-function ModalSurveyList({ loading, surveys, onClose, onCreateSurvey, onEditSurvey }) {
+function ModalSurveyList({ loading, surveys, onClose, onCreateSurvey, onEditSurvey, onDeleteSurvey }) {
   const safeSurveys = Array.isArray(surveys) ? surveys : [];
 
   return (
@@ -934,24 +987,33 @@ function ModalSurveyList({ loading, surveys, onClose, onCreateSurvey, onEditSurv
                           >
                             <Edit2 size={16} />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                          <button
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={e => {
+                              e.stopPropagation();
+                              onDeleteSurvey(survey);
+                            }}
+                          >
                             <Trash2 size={16} />
                           </button>
+
+
+
                         </div>
                       </div>
                     </div>
 
                     {/* Questions List */}
-                    <div className="px-6 py-4">
+                    <div className="p-6">
                       {survey.questions && survey.questions.length > 0 ? (
                         <div className="space-y-4">
                           {survey.questions.map((question, questionIndex) => (
                             <div
                               key={question.id || questionIndex}
-                              className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-400"
+                              className="bg-gray-50 border border-gray-200 rounded-xl p-6"
                             >
                               <div className="flex items-start gap-3">
-                                <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
                                   <HelpCircle className="text-blue-600" size={16} />
                                 </div>
                                 <div className="flex-1">
@@ -1481,5 +1543,32 @@ function ModalEditSurvey({ title, surveyData, setSurveyData, onCancel, onSubmit,
     </div>
   );
 }
+function ModalConfirmDeleteSurvey({ survey, onCancel, onConfirm }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+      <div className="bg-white rounded-xl w-full max-w-md p-6 relative shadow-lg">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Xác nhận xoá khảo sát</h2>
+        <p className="mb-6">
+          Bạn có chắc muốn xoá khảo sát <span className="font-semibold">{survey.title}</span>?
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Xoá
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default StaffEvent;
