@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Star, Eye, Plus, Trash2, Pencil, X, BookOpen, ChevronRight } from 'lucide-react';
 import api from '../../services/axios';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const StaffCourse = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,24 +72,49 @@ const StaffCourse = () => {
 
   // Create course
   const handleCreateCourse = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/courses', newCourse);
-      const res = await api.get('/courses');
-      setCourses(res.data || []);
-      setShowCreate(false);
-      setNewCourse({
-        title: '',
-        description: '',
-        objectives: '',
-        overview: '',
-        ageGroup: '',
-        chapters: [{ title: '', content: '' }],
-      });
-    } catch (error) {
-      console.error('Tạo khóa học thất bại:', error);
-    }
-  };
+  e.preventDefault();
+  const { title, description, objectives, overview, ageGroup, chapters } = newCourse;
+
+  if (
+    !title.trim() ||
+    !description.trim() ||
+    !objectives.trim() ||
+    !overview.trim() ||
+    !ageGroup.trim()
+  ) {
+    toast.error("Vui lòng điền đầy đủ thông tin khóa học!");
+    return;
+  }
+
+  if (
+    chapters.length === 0 ||
+    chapters.some(ch => !ch.title.trim() || !ch.content.trim())
+  ) {
+    toast.error("Tất cả chương phải có tiêu đề và nội dung!");
+    return;
+  }
+
+  try {
+    await api.post('/courses', newCourse);
+    const res = await api.get('/courses');
+    setCourses(res.data || []);
+    setShowCreate(false);
+    setNewCourse({
+      title: '',
+      description: '',
+      objectives: '',
+      overview: '',
+      ageGroup: '',
+      chapters: [{ title: '', content: '' }],
+    });
+    toast.success("Tạo khóa học thành công!");
+  } catch (error) {
+    console.error('Tạo khóa học thất bại:', error);
+    toast.error("Tạo khóa học thất bại. Vui lòng thử lại!");
+  }
+};
+
+
 
   // Delete course (show popup)
   const handleDeleteCourseClick = (course) => {
@@ -102,10 +129,13 @@ const StaffCourse = () => {
     try {
       await api.delete(`/courses/${id}`);
       setCourses((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Xóa khóa học thành công!");
     } catch (error) {
       console.error('Xóa khóa học thất bại:', error);
+      toast.error("Xóa khóa học thất bại. Vui lòng thử lại!");
     }
   };
+
 
   const handleShowChapters = async (course) => {
     setChapterCourse(course);
