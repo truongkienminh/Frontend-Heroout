@@ -77,7 +77,7 @@ const ProfilePage = () => {
       }
     };
     fetchUserData();
-  }, [user?.id]); // Phụ thuộc vào user.id để fetch lại nếu user thay đổi
+  }, [user]); // Phụ thuộc vào user.id để fetch lại nếu user thay đổi
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -180,6 +180,19 @@ const ProfilePage = () => {
       setOriginalData((prev) => ({ ...prev, avatar: newAvatarUrl }));
       updateUser({ ...user, avatar: newAvatarUrl });
 
+      // Force re-render header by updating localStorage
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({ ...user, avatar: newAvatarUrl })
+      );
+
+      // Trigger a custom event to notify header about avatar change
+      window.dispatchEvent(
+        new CustomEvent("avatarUpdated", {
+          detail: { avatar: newAvatarUrl },
+        })
+      );
+
       toast.success("Cập nhật ảnh đại diện thành công!");
     } catch (error) {
       console.error("Error uploading avatar:", error);
@@ -229,7 +242,7 @@ const ProfilePage = () => {
               {/* Vùng hiển thị avatar */}
               {formData.avatar ? (
                 <img
-                  src={formData.avatar}
+                  src={formData.avatar || "/placeholder.svg"}
                   alt="Avatar"
                   className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 />
