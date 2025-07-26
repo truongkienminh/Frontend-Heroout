@@ -213,7 +213,71 @@ const BookingPage = () => {
     setCurrentStep(2);
   };
 
+  // Hàm định dạng thời gian
+  const formatTime = (timeString) => {
+    try {
+      // Giả định timeString là dạng "HH:mm:ss" hoặc "HH:mm"
+      const parts = timeString.split(":");
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`; // Trả về "HH:mm"
+      }
+      console.warn("Định dạng thời gian không hợp lệ:", timeString);
+      return timeString; // Trả về chuỗi gốc nếu không đúng định dạng
+    } catch (error) {
+      console.error("Lỗi định dạng thời gian:", error);
+      return timeString; // Trả về chuỗi gốc nếu có lỗi
+    }
+  };
+
+  // Add this function after the formatTime function
+  const filterFutureSchedules = (schedules) => {
+    const now = new Date();
+    const currentDate = now.toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+
+    return schedules.filter((schedule) => {
+      const scheduleDate = schedule.date;
+
+      // If schedule is in the future (different date), include it
+      if (scheduleDate > currentDate) {
+        return true;
+      }
+
+      // If schedule is today, check if the time slot is in the future
+      if (scheduleDate === currentDate) {
+        const slotStart = schedule.slot?.slotStart;
+        if (slotStart) {
+          const [hours, minutes] = slotStart.split(":").map(Number);
+          const slotStartMinutes = hours * 60 + minutes;
+          return slotStartMinutes > currentTime;
+        }
+      }
+
+      // If schedule is in the past, exclude it
+      return false;
+    });
+  };
+
   const handleScheduleSelect = (schedule) => {
+    // Check if schedule is in the past
+    const now = new Date();
+    const currentDate = now.toISOString().split("T")[0];
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    if (
+      schedule.date < currentDate ||
+      (schedule.date === currentDate && schedule.slot?.slotStart)
+    ) {
+      const [hours, minutes] = schedule.slot.slotStart.split(":").map(Number);
+      const slotStartMinutes = hours * 60 + minutes;
+      if (schedule.date === currentDate && slotStartMinutes <= currentTime) {
+        alertFail(
+          "Không thể đặt lịch trong quá khứ. Vui lòng chọn khung giờ khác."
+        );
+        return;
+      }
+    }
+
     // Không cho phép chọn lịch đã đặt
     if (isScheduleBooked(schedule)) {
       alertFail(
@@ -313,22 +377,6 @@ const BookingPage = () => {
       console.error("Lỗi khi đặt lịch:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Hàm định dạng thời gian
-  const formatTime = (timeString) => {
-    try {
-      // Giả định timeString là dạng "HH:mm:ss" hoặc "HH:mm"
-      const parts = timeString.split(":");
-      if (parts.length >= 2) {
-        return `${parts[0]}:${parts[1]}`; // Trả về "HH:mm"
-      }
-      console.warn("Định dạng thời gian không hợp lệ:", timeString);
-      return timeString; // Trả về chuỗi gốc nếu không đúng định dạng
-    } catch (error) {
-      console.error("Lỗi định dạng thời gian:", error);
-      return timeString; // Trả về chuỗi gốc nếu có lỗi
     }
   };
 
@@ -444,15 +492,21 @@ const BookingPage = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate("/my-appointments")}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Xem lịch hẹn của tôi
+              </button>
               <Link
                 to="/consultation"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-3 rounded-lg font-semibold transition-colors text-center"
               >
                 Đặt lịch khác
               </Link>
               <Link
                 to="/"
-                className="border border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="border border-gray-300 text-gray-600 hover:bg-gray-50 px-6 py-3 rounded-lg font-semibold transition-colors text-center"
               >
                 Về trang chủ
               </Link>
@@ -476,7 +530,7 @@ const BookingPage = () => {
   };
 
   const groupedSchedules = selectedConsultant
-    ? groupSchedulesByDate(availableSchedules)
+    ? groupSchedulesByDate(filterFutureSchedules(availableSchedules))
     : {};
 
   return (

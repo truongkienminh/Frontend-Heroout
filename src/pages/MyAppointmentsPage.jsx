@@ -415,23 +415,36 @@ const MyAppointmentsPage = () => {
                             </div>
                           )}
 
-                          {/* Meeting Link */}
-                          {appointment.meeting_link && (
+                          {/* Meeting Link - Only show for BOOKED appointments */}
+                          {appointment.meeting_link &&
+                            appointment.status === "BOOKED" && (
+                              <div className="mb-4">
+                                <h4 className="font-medium text-gray-800 mb-2">
+                                  Link tham gia:
+                                </h4>
+                                <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <Video className="w-4 h-4 text-blue-600" />
+                                  <a
+                                    href={appointment.meeting_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                  >
+                                    Tham gia cuộc họp
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+
+                          {/* Completed consultation message */}
+                          {appointment.status === "CONSULTED" && (
                             <div className="mb-4">
-                              <h4 className="font-medium text-gray-800 mb-2">
-                                Link tham gia:
-                              </h4>
-                              <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <Video className="w-4 h-4 text-blue-600" />
-                                <a
-                                  href={appointment.meeting_link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                                >
-                                  Tham gia cuộc họp
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
+                              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-green-700 font-medium">
+                                  Buổi tư vấn đã hoàn thành
+                                </span>
                               </div>
                             </div>
                           )}
@@ -439,7 +452,7 @@ const MyAppointmentsPage = () => {
 
                         {/* Actions */}
                         <div className="flex flex-col gap-3 lg:w-48">
-                          {/* Check-in Button */}
+                          {/* Check-in Button - Only for BOOKED appointments */}
                           {appointment.status === "BOOKED" &&
                             !appointment.checked_in && (
                               <button
@@ -472,7 +485,7 @@ const MyAppointmentsPage = () => {
                               </button>
                             )}
 
-                          {/* Cancel Button */}
+                          {/* Cancel Button - Only for BOOKED appointments */}
                           {appointment.status === "BOOKED" &&
                             !appointment.checked_in && (
                               <button
@@ -501,18 +514,19 @@ const MyAppointmentsPage = () => {
                               </button>
                             )}
 
-                          {/* Join Meeting Button */}
-                          {appointment.meeting_link && (
-                            <a
-                              href={appointment.meeting_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                              <Video className="w-4 h-4" />
-                              Tham gia
-                            </a>
-                          )}
+                          {/* Join Meeting Button - Only for BOOKED appointments with meeting link */}
+                          {appointment.meeting_link &&
+                            appointment.status === "BOOKED" && (
+                              <a
+                                href={appointment.meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                              >
+                                <Video className="w-4 h-4" />
+                                Tham gia
+                              </a>
+                            )}
 
                           {/* Appointment Details */}
                           <div className="text-xs text-gray-500 space-y-1">
