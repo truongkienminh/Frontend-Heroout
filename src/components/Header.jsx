@@ -3,12 +3,10 @@ import { useState } from "react";
 import {
   ChevronDown,
   User,
-  Settings,
   LogOut,
   Calendar,
-  Bell,
   GraduationCap,
-  AlertTriangle, // Import icon mới
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import HeroOutLogo from "../assets/heroout.jpg";
@@ -212,32 +210,6 @@ const Header = () => {
                       >
                         <GraduationCap className="w-4 h-4 mr-3" />
                         Thành tích
-                      </Link>
-
-                      <Link
-                        to="/notifications"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
-                          isActiveRoute("/notifications")
-                            ? "text-emerald-600 bg-emerald-50"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <Bell className="w-4 h-4 mr-3" />
-                        Thông báo
-                      </Link>
-
-                      <Link
-                        to="/settings"
-                        className={`flex items-center px-4 py-2 text-sm transition-colors ${
-                          isActiveRoute("/settings")
-                            ? "text-emerald-600 bg-emerald-50"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <Settings className="w-4 h-4 mr-3" />
-                        Cài đặt
                       </Link>
 
                       <hr className="my-2" />
