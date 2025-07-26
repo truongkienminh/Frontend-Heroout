@@ -16,41 +16,31 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 
-// Import instance axios đã cấu hình
 import api from "../../services/axios";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const StaffViewMeetings = () => {
-  // State để kiểm soát việc hiển thị Modal
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // State lưu trữ dữ liệu lấy từ API
   const [consultants, setConsultants] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]); // Danh sách các slot thời gian có ID và label
-
-  // State cho việc chọn trong Modal
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedConsultantId, setSelectedConsultantId] = useState(null);
 
-  // State ĐÃ SỬA ĐỔI: Lưu trữ MẢNG các ID của slot thời gian được chọn trong Modal
   const [selectedSlotIds, setSelectedSlotIds] = useState([]);
-
-  // State: Lưu danh sách lịch đã đăng ký lấy từ API /api/schedules
   const [schedules, setSchedules] = useState([]);
-
-  // State cho trạng thái tải dữ liệu ban đầu (consultants, availableSlots)
   const [loadingInitialData, setLoadingInitialData] = useState(true);
-  // State cho trạng thái tải lịch đã đăng ký (schedules)
+
   const [loadingSchedules, setLoadingSchedules] = useState(false);
-  // State cho trạng thái đăng ký slot mới
+
   const [registering, setRegistering] = useState(false);
-  // State cho lỗi khi tải dữ liệu ban đầu
+
   const [initialDataError, setInitialDataError] = useState(null);
-  // State cho lỗi khi tải lịch đã đăng ký
+
   const [schedulesError, setSchedulesError] = useState(null);
-  // State cho lỗi khi đăng ký slot mới
+
   const [registrationError, setRegistrationError] = useState(null);
 
   useEffect(() => {
@@ -58,11 +48,9 @@ const StaffViewMeetings = () => {
       setLoadingInitialData(true);
       setInitialDataError(null); // Reset lỗi trước khi fetch
       try {
-        // Tải danh sách chuyên viên từ /api/consultants
         const consultantsResponse = await api.get("/consultants");
         setConsultants(consultantsResponse.data);
 
-        // Tải danh sách các slot định nghĩa từ /api/slot
         const slotsResponse = await api.get("/slot");
         setAvailableSlots(slotsResponse.data);
       } catch (err) {
@@ -77,20 +65,17 @@ const StaffViewMeetings = () => {
     };
 
     fetchInitialData();
-  }, []); // Mảng dependency rỗng: chỉ chạy một lần khi component mount
-
-  // --- Effect để tải danh sách lịch đã đăng ký từ /api/schedules ---
+  }, []);
   const fetchSchedules = async () => {
     setLoadingSchedules(true);
     setSchedulesError(null); // Reset lỗi trước khi fetch
     try {
       const schedulesResponse = await api.get("/schedules");
-      // API /api/schedules trả về mảng các đối tượng schedule
+
       setSchedules(schedulesResponse.data);
     } catch (err) {
       console.error("Error fetching schedules:", err);
       setSchedulesError("Không thể tải danh sách lịch đã đăng ký.");
-      // Interceptor đã xử lý lỗi 401
     } finally {
       setLoadingSchedules(false);
     }
@@ -98,25 +83,21 @@ const StaffViewMeetings = () => {
 
   useEffect(() => {
     fetchSchedules();
-  }, []); // Fetch khi component mount
-
-  //  Hàm xử lý khi click nút "Đăng kí lịch làm việc"
+  }, []);
   const showModal = () => {
     setIsModalVisible(true);
     // Reset các state khi mở modal để form trống
     setSelectedDate(null);
     setSelectedConsultantId(null);
-    setSelectedSlotIds([]); // Reset MẢNG selectedSlotIds về rỗng
-    setRegistrationError(null); // Xóa lỗi đăng ký cũ
+    setSelectedSlotIds([]); // Reset mảng
+    setRegistrationError(null);
   };
 
-  //  Hàm xử lý khi click nút "OK" trong Modal (Đăng ký slot mới)
   const handleOk = async () => {
-    // Kiểm tra thông tin đã đủ chưa
     if (
       !selectedDate ||
       selectedConsultantId === null ||
-      selectedSlotIds.length === 0 // Kiểm tra nếu MẢNG selectedSlotIds rỗng
+      selectedSlotIds.length === 0
     ) {
       message.warning(
         "Vui lòng chọn đầy đủ Chuyên viên, Ngày và ít nhất một Slot thời gian."
@@ -125,36 +106,32 @@ const StaffViewMeetings = () => {
     }
 
     setRegistering(true); // Bắt đầu trạng thái đăng ký
-    setRegistrationError(null); // Xóa lỗi đăng ký cũ
+    setRegistrationError(null);
 
     try {
-      // Chuẩn bị dữ liệu theo định dạng API /api/slot/register
       const registrationData = {
-        date: selectedDate.format("YYYY-MM-DD"), // Format ngày
+        date: selectedDate.format("YYYY-MM-DD"),
         consultantId: selectedConsultantId,
-        slotIds: selectedSlotIds, // Gửi MẢNG selectedSlotIds
+        slotIds: selectedSlotIds,
       };
 
       console.log("Đang gửi đăng ký:", registrationData);
 
-      // Gọi API đăng ký sử dụng instance api
       const response = await api.post("/slot/register", registrationData);
 
       console.log("Đăng ký thành công:", response.data);
 
       message.success(`Đã đăng ký thành công ${selectedSlotIds.length} slot!`);
 
-      // Sau khi đăng ký thành công, gọi lại hàm fetchSchedules để cập nhật bảng
       fetchSchedules();
 
-      // Đóng Modal và reset form
       setIsModalVisible(false);
       setSelectedDate(null);
       setSelectedConsultantId(null);
       setSelectedSlotIds([]); // Reset MẢNG selectedSlotIds
     } catch (err) {
       console.error("Lỗi khi đăng ký:", err);
-      // Interceptor đã xử lý lỗi 401. Xử lý các lỗi khác tại đây.
+
       const errorMessage =
         err.response?.data?.message ||
         "Có lỗi xảy ra khi đăng ký lịch làm việc.";
@@ -330,7 +307,6 @@ const StaffViewMeetings = () => {
         destroyOnClose={true}
       >
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          {/* Hiển thị lỗi đăng ký nếu có */}
           {registrationError && (
             <Alert
               message="Lỗi đăng ký"
@@ -343,7 +319,7 @@ const StaffViewMeetings = () => {
           <div>
             <Text strong>Chọn chuyên viên:</Text>
             <br />
-            {/* Sử dụng danh sách consultant lấy từ API */}
+
             <Select
               placeholder="Chọn chuyên viên"
               style={{ width: "100%", marginTop: "8px" }}
@@ -380,13 +356,13 @@ const StaffViewMeetings = () => {
             <List
               size="small"
               bordered
-              dataSource={availableSlots} // Sử dụng availableSlots từ API
+              dataSource={availableSlots}
               renderItem={(item) => (
                 <List.Item
-                  key={item.id} // Dùng ID làm key
+                  key={item.id}
                   style={{
                     cursor: "pointer",
-                    // Sử dụng .includes() để kiểm tra ID có trong mảng đã chọn không
+
                     backgroundColor: selectedSlotIds.includes(item.id)
                       ? "#e6f7ff"
                       : "transparent",
@@ -394,7 +370,7 @@ const StaffViewMeetings = () => {
                       ? "#91d5ff"
                       : undefined,
                   }}
-                  onClick={() => handleSlotSelect(item.id)} // Truyền ID khi click
+                  onClick={() => handleSlotSelect(item.id)}
                 >
                   {item.label}
                 </List.Item>
@@ -402,11 +378,9 @@ const StaffViewMeetings = () => {
               style={{ maxHeight: "200px", overflowY: "auto", width: "200px" }}
             />
 
-            {/* Hiển thị các slot đã chọn */}
             {selectedSlotIds.length > 0 && (
               <Text strong style={{ marginTop: "10px", display: "block" }}>
                 Slot đã chọn:{" "}
-                {/* Map mảng các object slot đã chọn để lấy label và join lại */}
                 {selectedSlotObjects.map((slot) => slot.label).join(", ")}
               </Text>
             )}
