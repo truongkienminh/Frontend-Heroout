@@ -11,9 +11,10 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
+  CheckCircle,
 } from "lucide-react";
-import api from "../../services/axios"; // Đảm bảo đường dẫn này đúng
-import { useAuth } from "../../contexts/AuthContext"; // Đảm bảo đường dẫn này đúng
+import api from "../../services/axios";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Helper để định dạng ngày giờ
 const formatDateTime = (isoString) => {
@@ -63,11 +64,8 @@ const EventDetail = () => {
   const [registrationMessage, setRegistrationMessage] = useState("");
   const [userParticipation, setUserParticipation] = useState(null);
   const [isCheckingParticipation, setIsCheckingParticipation] = useState(false);
-
-  // State mới để kiểm tra thời gian sự kiện
   const [isEventOver, setIsEventOver] = useState(false);
 
-  // Helper lấy thông báo trạng thái
   const getStatusMessage = (status) => {
     switch (status) {
       case "REGISTERED":
@@ -75,7 +73,7 @@ const EventDetail = () => {
       case "CHECKED_IN":
         return "Bạn đã check-in sự kiện này.";
       case "CHECKED_OUT":
-        return "Bạn đã hoàn thành sự kiện này.";
+        return "Bạn đã hoàn thành sự kiện này và khảo sát.";
       case "CANCELLED":
         return "Bạn đã hủy đăng ký sự kiện này.";
       default:
@@ -83,9 +81,9 @@ const EventDetail = () => {
     }
   };
 
-  // Hàm kiểm tra trạng thái tham gia của người dùng
   const checkUserParticipation = async (eventId, accountId) => {
     if (!accountId || !eventId) return;
+
     setIsCheckingParticipation(true);
     try {
       const response = await api.get(`/participations`);
@@ -120,7 +118,6 @@ const EventDetail = () => {
     }
   };
 
-  // useEffect để tải chi tiết sự kiện
   useEffect(() => {
     if (!id) {
       setIsLoading(false);
@@ -140,7 +137,6 @@ const EventDetail = () => {
         const eventData = response.data;
         setEvent(eventData);
 
-        // Logic kiểm tra thời gian
         if (eventData.startTime) {
           const startTime = new Date(eventData.startTime);
           const now = new Date();
@@ -165,9 +161,8 @@ const EventDetail = () => {
     };
 
     fetchEventDetail();
-  }, [id, user?.id, authLoading]); // Phụ thuộc vào cả user và authLoading
+  }, [id, user?.id, authLoading]);
 
-  // Hàm xử lý đăng ký
   const handleRegisterClick = async () => {
     if (!user?.id) {
       navigate("/login", { state: { from: location }, replace: true });
@@ -317,8 +312,7 @@ const EventDetail = () => {
             </button>
           ) : (
             <>
-              {(userParticipation?.status === "CHECKED_IN" ||
-                userParticipation?.status === "CHECKED_OUT") && (
+              {userParticipation?.status === "CHECKED_IN" && (
                 <div className="mt-4">
                   <Link
                     to={`/survey-event/${event.id}`}
@@ -326,6 +320,18 @@ const EventDetail = () => {
                   >
                     Làm khảo sát
                   </Link>
+                </div>
+              )}
+
+              {userParticipation?.status === "CHECKED_OUT" && (
+                <div className="mt-4">
+                  <button
+                    disabled
+                    className="w-full flex items-center justify-center px-4 py-2 bg-gray-400 text-white rounded-md text-lg font-semibold cursor-not-allowed"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Bạn đã hoàn thành sự kiện
+                  </button>
                 </div>
               )}
 
