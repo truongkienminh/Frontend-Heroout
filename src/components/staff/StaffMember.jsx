@@ -116,7 +116,7 @@ const StaffMember = () => {
     try {
       const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
       await api.put(
-        `/accounts/accounts/${memberId}/status?status=${newStatus}`
+        `/accounts/${memberId}/status?status=${newStatus}`
       );
       toast.success(
         `Đã ${newStatus === "ACTIVE" ? "kích hoạt" : "vô hiệu hóa"} tài khoản`
