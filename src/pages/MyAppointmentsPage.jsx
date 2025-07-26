@@ -26,6 +26,62 @@ const MyAppointmentsPage = () => {
   const [cancelling, setCancelling] = useState({});
   const [error, setError] = useState(null);
 
+  // Auto-cancel expired appointments
+  const checkAndCancelExpiredAppointments = async (appointments) => {
+    const now = new Date();
+    const expiredAppointments = [];
+
+    appointments.forEach((appointment) => {
+      if (appointment.status === "BOOKED" && appointment.schedule?.slot) {
+        const appointmentDate = new Date(
+          appointment.appointment_date || appointment.schedule.date
+        );
+        const slotEnd = appointment.schedule.slot.slot_end;
+
+        if (slotEnd) {
+          const [hours, minutes] = slotEnd.split(":").map(Number);
+          const appointmentEndTime = new Date(appointmentDate);
+          appointmentEndTime.setHours(hours, minutes, 0, 0);
+
+          // Add 15 minutes buffer after slot end time
+          const expiryTime = new Date(
+            appointmentEndTime.getTime() + 15 * 60 * 1000
+          );
+
+          if (now > expiryTime) {
+            expiredAppointments.push(appointment.id);
+          }
+        }
+      }
+    });
+
+    // Auto-cancel expired appointments
+    if (expiredAppointments.length > 0) {
+      try {
+        await Promise.all(
+          expiredAppointments.map((appointmentId) =>
+            ApiService.updateAppointmentStatus(appointmentId, "CANCELLED")
+          )
+        );
+
+        // Update local state
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            expiredAppointments.includes(apt.id)
+              ? { ...apt, status: "CANCELLED" }
+              : apt
+          )
+        );
+
+        console.log(
+          `Auto-cancelled ${expiredAppointments.length} expired appointments`
+        );
+      } catch (error) {
+        console.error("Error auto-cancelling expired appointments:", error);
+      }
+    }
+  };
+
   // Fetch user's appointments
   const fetchAppointments = async () => {
     if (!user?.id) return;
@@ -35,6 +91,9 @@ const MyAppointmentsPage = () => {
       setError(null);
       const data = await ApiService.getMemberAppointments(user.id);
       setAppointments(data);
+
+      // Check and auto-cancel expired appointments
+      await checkAndCancelExpiredAppointments(data);
     } catch (err) {
       setError(err.message);
       console.error("Error fetching appointments:", err);
@@ -48,6 +107,17 @@ const MyAppointmentsPage = () => {
       fetchAppointments();
     }
   }, [isAuthenticated, user?.id]);
+
+  // Auto-check for expired appointments every 5 minutes
+  useEffect(() => {
+    if (appointments.length > 0) {
+      const interval = setInterval(() => {
+        checkAndCancelExpiredAppointments(appointments);
+      }, 5 * 60 * 1000); // 5 minutes
+
+      return () => clearInterval(interval);
+    }
+  }, [appointments]);
 
   // Handle check-in
   const handleCheckIn = async (appointmentId) => {
@@ -103,10 +173,7 @@ const MyAppointmentsPage = () => {
     try {
       setCancelling((prev) => ({ ...prev, [appointmentId]: true }));
 
-      const response = await ApiService.updateAppointmentStatus(
-        appointmentId,
-        "CANCELLED"
-      );
+      await ApiService.updateAppointmentStatus(appointmentId, "CANCELLED");
 
       setAppointments((prev) =>
         prev.map((apt) =>
@@ -206,6 +273,28 @@ const MyAppointmentsPage = () => {
     const minutesDiff = timeDiff / (1000 * 60);
 
     return minutesDiff <= 15 && minutesDiff >= -60;
+  };
+
+  // Check if appointment is expired (past slot end time + 15 minutes)
+  const isAppointmentExpired = (appointment) => {
+    if (appointment.status !== "BOOKED") return false;
+
+    const now = new Date();
+    const appointmentDate = new Date(
+      appointment.appointment_date || appointment.schedule?.date
+    );
+    const slotEnd = appointment.schedule?.slot?.slot_end;
+
+    if (!slotEnd) return false;
+
+    const [hours, minutes] = slotEnd.split(":").map(Number);
+    const appointmentEndTime = new Date(appointmentDate);
+    appointmentEndTime.setHours(hours, minutes, 0, 0);
+
+    // Add 15 minutes buffer after slot end time
+    const expiryTime = new Date(appointmentEndTime.getTime() + 15 * 60 * 1000);
+
+    return now > expiryTime;
   };
 
   if (!isAuthenticated) {
@@ -312,6 +401,7 @@ const MyAppointmentsPage = () => {
                 const statusInfo = getStatusInfo(appointment.status);
                 const StatusIcon = statusInfo.icon;
                 const canCheckInNow = canCheckIn(appointment);
+                const isExpired = isAppointmentExpired(appointment);
 
                 return (
                   <div
@@ -341,6 +431,13 @@ const MyAppointmentsPage = () => {
                                     Đã check-in
                                   </span>
                                 )}
+                                {isExpired &&
+                                  appointment.status === "BOOKED" && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                      <AlertCircle className="w-3 h-3" />
+                                      Sắp hết hạn
+                                    </span>
+                                  )}
                               </div>
                             </div>
                           </div>
@@ -444,6 +541,18 @@ const MyAppointmentsPage = () => {
                                 <CheckCircle className="w-4 h-4 text-green-600" />
                                 <span className="text-green-700 font-medium">
                                   Buổi tư vấn đã hoàn thành
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Cancelled appointment message */}
+                          {appointment.status === "CANCELLED" && (
+                            <div className="mb-4">
+                              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <XCircle className="w-4 h-4 text-red-600" />
+                                <span className="text-red-700 font-medium">
+                                  Lịch hẹn đã bị hủy
                                 </span>
                               </div>
                             </div>
