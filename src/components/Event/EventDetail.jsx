@@ -1,6 +1,6 @@
 // src/pages/EventDetail.js
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom"; // Thêm Link
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Calendar,
   Clock,
@@ -9,6 +9,9 @@ import {
   DollarSign,
   Users,
   ArrowLeft,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 import api from "../../services/axios";
 import { useAuth } from "../../contexts/AuthContext";
@@ -61,14 +64,28 @@ const EventDetail = () => {
   const [registrationMessage, setRegistrationMessage] = useState("");
   const [userParticipation, setUserParticipation] = useState(null);
   const [isCheckingParticipation, setIsCheckingParticipation] = useState(false);
+  const [isEventOver, setIsEventOver] = useState(false);
 
-  // Hàm kiểm tra trạng thái tham gia của người dùng
+  const getStatusMessage = (status) => {
+    switch (status) {
+      case "REGISTERED":
+        return "Bạn đã đăng ký sự kiện này.";
+      case "CHECKED_IN":
+        return "Bạn đã check-in sự kiện này.";
+      case "CHECKED_OUT":
+        return "Bạn đã hoàn thành sự kiện này và khảo sát.";
+      case "CANCELLED":
+        return "Bạn đã hủy đăng ký sự kiện này.";
+      default:
+        return "";
+    }
+  };
+
   const checkUserParticipation = async (eventId, accountId) => {
     if (!accountId || !eventId) return;
 
     setIsCheckingParticipation(true);
     try {
-      // API này nên được tối ưu hơn, ví dụ: /api/participations/event/{eventId}/user/{accountId}
       const response = await api.get(`/participations`);
       const parsedEventId = parseInt(eventId, 10);
       const participation = response.data.find(
@@ -101,36 +118,34 @@ const EventDetail = () => {
     }
   };
 
-  // Helper lấy thông báo trạng thái
-  const getStatusMessage = (status) => {
-    switch (status) {
-      case "REGISTERED":
-        return "Bạn đã đăng ký sự kiện này.";
-      case "CHECKED_IN":
-        return "Bạn đã check-in sự kiện này.";
-      case "CHECKED_OUT":
-        return "Bạn đã hoàn thành sự kiện này.";
-      case "CANCELLED":
-        return "Bạn đã hủy đăng ký sự kiện này.";
-      default:
-        return "";
-    }
-  };
-
-  // useEffect để tải chi tiết sự kiện và kiểm tra trạng thái tham gia
   useEffect(() => {
-    if (!id || authLoading) return;
+    if (!id) {
+      setIsLoading(false);
+      setError(new Error("Không có ID sự kiện."));
+      return;
+    }
 
     const fetchEventDetail = async () => {
       setIsLoading(true);
       setError(null);
       setUserParticipation(null);
       setRegistrationStatus(null);
+      setIsEventOver(false);
 
       try {
         const response = await api.get(`/events/${id}`);
-        setEvent(response.data);
-        if (user?.id) {
+        const eventData = response.data;
+        setEvent(eventData);
+
+        if (eventData.startTime) {
+          const startTime = new Date(eventData.startTime);
+          const now = new Date();
+          if (startTime < now) {
+            setIsEventOver(true);
+          }
+        }
+
+        if (user?.id && !authLoading) {
           await checkUserParticipation(id, user.id);
         }
       } catch (err) {
@@ -146,9 +161,8 @@ const EventDetail = () => {
     };
 
     fetchEventDetail();
-  }, [id, authLoading, user?.id]);
+  }, [id, user?.id, authLoading]);
 
-  // Hàm xử lý đăng ký
   const handleRegisterClick = async () => {
     if (!user?.id) {
       navigate("/login", { state: { from: location }, replace: true });
@@ -180,19 +194,17 @@ const EventDetail = () => {
     }
   };
 
-  // Các biến trạng thái loading và hiển thị nút
-  const overallLoading = isLoading || authLoading;
+  const overallLoading = isLoading || authLoading || isCheckingParticipation;
   const showRegisterButton =
     !isRegistering &&
-    !isCheckingParticipation &&
     registrationStatus !== "success" &&
     registrationStatus !== "already_registered" &&
     (!userParticipation || userParticipation.status === "CANCELLED");
 
   if (overallLoading) {
     return (
-      <div className="container mx-auto p-6 flex justify-center">
-        Đang tải chi tiết sự kiện...
+      <div className="container mx-auto p-6 flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
       </div>
     );
   }
@@ -201,12 +213,9 @@ const EventDetail = () => {
     return (
       <div className="container mx-auto p-6 text-center">
         <div className="text-red-600 mb-4">{error.message}</div>
-        <button
-          onClick={() => navigate(-1)}
-          className="text-green-600 hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1 inline" /> Quay lại
-        </button>
+        <Link to="/event" className="text-green-600 hover:underline">
+          <ArrowLeft className="w-4 h-4 mr-1 inline" /> Quay lại danh sách
+        </Link>
       </div>
     );
   }
@@ -227,12 +236,12 @@ const EventDetail = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 min-h-screen">
-      <button
-        onClick={() => navigate(-1)}
+      <Link
+        to="/event"
         className="mb-6 flex items-center text-green-600 hover:underline"
       >
         <ArrowLeft className="w-4 h-4 mr-1" /> Quay lại danh sách sự kiện
-      </button>
+      </Link>
 
       <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
@@ -278,11 +287,6 @@ const EventDetail = () => {
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <h3 className="text-xl font-semibold text-gray-800 mb-4">Tham gia</h3>
-          {isCheckingParticipation && (
-            <div className="p-3 mb-4 text-sm rounded-lg bg-gray-100 text-gray-600">
-              Đang kiểm tra trạng thái...
-            </div>
-          )}
 
           {registrationMessage && (
             <div
@@ -299,41 +303,68 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* --- BẮT ĐẦU: NÚT LÀM KHẢO SÁT --- */}
-          {(userParticipation?.status === "CHECKED_IN" ||
-            userParticipation?.status === "CHECKED_OUT") && (
-            <div className="mt-4">
-              <Link
-                to={`/survey-event/${event.id}`}
-                className="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Làm khảo sát
-              </Link>
-            </div>
-          )}
-          {/* --- KẾT THÚC: NÚT LÀM KHẢO SÁT --- */}
-
-          {showRegisterButton && (
+          {isEventOver ? (
             <button
-              onClick={handleRegisterClick}
-              disabled={isRegistering}
-              className={`w-full mt-4 px-4 py-2 text-white rounded-md text-lg font-semibold ${
-                isRegistering
-                  ? "bg-green-300 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              } focus:outline-none focus:ring-2 focus:ring-green-500`}
+              disabled
+              className="w-full mt-4 px-4 py-2 bg-gray-400 text-white rounded-md text-lg font-semibold cursor-not-allowed"
             >
-              {isRegistering ? "Đang xử lý..." : "Đăng ký ngay"}
+              Sự kiện đã kết thúc
             </button>
-          )}
+          ) : (
+            <>
+              {userParticipation?.status === "CHECKED_IN" && (
+                <div className="mt-4">
+                  <Link
+                    to={`/survey-event/${event.id}`}
+                    className="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Làm khảo sát
+                  </Link>
+                </div>
+              )}
 
-          {userParticipation?.status === "CANCELLED" && !isRegistering && (
-            <button
-              onClick={handleRegisterClick}
-              className="w-full mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-lg font-semibold"
-            >
-              Đăng ký lại
-            </button>
+              {userParticipation?.status === "CHECKED_OUT" && (
+                <div className="mt-4">
+                  <button
+                    disabled
+                    className="w-full flex items-center justify-center px-4 py-2 bg-gray-400 text-white rounded-md text-lg font-semibold cursor-not-allowed"
+                  >
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Bạn đã hoàn thành sự kiện
+                  </button>
+                </div>
+              )}
+
+              {showRegisterButton && (
+                <button
+                  onClick={handleRegisterClick}
+                  disabled={isRegistering}
+                  className={`w-full mt-4 px-4 py-2 text-white rounded-md text-lg font-semibold ${
+                    isRegistering
+                      ? "bg-green-300 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                >
+                  {isRegistering ? (
+                    <>
+                      <Loader2 className="inline-block w-5 h-5 mr-2 animate-spin" />{" "}
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    "Đăng ký ngay"
+                  )}
+                </button>
+              )}
+
+              {userParticipation?.status === "CANCELLED" && !isRegistering && (
+                <button
+                  onClick={handleRegisterClick}
+                  className="w-full mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-lg font-semibold"
+                >
+                  Đăng ký lại
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
