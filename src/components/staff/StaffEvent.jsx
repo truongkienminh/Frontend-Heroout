@@ -4,12 +4,14 @@ import {
 } from 'lucide-react';
 import api from '../../services/axios';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 
-const StatBox = ({ title, value, color }) => (
-  <div className="bg-white shadow-md border rounded-xl p-6 text-center">
-    <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    <p className="text-gray-500 text-base mt-2">{title}</p>
+
+const StatBox = ({ title, value, color = "text-gray-900" }) => (
+  <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+    <p className="text-sm text-gray-600 font-bold mb-2">{title}</p>
+    <p className={`text-4xl font-bold ${color}`}>{value}</p>
   </div>
 );
 
@@ -98,15 +100,7 @@ const StaffEvent = () => {
   };
 
   // Derived values
-  const totalCheckin = events.reduce((sum, e) =>
-    sum + (e.participants?.filter(p => p.checkedIn)?.length || 0), 0);
-  const totalCheckout = events.reduce((sum, e) =>
-    sum + (e.participants?.filter(p => p.checkedOut)?.length || 0), 0);
-  const totalParticipants = events.reduce((sum, e) =>
-    sum + (e.participants?.length || 0), 0);
-  const attendanceRate = totalParticipants
-    ? `${Math.round((totalCheckin / totalParticipants) * 100)}%`
-    : '0%';
+
 
   // Handlers
   const handleEditClick = (event) => {
@@ -129,45 +123,89 @@ const StaffEvent = () => {
   };
 
   const handleCreateEvent = async () => {
+    const { title, location, startTime, endTime } = newEvent;
+
+    if (!title.trim()) {
+      toast.error('Vui lòng nhập tiêu đề sự kiện.');
+      return;
+    }
+    if (!location.trim()) {
+      toast.error('Vui lòng nhập địa điểm.');
+      return;
+    }
+    if (!startTime || !endTime) {
+      toast.error('Vui lòng nhập thời gian bắt đầu và kết thúc.');
+      return;
+    }
+    if (new Date(startTime) >= new Date(endTime)) {
+      toast.error('Thời gian bắt đầu phải trước thời gian kết thúc.');
+      return;
+    }
+
     try {
-      const response = await api.post('/events', {
-        ...newEvent,
-        participants: []
-      });
+      const response = await api.post('/events', { ...newEvent, participants: [] });
       setEvents(prev => [...prev, response.data]);
       setShowModal(false);
       setNewEvent({ title: '', description: '', location: '', startTime: '', endTime: '' });
+      toast.success('Tạo sự kiện thành công!');
     } catch (error) {
       console.error('Lỗi khi tạo sự kiện:', error);
+      toast.error('Đã xảy ra lỗi khi tạo sự kiện.');
     }
   };
+
 
   const handleDeleteEvent = async (id) => {
     setEventToDelete(null);
     if (!id) return;
+
     try {
       await api.delete(`/events/${id}`);
       setEvents(prev => prev.filter(event => event.id !== id));
+      toast.success('Xóa sự kiện thành công!');
     } catch (error) {
       console.error('Lỗi khi xóa sự kiện:', error);
+      toast.error('Đã xảy ra lỗi khi xóa sự kiện.');
     }
   };
 
+
   const handleUpdateEvent = async () => {
     if (!eventToEdit) return;
+
+    const { title, location, startTime, endTime } = editEventData;
+
+    if (!title.trim()) {
+      toast.error('Vui lòng nhập tiêu đề sự kiện.');
+      return;
+    }
+    if (!location.trim()) {
+      toast.error('Vui lòng nhập địa điểm.');
+      return;
+    }
+    if (!startTime || !endTime) {
+      toast.error('Vui lòng nhập thời gian bắt đầu và kết thúc.');
+      return;
+    }
+    if (new Date(startTime) >= new Date(endTime)) {
+      toast.error('Thời gian bắt đầu phải trước thời gian kết thúc.');
+      return;
+    }
+
     try {
       const response = await api.put(`/events/${eventToEdit.id}`, {
         ...eventToEdit,
         ...editEventData
       });
-      setEvents(prev =>
-        prev.map(ev => (ev.id === eventToEdit.id ? response.data : ev))
-      );
+      setEvents(prev => prev.map(ev => (ev.id === eventToEdit.id ? response.data : ev)));
       setEventToEdit(null);
+      toast.success('Cập nhật sự kiện thành công!');
     } catch (error) {
       console.error('Lỗi khi cập nhật sự kiện:', error);
+      toast.error('Đã xảy ra lỗi khi cập nhật sự kiện.');
     }
   };
+
 
   const handleCheckIn = async (participantId) => {
     try {
@@ -211,13 +249,37 @@ const StaffEvent = () => {
   };
 
   const createSurvey = async (surveyData) => {
-    // Chỉ lấy các trường cần thiết
+    if (!surveyData.title.trim()) {
+      toast.error('Vui lòng nhập tiêu đề khảo sát.');
+      return null;
+    }
+    if (!surveyData.questions || surveyData.questions.length === 0) {
+      toast.error('Phải có ít nhất một câu hỏi.');
+      return null;
+    }
+
+    for (let i = 0; i < surveyData.questions.length; i++) {
+      const q = surveyData.questions[i];
+      if (!q.questionText.trim()) {
+        toast.error(`Câu hỏi ${i + 1} chưa có nội dung.`);
+        return null;
+      }
+      if (!q.options || q.options.length === 0) {
+        toast.error(`Câu hỏi ${i + 1} phải có ít nhất một lựa chọn.`);
+        return null;
+      }
+      for (let j = 0; j < q.options.length; j++) {
+        if (!q.options[j].content.trim()) {
+          toast.error(`Câu hỏi ${i + 1}, lựa chọn ${j + 1} chưa có nội dung.`);
+          return null;
+        }
+      }
+    }
+
+    // Chuẩn bị payload sạch
     const cleanQuestions = surveyData.questions.map(q => ({
       questionText: q.questionText,
-      options: q.options.map(opt => ({
-        content: opt.content,
-        score: opt.score
-      }))
+      options: q.options.map(opt => ({ content: opt.content, score: opt.score }))
     }));
 
     const payload = {
@@ -228,16 +290,46 @@ const StaffEvent = () => {
 
     try {
       const response = await api.post('/surveys', payload);
-      console.log('Survey created:', response.data);
+      toast.success('Tạo khảo sát thành công!');
       return response.data;
     } catch (error) {
       console.error('Lỗi khi tạo khảo sát:', error);
+      toast.error('Đã xảy ra lỗi khi tạo khảo sát.');
       return null;
     }
   };
 
+
+
   const handleUpdateSurvey = async () => {
     if (!surveyEventId) return;
+
+    if (!editSurveyData.title.trim()) {
+      toast.error('Vui lòng nhập tiêu đề khảo sát.');
+      return;
+    }
+    if (!editSurveyData.questions || editSurveyData.questions.length === 0) {
+      toast.error('Phải có ít nhất một câu hỏi.');
+      return;
+    }
+
+    for (let i = 0; i < editSurveyData.questions.length; i++) {
+      const q = editSurveyData.questions[i];
+      if (!q.questionText.trim()) {
+        toast.error(`Câu hỏi ${i + 1} chưa có nội dung.`);
+        return;
+      }
+      if (!q.options || q.options.length === 0) {
+        toast.error(`Câu hỏi ${i + 1} phải có ít nhất một lựa chọn.`);
+        return;
+      }
+      for (let j = 0; j < q.options.length; j++) {
+        if (!q.options[j].content.trim()) {
+          toast.error(`Câu hỏi ${i + 1}, lựa chọn ${j + 1} chưa có nội dung.`);
+          return;
+        }
+      }
+    }
 
     try {
       const cleanQuestions = editSurveyData.questions.map(q => ({
@@ -251,22 +343,18 @@ const StaffEvent = () => {
         }))
       }));
 
-      const payload = {
-        eventId: surveyEventId,
-        title: editSurveyData.title,
-        questions: cleanQuestions
-      };
-
+      const payload = { eventId: surveyEventId, title: editSurveyData.title, questions: cleanQuestions };
       const response = await api.put(`/surveys/event/${surveyEventId}`, payload);
 
-      setSurveyList(prev =>
-        prev.map(sv => (sv.id === surveyToEdit.id ? response.data : sv))
-      );
+      setSurveyList(prev => prev.map(sv => (sv.id === surveyToEdit.id ? response.data : sv)));
       setSurveyToEdit(null);
+      toast.success('Cập nhật khảo sát thành công!');
     } catch (error) {
       console.error('Lỗi khi cập nhật khảo sát:', error);
+      toast.error('Đã xảy ra lỗi khi cập nhật khảo sát.');
     }
   };
+
 
 
   const handleEditSurveyClick = (survey) => {
@@ -281,20 +369,21 @@ const StaffEvent = () => {
 
   const handleDeleteSurvey = async () => {
     if (!surveyToDelete || !surveyToDelete.eventId) return;
+
     try {
       await api.delete(`/surveys/event/${surveyToDelete.eventId}`);
 
-      setSurveyList(prev =>
-        prev.filter(sv => sv.eventId !== surveyToDelete.eventId)
-      );
-
+      setSurveyList(prev => prev.filter(sv => sv.eventId !== surveyToDelete.eventId));
       setSurveyToDelete(null);
 
       if (surveyEventId) {
         await handleShowSurveys({ id: surveyEventId });
       }
+
+      toast.success('Xóa khảo sát thành công!');
     } catch (error) {
       console.error('Lỗi khi xoá khảo sát:', error);
+      toast.error('Đã xảy ra lỗi khi xóa khảo sát.');
     }
   };
 
@@ -445,7 +534,7 @@ const StaffEvent = () => {
           survey={surveyToDelete}
           onCancel={() => {
             setSurveyToDelete(null);
-            setShowSurveyModal(true); 
+            setShowSurveyModal(true);
           }}
           onConfirm={handleDeleteSurvey}
         />
@@ -456,12 +545,15 @@ const StaffEvent = () => {
 
       {/* Dashboard */}
       <h1 className="text-3xl font-bold text-gray-800">Event Dashboard</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-        <StatBox title="Tổng sự kiện" value={events.length} color="text-blue-600" />
-        <StatBox title="Tổng lượt check-in" value={totalCheckin} color="text-green-600" />
-        <StatBox title="Tổng lượt check-out" value={totalCheckout} color="text-red-600" />
-        <StatBox title="Tỷ lệ tham dự" value={attendanceRate} color="text-yellow-600" />
+      <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+        <StatBox
+          title="Tổng sự kiện"
+          value="2"
+          color="text-gray-900"
+        />
       </div>
+
+
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -564,11 +656,12 @@ const StaffEvent = () => {
                       className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       onClick={e => {
                         e.stopPropagation();
-                        setEventToEdit(event);
+                        handleEditClick(event);
                       }}
                     >
                       <Edit2 size={16} />
                     </button>
+
                     <button
                       className="text-red-500 hover:text-red-700"
                       title="Xóa"
