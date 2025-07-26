@@ -84,6 +84,34 @@ const ConsultantDetailPage = () => {
     return timeStr; // Đã được định dạng thành "HH:MM" trong ApiService
   };
 
+  const filterFutureSchedules = (schedules) => {
+    const now = new Date();
+    const currentDate = now.toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+
+    return schedules.filter((schedule) => {
+      const scheduleDate = schedule.date;
+
+      // If schedule is in the future (different date), include it
+      if (scheduleDate > currentDate) {
+        return true;
+      }
+
+      // If schedule is today, check if the time slot is in the future
+      if (scheduleDate === currentDate) {
+        const slotStart = schedule.slot?.slotStart;
+        if (slotStart) {
+          const [hours, minutes] = slotStart.split(":").map(Number);
+          const slotStartMinutes = hours * 60 + minutes;
+          return slotStartMinutes > currentTime;
+        }
+      }
+
+      // If schedule is in the past, exclude it
+      return false;
+    });
+  };
+
   const isScheduleBooked = (schedule) => {
     if (schedule.hasOwnProperty("bookedStatus")) {
       return schedule.bookedStatus; // True nếu đã đặt, false nếu chưa đặt
@@ -160,7 +188,8 @@ const ConsultantDetailPage = () => {
     return grouped;
   };
 
-  const groupedSchedules = groupSchedulesByDate(schedules);
+  const futureSchedules = filterFutureSchedules(schedules);
+  const groupedSchedules = groupSchedulesByDate(futureSchedules);
 
   return (
     <div className="min-h-screen bg-white">
