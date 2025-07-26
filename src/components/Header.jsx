@@ -54,7 +54,7 @@ const Header = () => {
           <div className="flex items-center space-x-2">
             <Link to="/">
               <img
-                src={HeroOutLogo}
+                src={HeroOutLogo || "/placeholder.svg"}
                 alt="Herodout Logo"
                 style={{ width: 100, height: 80, objectFit: "contain" }}
               />
@@ -109,9 +109,9 @@ const Header = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  {user.profile_pic ? (
+                  {user.avatar ? (
                     <img
-                      src={user.profile_pic || "/placeholder.svg"}
+                      src={user.avatar || "/placeholder.svg"}
                       alt={user.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
@@ -137,9 +137,9 @@ const Header = () => {
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center space-x-3">
-                        {user.profile_pic ? (
+                        {user.avatar ? (
                           <img
-                            src={user.profile_pic || "/placeholder.svg"}
+                            src={user.avatar || "/placeholder.svg"}
                             alt={user.name}
                             className="w-12 h-12 rounded-full object-cover"
                           />

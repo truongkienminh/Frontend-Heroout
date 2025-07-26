@@ -144,8 +144,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem("userData", JSON.stringify(userData));
+    const updatedUser = { ...user, ...userData };
+    setUser(updatedUser);
+    localStorage.setItem("userData", JSON.stringify(updatedUser));
+
+    // Trigger re-render for components that depend on user data
+    window.dispatchEvent(
+      new CustomEvent("userUpdated", {
+        detail: updatedUser,
+      })
+    );
   };
 
   const value = {
