@@ -15,12 +15,21 @@
   border-radius: 8px; /* Rounded corners */
   padding: 40px;      /* Inner padding */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-  /* text-align: center; /* Có thể bỏ hoặc giữ, flexbox trên header sẽ đảm bảo centering */
   width: 100%;          /* Allow container to take full width up to max */
   max-width: 400px;     /* Limit max width as in the image */
 }
 
-/* Header styles - UPDATED */
+/* White container for register page */
+.register-container {
+  background-color: white;
+  border-radius: 8px; /* Rounded corners */
+  padding: 40px;      /* Inner padding */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  width: 100%;          /* Allow container to take full width up to max */
+  max-width: 600px;     /* Slightly wider for register form */
+}
+
+/* Header styles */
 .login-header {
   margin-bottom: 30px; /* Space below header */
   display: flex;         /* Kích hoạt Flexbox */
@@ -50,7 +59,7 @@
   margin-bottom: 0; /* No bottom margin */
 }
 
-/* Form container - optional, mostly for structure */
+/* Form container */
 .login-form-wrap {
   width: 100%;
 }
@@ -63,8 +72,6 @@
     height: auto !important;   /* Allow label height to adjust */
     line-height: normal !important; /* Reset line height */
     margin-bottom: 8px; /* Space between label and input */
-    /* Thêm text-align left cho label nếu cần đảm bảo nó không bị center theo parent */
-    /* text-align: left !important; */
     width: 100%; /* Đảm bảo label chiếm đủ rộng để text-align có hiệu quả */
 }
 
@@ -79,7 +86,6 @@
 .ant-form-item {
     text-align: left !important; /* Align form items content (like inputs) to the left */
 }
-
 
 /* Form Actions (Forgot password) */
 .form-actions {
@@ -99,8 +105,8 @@
   text-decoration: underline; /* Underline on hover */
 }
 
-/* Submit button */
-.login-button.ant-btn { /* Target the specific button class */
+/* Submit button for login */
+.login-button.ant-btn {
   width: 100%;          /* Full width */
   height: 40px;         /* Button height */
   background-color: #0D9488; /* Green background */
@@ -114,6 +120,26 @@
 
 .login-button.ant-btn:hover,
 .login-button.ant-btn:focus {
+  background-color: #0b7f74; /* Darker green on hover/focus */
+  border-color: #0b7f74;
+  color: white;
+}
+
+/* Submit button for register */
+.register-button.ant-btn {
+  width: 100%;          /* Full width */
+  height: 40px;         /* Button height */
+  background-color: #0D9488; /* Green background */
+  border-color: #0D9488;     /* Green border */
+  color: white;         /* White text color */
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;   /* Rounded corners */
+  margin-top: 10px;     /* Space above the button */
+}
+
+.register-button.ant-btn:hover,
+.register-button.ant-btn:focus {
   background-color: #0b7f74; /* Darker green on hover/focus */
   border-color: #0b7f74;
   color: white;
@@ -144,4 +170,26 @@
 /* Adjust margin for the submit button Form.Item */
 .submit-button-item.ant-form-item {
     margin-bottom: 0 !important; /* Remove default bottom margin if needed */
+}
+
+/* Register form specific styles */
+.register-card {
+  width: 100%;
+  max-width: 600px;
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.custom-input,
+.custom-select {
+  width: 100%;
 }
