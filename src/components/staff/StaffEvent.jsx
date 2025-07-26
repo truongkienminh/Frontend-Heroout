@@ -548,7 +548,7 @@ const StaffEvent = () => {
       <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
         <StatBox
           title="Tổng sự kiện"
-          value="2"
+          value={events.length}
           color="text-gray-900"
         />
       </div>
