@@ -15,13 +15,8 @@ const CoursesPage = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        if (!user || !user.id) {
-          setCourses([]);
-          setLoading(false);
-          return;
-        }
         const res = await api.get(`/courses/not-started`, {
-          params: { accountId: user.id }
+          params: user?.id ? { accountId: user.id } : {}
         });
         setCourses(res.data || []);
       } catch (error) {
@@ -51,10 +46,12 @@ const CoursesPage = () => {
     fetchMyCourses();
   }, [user]);
 
+
   // Lọc courses theo searchTerm (không phân biệt hoa thường)
   const filteredCourses = courses.filter(course =>
-    course.title.toLowerCase().includes((searchTerm || '').toLowerCase())
+    (course.title || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
+
 
   // Tính toán carousel
   const coursesPerSlide = 3;
