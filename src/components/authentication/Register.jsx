@@ -29,7 +29,7 @@ function Register() {
           ? values.dateOfBirth.toISOString()
           : null,
         gender: values.gender,
-        role: "MEMBER", 
+        role: "MEMBER",
       };
 
       const result = await register(registerData);
@@ -58,11 +58,7 @@ function Register() {
       <div className="login-container">
         <div className="login-header">
           <Link to="/">
-            <img
-              src={logo}
-              alt="Heroout Logo"
-              className="login-logo"
-            />
+            <img src={logo} alt="Heroout Logo" className="login-logo" />
           </Link>
           <h2 className="login-title">Đăng ký</h2>
           <p className="login-subtitle">Tạo tài khoản mới</p>
@@ -164,7 +160,10 @@ function Register() {
                     },
                   ]}
                 >
-                  <Input.Password placeholder="Nhập mật khẩu" disabled={loading} />
+                  <Input.Password
+                    placeholder="Nhập mật khẩu"
+                    disabled={loading}
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
