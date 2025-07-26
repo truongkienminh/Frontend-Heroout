@@ -127,9 +127,11 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: newUserData };
     } catch (error) {
       console.error("Registration failed:", error);
+
       return {
         success: false,
-        error: error.response?.data?.message || "Đăng ký thất bại",
+
+        error: error.response?.data || "Đăng ký thất bại. Vui lòng thử lại.",
       };
     }
   };
