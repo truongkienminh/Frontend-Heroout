@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../contexts/AuthContext";
-import "./login.css";
+import "./Login.css";
 
 import logo from "../../../assets/heroout.jpg";
 
